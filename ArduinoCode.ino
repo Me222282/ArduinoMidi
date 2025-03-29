@@ -281,11 +281,27 @@ void updateMod(Channel* c, uint16_t mod)
     oldMod = mod;
     setMod(mod);
 }
+void gateOff(Channel* c)
+{
+    uint8_t end = c->position + c->places;
+    for (uint8_t i = c->position; i < end; i++)
+    {
+        setGateNote(i, false);
+    }
+    setGate(gate);
+}
 void onControlChange(uint8_t channel, CCType number, uint8_t value)
 {
     // cc 01 is mod wheel
     if (channel >= activeChannels) { return; }
     Channel* c = &channels[channel];
+    
+    if (number == CCType::AllNotesOff)
+    {
+        clearNotes(c);
+        gateOff(c);
+        return;
+    }
     
     uint16_t mod = c->modulation;
     if (number == CCType::ModulationWheel_MSB)

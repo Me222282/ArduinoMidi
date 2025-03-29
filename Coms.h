@@ -7,7 +7,6 @@
 #define POTSPI SPISettings(10000000, MSBFIRST, SPI_MODE0)
 
 uint8_t gateCurrent;
-
 void setGate(uint8_t value)
 {
     gateCurrent = value;
@@ -34,16 +33,12 @@ void _dac8(uint8_t n, uint8_t value, uint16_t command)
     uint16_t trans = (value << 4) + command;
     _trans(pin, trans, DAC8SPI);
 }
-uint8_t vv[5] = { 0, 0, 0, 0, 0 };
 void setVel(uint8_t n, uint8_t value)
 {
-    vv[n] = value;
     _dac8(n, value, 0xF000);
 }
-uint8_t nv[5] = { 0, 0, 0, 0, 0 };
 void setNote(uint8_t n, uint8_t value)
 {
-    nv[n] = value;
     _dac8(n, value << 1, 0x3000);
 }
 
