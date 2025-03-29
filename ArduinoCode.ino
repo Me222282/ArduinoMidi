@@ -174,6 +174,7 @@ void specialOptions()
                         retriggerNew = true;
                         retriggerOld = false;
                         alwaysDelay = false;
+                        setNote = _setNoteNorm;
                         return;
                     case NoteName::C4:
                         retriggerOld = !retriggerOld;
