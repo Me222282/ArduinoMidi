@@ -1,3 +1,6 @@
+#ifndef __notes
+#define __notes
+
 #include "Channels.h"
 #include "Globals.h"
 
@@ -28,8 +31,8 @@ int8_t pushNote(Channel* c, uint8_t chI, Note n)
 {
     // Add to link list
     NoteList* nl = CREATE(NoteList);
-    // out of memory
-    if (!nl) { return -1; }
+    // // out of memory
+    // if (!nl) { return -1; }
     nl->value = n;
     nl->index = -1;
     
@@ -92,6 +95,7 @@ void _remove(Channel* c, NoteList* nl)
 int8_t removeNote(Channel* c, uint8_t chI, uint8_t key)
 {
     NoteList* nl;
+    // prioritises removing old notes first - important for arpeggios
     for (nl = c->noteStart; nl; nl = nl->next)
     {
         if (nl->value.key != key) { continue; }
@@ -224,3 +228,5 @@ NoteList* _getLosableNote(Channel* c)
     // mode 2 - take most recent
     return c->noteEnd;
 }
+
+#endif

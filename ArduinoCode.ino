@@ -3,7 +3,8 @@
 // #include "Coms.h"
 #include "Midi.h"
 // #include "Channels.h"
-#include "Callbacks.h"
+// #include "Callbacks.h"
+#include "Arpeggio.h"
 #include "Controls.h"
 
 Midi MIDI(Serial0);
@@ -38,6 +39,7 @@ void setup()
     digitalWrite(GATEIC, HIGH);
     
     MIDI.begin();
+    // Serial.begin(38400);
     
     SPI.begin();
     
@@ -51,6 +53,7 @@ void setup()
     SPI.endTransaction();
     
     setChannels(1, 1);
+    initArps();
 }
 
 void readControls()
@@ -110,6 +113,8 @@ void readControls()
     }
 }
 
+bool invokeArp = false;
+bool channelArps[5] = { false, false, false, false, false };
 void loop()
 {
     readControls();
@@ -120,6 +125,8 @@ void loop()
         specialOptions();
         return;
     }
+    
+    if (invokeArp) { invokeArps(); }
     
     if (MIDI.read())
     {
@@ -134,10 +141,20 @@ void loop()
                 uint8_t vel = MIDI.getData2();
                 if (type == MidiCode::NoteOFF || vel == 0)
                 {
+                    if (channelArps[channel])
+                    {
+                        arpRemoveNote(channel, n);
+                        return;
+                    }
                     onNoteOff(channel, n);
                     return;
                 }
                 
+                if (channelArps[channel])
+                {
+                    arpAddNote(channel, { n, vel });
+                    return;
+                }
                 onNoteOn(channel, n, vel);
                 return;
             }
@@ -155,11 +172,53 @@ void loop()
     }
 }
 
+void shouldInvokeArp()
+{
+    bool v = false;
+    for (uint8_t i = 0; i < 5; i++)
+    {
+        v |= channelArps[i];
+    }
+    invokeArp = v;
+}
+bool setArpTime = false;
+uint8_t digit = 0;
+uint8_t arpDigits[4] = { 0, 0, 0, 0 };
+// consts
+const uint16_t digitPlaces[5] = { 1, 10, 100, 1000, 10000 };
+uint8_t getDigit(NoteName n)
+{
+    switch (n)
+    {
+        case NoteName::_A0:
+            return 1;
+        case NoteName::_B0:
+            return 2;
+        case NoteName::C1:
+            return 3;
+        case NoteName::_D1:
+            return 4;
+        case NoteName::E1:
+            return 5;
+        case NoteName::F1:
+            return 6;
+        case NoteName::G1:
+            return 7;
+        case NoteName::_A1:
+            return 8;
+        case NoteName::_B1:
+            return 9;
+        case NoteName::C2:
+            return 0;
+    }
+    return 11;
+}
 void specialOptions()
 {
     if (MIDI.read())
     {
         MidiCode type = MIDI.getType();
+        uint8_t channel = MIDI.getChannel();
         switch (type)
         {
             case MidiCode::NoteON:
@@ -168,14 +227,40 @@ void specialOptions()
                 // OFF
                 if (MIDI.getData2() == 0) { return; }
                 
+                // enter time - digit must start at 0
+                if (setArpTime)
+                {
+                    uint8_t dv = getDigit(n);
+                    // valid digit
+                    if (dv <= 9)
+                    {
+                        // no more digits
+                        if (digit >= 4) { return; }
+                        arpDigits[digit] = dv;
+                        digit++;
+                        return;
+                    }
+                }
+                
                 switch (n)
                 {
+                    // set to defaults
                     case NoteName::B3:
+                    {
                         retriggerNew = true;
                         retriggerOld = false;
                         alwaysDelay = false;
                         setNote = _setNoteNorm;
+                        setArpTime = false;
+                        digit = 0;
+                        clearArp(0);
+                        clearArp(1);
+                        clearArp(2);
+                        clearArp(3);
+                        clearArp(4);
+                        initArps();
                         return;
+                    }
                     case NoteName::C4:
                         retriggerOld = !retriggerOld;
                         return;
@@ -186,12 +271,53 @@ void specialOptions()
                         alwaysDelay = !alwaysDelay;
                         return;
                     case NoteName::F4:
+                    {
                         if (setNote == _setNoteNorm)
                         {
                             setNote = _setSubNote;
                             return;
                         }
                         setNote = _setNoteNorm;
+                        return;
+                    }
+                    case NoteName::G4:
+                    {
+                        bool v = !channelArps[channel];
+                        channelArps[channel] = v;
+                        if (!v) { clearArp(channel); }
+                        else { clearNotes(&channels[channel]); }
+                        shouldInvokeArp();
+                        return;
+                    }
+                    case NoteName::C3:
+                    {
+                        setArpTime = !setArpTime;
+                        // set arp time value
+                        if (!setArpTime)
+                        {
+                            uint32_t bpm = 0;
+                            // digit is the number of digits entered
+                            if (digit == 0) { digit = 4; }
+                            uint8_t place = 0;
+                            // read in reverse order
+                            for (int8_t i = digit - 1; i >= 0; i--)
+                            {
+                                bpm += arpDigits[i] * digitPlaces[place];
+                                place++;
+                            }
+                            digit = 0;
+                            arps[channel].timeOut = 60000 / bpm;
+                        }
+                        return;
+                    }
+                    case NoteName::_D3:
+                        arps[channel].mode = 0;
+                        return;
+                    case NoteName::E3:
+                        arps[channel].mode = 1;
+                        return;
+                    case NoteName::F3:
+                        arps[channel].mode = 2;
                         return;
                 }
                 return;
