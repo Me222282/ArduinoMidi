@@ -182,6 +182,7 @@ void arpAddNote(uint8_t channel, Note n)
         nl->last = ins->last;
         nl->next = ins;
         ins->last = nl;
+        if (nl->last) { nl->last->next = nl; }
         if (a->start == ins) { a->start = nl; }
     }
     else
