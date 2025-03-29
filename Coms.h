@@ -37,10 +37,16 @@ void setVel(uint8_t n, uint8_t value)
 {
     _dac8(n, value, 0xF000);
 }
-void setNote(uint8_t n, uint8_t value)
+
+void _setNoteNorm(uint8_t n, uint8_t value)
 {
     _dac8(n, value << 1, 0x3000);
 }
+void _setSubNote(uint8_t n, uint8_t value)
+{
+    _dac8(n, value + 60, 0x3000);
+}
+void (*setNote)(uint8_t, uint8_t) = _setNoteNorm;
 
 void _ic(uint8_t pin, uint16_t value, uint16_t command)
 {

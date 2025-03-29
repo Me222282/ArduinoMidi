@@ -184,6 +184,14 @@ void specialOptions()
                     case NoteName::E4:
                         alwaysDelay = !alwaysDelay;
                         return;
+                    case NoteName::F4:
+                        if (setNote == _setNoteNorm)
+                        {
+                            setNote = _setSubNote;
+                            return;
+                        }
+                        setNote = _setNoteNorm;
+                        return;
                 }
                 return;
             }
