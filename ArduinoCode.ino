@@ -163,7 +163,6 @@ void specialOptions()
     if (MIDI.read())
     {
         MidiCode type = MIDI.getType();
-        uint8_t channel = MIDI.getChannel();
         switch (type)
         {
             case MidiCode::NoteON:
