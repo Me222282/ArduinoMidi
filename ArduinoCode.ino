@@ -115,11 +115,14 @@ void readControls()
 
 void loop()
 {
-    // Serial.println("OK");
-    
     readControls();
     
-    // Serial.println("PRE_MIDI");
+    // 5 - 5 for special options
+    if (activeChannels == activeVoices && activeVoices == 5)
+    {
+        specialOptions();
+        return;
+    }
     
     if (MIDI.read())
     {
@@ -149,6 +152,40 @@ void loop()
             case MidiCode::PitchWheel:
             {
                 onPitchBend(channel, MIDI.getCombinedData());
+                return;
+            }
+        }
+    }
+}
+
+void specialOptions()
+{
+    if (MIDI.read())
+    {
+        MidiCode type = MIDI.getType();
+        uint8_t channel = MIDI.getChannel();
+        switch (type)
+        {
+            case MidiCode::NoteON:
+            case MidiCode::NoteOFF:
+            {
+                NoteName n = MIDI.getNote();
+                uint8_t vel = MIDI.getData2();
+                if (type == MidiCode::NoteOFF || vel == 0)
+                {
+                    // OFF
+                    return;
+                }
+                
+                switch (n)
+                {
+                    case NoteName::C4:
+                        retriggerOld = !retriggerOld;
+                        return;
+                    case NoteName::D4:
+                        retriggerNew = !retriggerNew;
+                        return;
+                }
                 return;
             }
         }

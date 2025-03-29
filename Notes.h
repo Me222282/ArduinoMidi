@@ -5,6 +5,9 @@ int8_t _findNextIndex(Channel* c);
 NoteList* _getNextNote(Channel* c);
 NoteList* _getLosableNote(Channel* c);
 
+bool retriggerNew = true;
+bool retriggerOld = false;
+
 void _add(Channel* c, NoteList* nl)
 {
     NoteList* end = c->noteEnd;
@@ -53,8 +56,11 @@ int8_t pushNote(Channel* c, uint8_t chI, Note n)
     take->index = -1;
     nl->index = hole;
     c->locations[hole] = nl;
-    // retrigger note
-    reTrigChannelNote(chI, hole);
+    if (retriggerNew)
+    {
+        // retrigger note
+        reTrigChannelNote(chI, hole);
+    }
     return hole;
 }
 void _remove(Channel* c, NoteList* nl)
@@ -119,6 +125,11 @@ int8_t removeNote(Channel* c, uint8_t chI, uint8_t key)
     }
     replace->index = hole;
     c->locations[hole] = replace;
+    if (retriggerOld)
+    {
+        // retrigger note
+        reTrigChannelNote(chI, hole);
+    }
     return hole;
 }
 
