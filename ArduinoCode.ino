@@ -189,7 +189,7 @@ void specialOptions()
                     case NoteName::D4:
                         retriggerNew = !retriggerNew;
                         return;
-                    case NoteName::D5:
+                    case NoteName::E4:
                         alwaysDelay = !alwaysDelay;
                         return;
                 }
