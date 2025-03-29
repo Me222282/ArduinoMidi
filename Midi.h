@@ -126,7 +126,7 @@ enum NoteName: uint8_t
     Ab0 = 20U,
     A0 = 21U,
     Bb0 = 22U,
-    B0 = 23U,
+    _B0 = 23U,
     C1 = 24U,
     Db1 = 25U,
     D1 = 26U,
