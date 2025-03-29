@@ -10,6 +10,8 @@ typedef struct
     uint8_t mode;
     uint8_t noteCount;
     bool freeCurrent;
+    bool sort;
+    bool halfTime;
 } Arpeggio;
 
 Arpeggio arps[5];
@@ -93,7 +95,11 @@ void _triggerNextArp(uint8_t i, Arpeggio* a)
     // should not be called if freeCurrent && noteCount > 1
     else if (!nextN) { nextN = previous; }
     a->current = nextN;
-    swap(i, previous, nextN);
+    
+    NoteList* rem = previous;
+    if (a->halfTime) { rem = nullptr; }
+    swap(i, rem, nextN);
+    
     if (a->freeCurrent)
     {
         _removeArpNote(a, previous);
@@ -120,16 +126,22 @@ void invokeArps()
             _triggerNextArp(i, a);
             continue;
         }
+        // turn off at half time
+        if (a->halfTime && ((a->ct * 2) >= a->timeOut))
+        {
+            onNoteOff(i, a->current->value.key);
+        }
     }
 }
 
 void initArps()
 {
-    arps[0] = { nullptr, nullptr, nullptr, 500, 0, 0, false };
-    arps[1] = { nullptr, nullptr, nullptr, 500, 0, 0, false };
-    arps[2] = { nullptr, nullptr, nullptr, 500, 0, 0, false };
-    arps[3] = { nullptr, nullptr, nullptr, 500, 0, 0, false };
-    arps[4] = { nullptr, nullptr, nullptr, 500, 0, 0, false };
+    arps[0] = { nullptr, nullptr, nullptr, 250, 0, 0, 0, false, true, false };
+    arps[1] = { nullptr, nullptr, nullptr, 250, 0, 0, 0, false, true, false };
+    arps[2] = { nullptr, nullptr, nullptr, 250, 0, 0, 0, false, true, false };
+    arps[3] = { nullptr, nullptr, nullptr, 250, 0, 0, 0, false, true, false };
+    arps[4] = { nullptr, nullptr, nullptr, 250, 0, 0, 0, false, true, false };
+    Serial.println(arps[0].sort);
 }
 void clearArp(uint8_t channel)
 {
@@ -146,6 +158,7 @@ void clearArp(uint8_t channel)
         a->start = nullptr;
         a->current = nullptr;
         a->end = nullptr;
+        a->noteCount = 0;
     }
 }
 
@@ -158,18 +171,35 @@ void arpAddNote(uint8_t channel, Note n)
     
     Arpeggio* a = &arps[channel];
     
-    NoteList* end = a->end;
-    if (!end)
+    if (a->sort)
     {
-        a->start = nl;
+        // add in order
+        NoteList* ins;
+        for (ins = a->start; ins && ins->value.key < n.key; ins = ins->next) { }
+        // none found - add to end like normal
+        if (!ins) { goto APPEND; }
+        // insert into list
+        nl->last = ins->last;
+        nl->next = ins;
+        ins->last = nl;
+        if (a->start == ins) { a->start = nl; }
     }
     else
     {
-        end->next = nl;
-        nl->last = end;
+    APPEND:
+        NoteList* end = a->end;
+        if (!end)
+        {
+            a->start = nl;
+        }
+        else
+        {
+            end->next = nl;
+            nl->last = end;
+        }
+        a->end = nl;
     }
     
-    a->end = nl;
     a->noteCount++;
     // if no current note
     if (!a->current)

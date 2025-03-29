@@ -259,6 +259,12 @@ void specialOptions()
                         clearArp(3);
                         clearArp(4);
                         initArps();
+                        channelArps[0] = false;
+                        channelArps[1] = false;
+                        channelArps[2] = false;
+                        channelArps[3] = false;
+                        channelArps[4] = false;
+                        invokeArp = false;
                         return;
                     }
                     case NoteName::C4:
@@ -318,6 +324,12 @@ void specialOptions()
                         return;
                     case NoteName::F3:
                         arps[channel].mode = 2;
+                        return;
+                    case NoteName::G3:
+                        arps[channel].sort = !arps[channel].sort;
+                        return;
+                    case NoteName::_A3:
+                        arps[channel].halfTime = !arps[channel].halfTime;
                         return;
                 }
                 return;
