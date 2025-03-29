@@ -36,6 +36,7 @@ void _updateSlot(uint8_t com, Note n)
         }
     }
 }
+bool alwaysDelay = false;
 void onNoteOn(uint8_t channel, uint8_t note, uint8_t velocity)
 {
     if (channel >= activeChannels) { return; }
@@ -51,6 +52,10 @@ void onNoteOn(uint8_t channel, uint8_t note, uint8_t velocity)
         // turn off retriggered notes
         setGate(gateCurrent & ~reTrig);
         reTrig = 0;
+        delay(RETRIGTIME);
+    }
+    else if (alwaysDelay)
+    {
         delay(RETRIGTIME);
     }
     

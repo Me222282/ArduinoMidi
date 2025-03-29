@@ -178,11 +178,19 @@ void specialOptions()
                 
                 switch (n)
                 {
+                    case NoteName::B3:
+                        retriggerNew = true;
+                        retriggerOld = false;
+                        alwaysDelay = false;
+                        return;
                     case NoteName::C4:
                         retriggerOld = !retriggerOld;
                         return;
                     case NoteName::D4:
                         retriggerNew = !retriggerNew;
+                        return;
+                    case NoteName::D5:
+                        alwaysDelay = !alwaysDelay;
                         return;
                 }
                 return;
