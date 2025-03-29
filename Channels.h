@@ -1,0 +1,177 @@
+#ifndef __chan_chan
+#define __chan_chan
+
+#include "Globals.h"
+#include "History.h"
+
+typedef struct _noteList
+{
+    Note value;
+    int8_t index;
+    _noteList* next;
+    _noteList* last;
+} NoteList;
+typedef struct
+{
+    // list is ordered by start time (oldest - newest)
+    NoteList* noteStart;
+    NoteList* noteEnd;
+    NoteList** locations;
+    uint8_t noteCount;
+    History history;
+    uint8_t voices;
+    uint8_t places;
+    uint16_t pitchBend;
+    uint16_t modulation;
+    int8_t position;
+} Channel;
+
+uint8_t _ss0[5] = { 0x00, 0x00, 0x00, 0x00, 0x00 };
+uint8_t _ss1[5] = { 0x00, 0x00, 0x00, 0x01, 0x01 };
+uint8_t _ss2[5] = { 0x00, 0x00, 0x01, 0x01, 0x02 };
+uint8_t _ss3[5] = { 0x00, 0x00, 0x01, 0x02, 0x03 };
+uint8_t _ss4[5] = { 0x00, 0x01, 0x02, 0x03, 0x04 };
+uint8_t _ss5[5] = { 0x00, 0x00, 0x00, 0x10, 0x10 };
+uint8_t _ss6[5] = { 0x00, 0x00, 0x01, 0x10, 0x11 };
+uint8_t _ss7[5] = { 0x00, 0x01, 0x02, 0x10, 0x11 };
+uint8_t _ss8[5] = { 0x00, 0x01, 0x02, 0x03, 0x10 };
+uint8_t _ss9[5] = { 0x00, 0x00, 0x10, 0x10, 0x20 };
+uint8_t _ss10[5] = { 0x00, 0x01, 0x10, 0x11, 0x20 };
+uint8_t _ss11[5] = { 0x00, 0x01, 0x02, 0x10, 0x20 };
+uint8_t _ss12[5] = { 0x00, 0x00, 0x10, 0x20, 0x30 };
+uint8_t _ss13[5] = { 0x00, 0x01, 0x10, 0x20, 0x30 };
+uint8_t _ss14[5] = { 0x00, 0x10, 0x20, 0x30, 0x40 };
+uint8_t* slotSettings[25] =
+{
+    // voice priority
+    // // 1 Channel
+    // _ss0, _ss1, _ss2, _ss3, _ss4,
+    // // 2 Channels
+    // _ss5, _ss6, _ss7, _ss8, _ss4,
+    // // 3 Channels
+    // _ss9, _ss10, _ss11, _ss8, _ss4,
+    // // 4 Channels
+    // _ss12, _ss13, _ss11, _ss8, _ss4,
+    // // 5 Channels
+    // _ss14, _ss13, _ss11, _ss8, _ss4
+    // channel priority
+    // 1 Channel
+    _ss0, _ss1, _ss2, _ss3, _ss4,
+    // 2 Channels
+    _ss5, _ss6, _ss7, _ss8, _ss8,
+    // 3 Channels
+    _ss9, _ss10, _ss11, _ss11, _ss11,
+    // 4 Channels
+    _ss12, _ss13, _ss13, _ss13, _ss13,
+    // 5 Channels
+    _ss14, _ss14, _ss14, _ss14, _ss14
+};
+
+Channel channels[5];
+uint8_t* slotAllocation;
+
+void clearChannel(Channel* c);
+void initChannel(Channel* c, uint8_t voices, uint8_t index, uint8_t places);
+
+void setChannels(uint8_t c, uint8_t v)
+{
+    slotAllocation = slotSettings[((c - 1) * 5) + v - 1];
+    
+    uint8_t c0 = 0;
+    uint8_t v0 = 0;
+    uint8_t p0 = 0;
+    uint8_t li = 0;
+    for (int i = 0; i < 5; i++)
+    {
+        clearChannel(&channels[i]);
+        
+        uint8_t sa = slotAllocation[i];
+        uint8_t chI = sa >> 4;
+        uint8_t vI = sa & 0b00001111;
+        
+        // init 0 when chI == 1, init 1 when chI == 2, etc
+        if (chI != c0)
+        {
+            // init previous channel
+            // v0 is auto counted
+            initChannel(&channels[c0], v0 + 1, li, p0);
+            // this index is the start of the next channel
+            li = i;
+            p0 = 0;
+        }
+        c0 = chI;
+        v0 = vI;
+        p0++;
+    }
+    // init last channel
+    initChannel(&channels[c0], v0 + 1, li, p0);
+}
+
+void initChannel(Channel* c, uint8_t voices, uint8_t index, uint8_t places)
+{
+    // will be null
+    // c->noteStart = nullptr;
+    // c->noteEnd = nullptr;
+    c->locations = CREATE_ARRAY(NoteList*, voices);
+    c->voices = voices;
+    c->pitchBend = 0x2000;
+    c->modulation = 0;
+    c->position = index;
+    c->places = places;
+    
+    c->history = allocateHistory(voices);
+}
+void clearNotes(Channel* c)
+{
+    if (c->noteStart)
+    {
+        // free by last so we still have index to next
+        for (NoteList* nl = c->noteStart->next; nl; nl = nl->next)
+        {
+            free(nl->last);
+        }
+        free(c->noteEnd);
+        c->noteStart = nullptr;
+        c->noteEnd = nullptr;
+        c->noteCount = 0;
+    }
+    
+    clearHistory(&c->history);
+    c->history = allocateHistory(c->voices);
+}
+void clearChannel(Channel* c)
+{
+    clearNotes(c);
+    if (c->locations)
+    {
+        free(c->locations);
+        c->locations = nullptr;
+    }
+}
+
+void gateChannelNote(uint8_t ci, uint8_t vi, bool v)
+{
+    uint8_t com = (ci << 4) | vi;
+    
+    for (uint8_t i = 0; i < 5; i++)
+    {
+        if (slotAllocation[i] == com)
+        {
+            setGateNote(i, v);
+        }
+    }
+}
+void reTrigChannelNote(uint8_t ci, uint8_t vi)
+{
+    uint8_t com = (ci << 4) | vi;
+    
+    for (uint8_t i = 0; i < 5; i++)
+    {
+        if (slotAllocation[i] == com)
+        {
+            reTrigNote(i);
+        }
+    }
+}
+
+#endif
