@@ -72,6 +72,14 @@ void onNoteOff(uint8_t channel, uint8_t note)
     Channel* c = &channels[channel];
     int8_t vi = removeNote(c, channel, note);
     
+    if (reTrig)
+    {
+        // turn off retriggered notes
+        setGate(gateCurrent & ~reTrig);
+        reTrig = 0;
+        delay(RETRIGTIME);
+    }
+    
     if (vi >= 0)
     {
         uint8_t com = (channel << 4) | (uint8_t)vi;
