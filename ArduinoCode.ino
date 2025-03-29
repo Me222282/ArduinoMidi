@@ -166,15 +166,10 @@ void specialOptions()
         switch (type)
         {
             case MidiCode::NoteON:
-            case MidiCode::NoteOFF:
             {
                 NoteName n = MIDI.getNote();
-                uint8_t vel = MIDI.getData2();
-                if (type == MidiCode::NoteOFF || vel == 0)
-                {
-                    // OFF
-                    return;
-                }
+                // OFF
+                if (MIDI.getData2() == 0) { return; }
                 
                 switch (n)
                 {
@@ -186,7 +181,7 @@ void specialOptions()
                     case NoteName::C4:
                         retriggerOld = !retriggerOld;
                         return;
-                    case NoteName::D4:
+                    case NoteName::_D4:
                         retriggerNew = !retriggerNew;
                         return;
                     case NoteName::E4:
