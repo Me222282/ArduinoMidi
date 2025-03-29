@@ -4,6 +4,7 @@
 #include "Midi.h"
 // #include "Channels.h"
 #include "Callbacks.h"
+#include "Controls.h"
 
 Midi MIDI(Serial0);
 
@@ -37,7 +38,6 @@ void setup()
     digitalWrite(GATEIC, HIGH);
     
     MIDI.begin();
-    // Serial.begin(38400);
     
     SPI.begin();
     
@@ -56,27 +56,24 @@ void setup()
 void readControls()
 {
     int8_t oldOO = octaveOffset;
-    octaveOffset = (int8_t)round(analogRead(OCTAVE) / 682.666666667f) - 3;
+    octaveOffset = readControl(0) - 3;
     
     uint8_t oldC = activeChannels;
-    activeChannels = (uint8_t)round(analogRead(CHANNELS) / 1024.0f) + 1;
+    activeChannels = readControl(1) + 1;
     uint8_t oldV = activeVoices;
-    activeVoices = (uint8_t)round(analogRead(VOICES) / 1024.0f) + 1;
+    activeVoices = readControl(2) + 1;
     
     float oldPBS = pitchBendSelect;
-    pitchBendSelect = pbDiv[(uint8_t)round(analogRead(PITCHBEND) / 819.2f)];
-    
-    // Serial.println("READ1");
+    uint8_t pbI = readControl(3);
+    pitchBendSelect = pbDiv[pbI];
     
     bool oldM1 = mode1;
     mode1 = digitalRead(MODE1);
     uint8_t oldM2 = mode2;
-    mode2 = (uint8_t)round(analogRead(MODE2) / 2048.0f);
+    mode2 = readControl(4);
     
     bool oldOp = option;
     option = digitalRead(OPTIONMODE);
-    
-    // Serial.println("READ2");
     
     if (oldM2 != mode2 || oldM1 != mode1)
     {
@@ -117,8 +114,8 @@ void loop()
 {
     readControls();
     
-    // 5 - 5 for special options
-    if (activeChannels == activeVoices && activeVoices == 5)
+    // 5, 5 for special options
+    if (activeChannels == 5 && activeVoices == 5)
     {
         specialOptions();
         return;
