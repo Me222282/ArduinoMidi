@@ -230,9 +230,9 @@ void specialOptions()
         {
             case MidiCode::NoteON:
             {
-                NoteName n = MIDI.getNote();
                 // OFF
                 if (MIDI.getData2() == 0) { return; }
+                NoteName n = MIDI.getNote();
                 
                 // enter time - digit must start at 0
                 if (setArpTime)
