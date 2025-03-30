@@ -134,14 +134,22 @@ void invokeArps()
     }
 }
 
+void clearArps()
+{
+    clearArp(0);
+    clearArp(1);
+    clearArp(2);
+    clearArp(3);
+    clearArp(4);
+}
 void initArps()
 {
+    clearArps();
     arps[0] = { nullptr, nullptr, nullptr, 250, 0, 0, 0, false, true, false };
     arps[1] = { nullptr, nullptr, nullptr, 250, 0, 0, 0, false, true, false };
     arps[2] = { nullptr, nullptr, nullptr, 250, 0, 0, 0, false, true, false };
     arps[3] = { nullptr, nullptr, nullptr, 250, 0, 0, 0, false, true, false };
     arps[4] = { nullptr, nullptr, nullptr, 250, 0, 0, 0, false, true, false };
-    Serial.println(arps[0].sort);
 }
 void clearArp(uint8_t channel)
 {

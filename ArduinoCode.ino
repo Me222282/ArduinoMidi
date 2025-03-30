@@ -82,6 +82,7 @@ void readControls()
     
     if (oldM2 != mode2 || oldM1 != mode1)
     {
+        clearArps();
         clearNotes(&channels[0]);
         clearNotes(&channels[1]);
         clearNotes(&channels[2]);
@@ -95,6 +96,7 @@ void readControls()
     }
     if (activeChannels != oldC || activeVoices != oldV)
     {
+        clearArps();
         setChannels(activeChannels, activeVoices);
         gate = 0;
         setGate(gate);
@@ -260,11 +262,6 @@ void specialOptions()
                         setNote = _setNoteNorm;
                         setArpTime = false;
                         digit = 0;
-                        clearArp(0);
-                        clearArp(1);
-                        clearArp(2);
-                        clearArp(3);
-                        clearArp(4);
                         initArps();
                         channelArps[0] = false;
                         channelArps[1] = false;
