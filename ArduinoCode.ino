@@ -40,6 +40,7 @@ void setup()
     
     MIDI.begin();
     // Serial.begin(38400);
+    EEPROM.begin(35);
     
     SPI.begin();
     
@@ -53,7 +54,7 @@ void setup()
     SPI.endTransaction();
     
     setChannels(1, 1);
-    initArps();
+    loadArps();
 }
 
 bool specOps = false;
@@ -316,24 +317,24 @@ void specialOptions()
                                 place++;
                             }
                             digit = 0;
-                            arps[channel].timeOut = 60000 / bpm;
+                            setArpTimeOut(channel, 60000 / bpm);
                         }
                         return;
                     }
                     case NoteName::_D3:
-                        arps[channel].mode = 0;
+                        setArpMode(channel, 0);
                         return;
                     case NoteName::E3:
-                        arps[channel].mode = 1;
+                        setArpMode(channel, 1);
                         return;
                     case NoteName::F3:
-                        arps[channel].mode = 2;
+                        setArpMode(channel, 2);
                         return;
                     case NoteName::G3:
-                        arps[channel].sort = !arps[channel].sort;
+                        setArpSort(channel, !arps[channel].sort);
                         return;
                     case NoteName::_A3:
-                        arps[channel].halfTime = !arps[channel].halfTime;
+                        setArpHT(channel, !arps[channel].halfTime);
                         return;
                 }
                 return;

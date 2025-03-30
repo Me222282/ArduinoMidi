@@ -1,3 +1,4 @@
+#include <EEPROM.h>
 #include "Callbacks.h"
 
 typedef struct
@@ -134,23 +135,6 @@ void invokeArps()
     }
 }
 
-void clearArps()
-{
-    clearArp(0);
-    clearArp(1);
-    clearArp(2);
-    clearArp(3);
-    clearArp(4);
-}
-void initArps()
-{
-    clearArps();
-    arps[0] = { nullptr, nullptr, nullptr, 250, 0, 0, 0, false, true, false };
-    arps[1] = { nullptr, nullptr, nullptr, 250, 0, 0, 0, false, true, false };
-    arps[2] = { nullptr, nullptr, nullptr, 250, 0, 0, 0, false, true, false };
-    arps[3] = { nullptr, nullptr, nullptr, 250, 0, 0, 0, false, true, false };
-    arps[4] = { nullptr, nullptr, nullptr, 250, 0, 0, 0, false, true, false };
-}
 void clearArp(uint8_t channel)
 {
     Arpeggio* a = &arps[channel];
@@ -168,6 +152,87 @@ void clearArp(uint8_t channel)
         a->end = nullptr;
         a->noteCount = 0;
     }
+}
+void clearArps()
+{
+    clearArp(0);
+    clearArp(1);
+    clearArp(2);
+    clearArp(3);
+    clearArp(4);
+}
+void initArps()
+{
+    clearArps();
+    arps[0] = { nullptr, nullptr, nullptr, 250, 0, 0, 0, false, true, false };
+    arps[1] = { nullptr, nullptr, nullptr, 250, 0, 0, 0, false, true, false };
+    arps[2] = { nullptr, nullptr, nullptr, 250, 0, 0, 0, false, true, false };
+    arps[3] = { nullptr, nullptr, nullptr, 250, 0, 0, 0, false, true, false };
+    arps[4] = { nullptr, nullptr, nullptr, 250, 0, 0, 0, false, true, false };
+    
+    for (uint8_t i = 0; i < 5; i++)
+    {
+        uint8_t si = i * 7;
+        EEPROM.write(si, 0);
+        EEPROM.write(si + 1, 0);
+        EEPROM.write(si + 2, 0);
+        EEPROM.write(si + 3, 250);
+        EEPROM.write(si + 4, 0);
+        EEPROM.write(si + 5, true);
+        EEPROM.write(si + 6, false);
+    }
+}
+void loadArps()
+{
+    for (uint8_t i = 0; i < 5; i++)
+    {
+        uint8_t si = i * 7;
+        uint32_t timeA = EEPROM.read(si) << 24;
+        uint32_t timeB = EEPROM.read(si + 1) << 16;
+        uint32_t timeC = EEPROM.read(si + 2) << 8;
+        uint32_t timeD = EEPROM.read(si + 3);
+        uint8_t mode = EEPROM.read(si + 4);
+        uint8_t sort = EEPROM.read(si + 5);
+        uint8_t ht = EEPROM.read(si + 6);
+        arps[i] =
+        {
+            nullptr, nullptr, nullptr,
+            timeA + timeB + timeC + timeD,
+            0, mode, 0, false, sort, ht
+        };
+    }
+}
+void setArpTimeOut(uint8_t channel, uint32_t time)
+{
+    uint8_t si = channel * 7;
+    arps[channel].timeOut = time;
+    
+    EEPROM.write(si, time >> 24);
+    EEPROM.write(si + 1, (time >> 16) & 0xFF);
+    EEPROM.write(si + 2, (time >> 8) & 0xFF);
+    EEPROM.write(si + 3, time & 0xFF);
+    EEPROM.commit();
+}
+void setArpMode(uint8_t channel, uint8_t mode)
+{
+    uint8_t si = channel * 7;
+    arps[channel].mode = mode;
+    EEPROM.write(si + 4, mode);
+    EEPROM.commit();
+}
+void setArpSort(uint8_t channel, bool sort)
+{
+    uint8_t si = channel * 7;
+    arps[channel].sort = sort;
+    EEPROM.write(si + 5, sort);
+    EEPROM.commit();
+}
+void setArpHT(uint8_t channel, bool halfTime)
+{
+    uint8_t si = channel * 7;
+    arps[channel].halfTime = halfTime;
+    EEPROM.write(si + 6, halfTime);
+    EEPROM.commit();
 }
 
 void arpAddNote(uint8_t channel, Note n)
