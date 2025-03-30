@@ -56,6 +56,8 @@ void setup()
     initArps();
 }
 
+bool specOps = false;
+bool a0Pressed = false;
 void readControls()
 {
     int8_t oldOO = octaveOffset;
@@ -88,6 +90,8 @@ void readControls()
         
         gate = 0;
         setGate(0);
+        specOps = a0Pressed;
+        a0Pressed = false;
     }
     if (activeChannels != oldC || activeVoices != oldV)
     {
@@ -95,6 +99,8 @@ void readControls()
         gate = 0;
         setGate(gate);
         updateAllPBs();
+        specOps = a0Pressed;
+        a0Pressed = false;
     }
     else
     {
@@ -119,8 +125,7 @@ void loop()
 {
     readControls();
     
-    // 5, 5 for special options
-    if (activeChannels == 5 && activeVoices == 5)
+    if (specOps)
     {
         specialOptions();
         return;
@@ -141,6 +146,7 @@ void loop()
                 uint8_t vel = MIDI.getData2();
                 if (type == MidiCode::NoteOFF || vel == 0)
                 {
+                    if (n == NoteName::_A0) { a0Pressed = false; }
                     if (channelArps[channel])
                     {
                         arpRemoveNote(channel, n);
@@ -150,6 +156,7 @@ void loop()
                     return;
                 }
                 
+                if (n == NoteName::_A0) { a0Pressed = true; }
                 if (channelArps[channel])
                 {
                     arpAddNote(channel, { n, vel });
