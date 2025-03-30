@@ -194,10 +194,11 @@ void appendNote(NoteList** list, NoteList* nl)
 void insertNote(NoteList** list, NoteList* nl)
 {
     NoteList* start = list[0];
+    uint8_t key = nl->value.key;
     
     // add in order
     NoteList* ins;
-    for (ins = start; ins && ins->value.key < n.key; ins = ins->next) { }
+    for (ins = start; ins && ins->value.key < key; ins = ins->next) { }
     // none found - add to end like normal
     if (!ins)
     {

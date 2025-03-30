@@ -197,6 +197,7 @@ void shouldInvokeArp()
 }
 bool setArpTime = false;
 uint8_t digit = 0;
+uint32_t lv = 0;
 uint8_t arpDigits[4] = { 0, 0, 0, 0 };
 // consts
 const uint16_t digitPlaces[5] = { 1, 10, 100, 1000, 10000 };
@@ -329,9 +330,13 @@ void specialOptions()
                         // set arp time value
                         if (!setArpTime)
                         {
-                            uint32_t bpm = 0;
                             // digit is the number of digits entered
-                            if (digit == 0) { digit = 4; }
+                            if (digit == 0)
+                            {
+                                setArpTimeOut(channel, 60000 / lv);
+                                return;
+                            }
+                            uint32_t bpm = 0;
                             uint8_t place = 0;
                             // read in reverse order
                             for (int8_t i = digit - 1; i >= 0; i--)
@@ -340,6 +345,7 @@ void specialOptions()
                                 place++;
                             }
                             digit = 0;
+                            lv = bpm;
                             setArpTimeOut(channel, 60000 / bpm);
                         }
                         return;
