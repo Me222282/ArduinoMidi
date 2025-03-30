@@ -375,17 +375,17 @@ void specialOptions()
 
 void saveSate()
 {
-    EEPROM.write(35, retriggerOld);
-    EEPROM.write(36, retriggerNew);
-    EEPROM.write(37, alwaysDelay);
-    EEPROM.write(38, setNote == _setSubNote);
-    EEPROM.write(39, sortNotes);
+    eeWrite(35, retriggerOld);
+    eeWrite(36, retriggerNew);
+    eeWrite(37, alwaysDelay);
+    eeWrite(38, setNote == _setSubNote);
+    eeWrite(39, sortNotes);
     
-    EEPROM.write(40, channelArps[0]);
-    EEPROM.write(41, channelArps[1]);
-    EEPROM.write(42, channelArps[2]);
-    EEPROM.write(43, channelArps[3]);
-    EEPROM.write(44, channelArps[4]);
+    eeWrite(40, channelArps[0]);
+    eeWrite(41, channelArps[1]);
+    eeWrite(42, channelArps[2]);
+    eeWrite(43, channelArps[3]);
+    eeWrite(44, channelArps[4]);
     EEPROM.commit();
 }
 void loadSate()

@@ -6,7 +6,7 @@
 
 int8_t _findNextIndex(Channel* c);
 NoteList* _getNextNote(Channel* c);
-NoteList* _getLosableNote(Channel* c);
+NoteList* _getLosableNote(Channel* c, uint8_t key);
 
 bool retriggerNew = true;
 bool retriggerOld = false;
@@ -45,7 +45,7 @@ int8_t pushNote(Channel* c, uint8_t chI, Note n)
     }
     
     // take a use slot
-    NoteList* take = _getLosableNote(c);
+    NoteList* take = _getLosableNote(c, n.key);
     // add to list after slot chosen
     _add(c, nl);
     if (take == nullptr) { return -1; }
@@ -170,39 +170,16 @@ NoteList* _getNextNote(Channel* c)
     
     return nullptr;
 }
-// for taking a used slot
-NoteList* _getLosableNote(Channel* c)
+
+NoteList* _losableUNote(Channel* c)
 {
-    NoteList* nl;
-    
-    if (mode2 == 0)
-    {
-        if (sortNotes)
-        {
-            // start from top of stack
-            if (c->noteCount < (c->voices * 2))
-            {
-                for (nl = c->noteEnd; nl; nl = nl->last)
-                {
-                    if (nl->index >= 0) { return nl; }
-                }
-                
-                return nullptr;
-            }
-            
-            // start from bottom of stack
-            for (nl = c->noteStart; nl; nl = nl->next)
-            {
-                if (nl->index < 0) { return nl->last; }
-            }
-        }
-        
-        return nullptr;
-    }
+    if (mode2 == 0) { return nullptr; }
     
     // for newest note priority
     if (mode2 == 1)
-    {    
+    {
+        NoteList* nl;
+        
         // start from bottom of stack
         if (c->noteCount < (c->voices * 2))
         {
@@ -214,16 +191,154 @@ NoteList* _getLosableNote(Channel* c)
             return nullptr;
         }
         
+        NoteList* next = c->noteEnd;
         // start from top of stack
-        for (nl = c->noteEnd; nl; nl = nl->last)
+        for (nl = next->last; nl; nl = nl->last)
         {
-            if (nl->index < 0) { return nl->next; }
+            if (nl->index < 0) { return next; }
         }
         
         return nullptr;
     }
     // mode 2 - take most recent
     return c->noteEnd;
+}
+NoteList* _losableLLONote(Channel* c, uint8_t key)
+{
+    NoteList* nl;
+    
+    // for lowest note priority
+    // start from top of stack
+    if (c->noteCount < (c->voices * 2))
+    {
+        for (nl = c->noteEnd; nl; nl = nl->last)
+        {
+            if (nl->value.key < key) { return nullptr; }
+            if (nl->index >= 0) { return nl; }
+        }
+        
+        return nullptr;
+    }
+    
+    NoteList* last = c->noteStart;
+    // start from bottom of stack
+    for (nl = last->next; nl; nl = nl->next)
+    {
+        if (nl->index < 0)
+        {
+            if (last->value.key < key) { return nullptr; }
+            return last;
+        }
+        last = nl;
+    }
+    
+    return nullptr;
+}
+NoteList* _losableONote(Channel* c, uint8_t key)
+{
+    NoteList* nl;
+    
+    // for highest note priority
+    if (mode2 == 1)
+    {
+        // start from bottom of stack
+        if (c->noteCount < (c->voices * 2))
+        {
+            for (nl = c->noteStart; nl; nl = nl->next)
+            {
+                if (nl->value.key > key) { return nullptr; }
+                if (nl->index >= 0) { return nl; }
+            }
+            
+            return nullptr;
+        }
+        
+        NoteList* next = c->noteEnd;
+        // start from top of stack
+        for (nl = next->last; nl; nl = nl->last)
+        {
+            if (nl->index < 0)
+            {
+                if (next->value.key > key) { return nullptr; }
+                return next;
+            }
+            next = nl;
+        }
+        
+        return nullptr;
+    }
+    
+    if (mode2 == 2)
+    {
+        if (c->noteEnd->value.key < key)
+        {
+            return c->noteEnd;
+        }
+        
+        // for lowest note priority modified
+        // start from top of stack
+        if (c->noteCount < (c->voices * 2))
+        {
+            for (nl = c->noteEnd->last; nl; nl = nl->last)
+            {
+                if (nl->value.key < key) { return nullptr; }
+                if (nl->index >= 0) { return nl; }
+            }
+            
+            return nullptr;
+        }
+        
+        NoteList* last = c->noteStart;
+        // start from bottom of stack
+        for (nl = last->next; nl; nl = nl->next)
+        {
+            if (nl->index < 0)
+            {
+                if (last->value.key < key) { return nullptr; }
+                return last;
+            }
+            last = nl;
+        }
+        
+        return nullptr;
+    }
+    // mode 0
+    // for lowest note priority
+    // start from top of stack
+    if (c->noteCount < (c->voices * 2))
+    {
+        for (nl = c->noteEnd; nl; nl = nl->last)
+        {
+            if (nl->value.key < key) { return nullptr; }
+            if (nl->index >= 0) { return nl; }
+        }
+        
+        return nullptr;
+    }
+    
+    NoteList* last = c->noteStart;
+    // start from bottom of stack
+    for (nl = last->next; nl; nl = nl->next)
+    {
+        if (nl->index < 0)
+        {
+            if (last->value.key < key) { return nullptr; }
+            return last;
+        }
+        last = nl;
+    }
+    
+    return nullptr;
+}
+
+// for taking a used slot
+NoteList* _getLosableNote(Channel* c, uint8_t key)
+{
+    if (sortNotes)
+    {
+        return _losableONote(c, key);
+    }
+    return _losableUNote(c);
 }
 
 #endif

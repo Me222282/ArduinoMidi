@@ -1,6 +1,8 @@
 #ifndef __glob
 #define __glob
 
+#include <EEPROM.h>
+
 #define CREATE(type) (type*)calloc(1, sizeof(type));
 #define CREATE_ARRAY(type, size) (type*)calloc(size, sizeof(type));
 
@@ -74,6 +76,12 @@ void reTrigNote(uint8_t n)
 {
     uint8_t g = 1 << n;
     reTrig |= g;
+}
+
+void eeWrite(int address, uint8_t v)
+{
+    if (EEPROM.read(address) == v) { return; }
+    EEPROM.write(address, v);
 }
 
 #endif

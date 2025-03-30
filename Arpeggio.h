@@ -1,4 +1,3 @@
-#include <EEPROM.h>
 #include "Callbacks.h"
 
 typedef struct
@@ -152,13 +151,13 @@ void initArps()
     for (uint8_t i = 0; i < 5; i++)
     {
         uint8_t si = i * 7;
-        EEPROM.write(si, 0);
-        EEPROM.write(si + 1, 0);
-        EEPROM.write(si + 2, 0);
-        EEPROM.write(si + 3, 250);
-        EEPROM.write(si + 4, 0);
-        EEPROM.write(si + 5, true);
-        EEPROM.write(si + 6, false);
+        eeWrite(si, 0);
+        eeWrite(si + 1, 0);
+        eeWrite(si + 2, 0);
+        eeWrite(si + 3, 250);
+        eeWrite(si + 4, 0);
+        eeWrite(si + 5, true);
+        eeWrite(si + 6, false);
     }
 }
 void loadArps()
@@ -186,31 +185,31 @@ void setArpTimeOut(uint8_t channel, uint32_t time)
     uint8_t si = channel * 7;
     arps[channel].timeOut = time;
     
-    EEPROM.write(si, time >> 24);
-    EEPROM.write(si + 1, (time >> 16) & 0xFF);
-    EEPROM.write(si + 2, (time >> 8) & 0xFF);
-    EEPROM.write(si + 3, time & 0xFF);
+    eeWrite(si, time >> 24);
+    eeWrite(si + 1, (time >> 16) & 0xFF);
+    eeWrite(si + 2, (time >> 8) & 0xFF);
+    eeWrite(si + 3, time & 0xFF);
     EEPROM.commit();
 }
 void setArpMode(uint8_t channel, uint8_t mode)
 {
     uint8_t si = channel * 7;
     arps[channel].mode = mode;
-    EEPROM.write(si + 4, mode);
+    eeWrite(si + 4, mode);
     EEPROM.commit();
 }
 void setArpSort(uint8_t channel, bool sort)
 {
     uint8_t si = channel * 7;
     arps[channel].sort = sort;
-    EEPROM.write(si + 5, sort);
+    eeWrite(si + 5, sort);
     EEPROM.commit();
 }
 void setArpHT(uint8_t channel, bool halfTime)
 {
     uint8_t si = channel * 7;
     arps[channel].halfTime = halfTime;
-    EEPROM.write(si + 6, halfTime);
+    eeWrite(si + 6, halfTime);
     EEPROM.commit();
 }
 
