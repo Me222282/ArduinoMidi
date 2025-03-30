@@ -2,8 +2,8 @@
 
 typedef struct _item
 {
-    uint8_t value;
     _item* next;
+    uint8_t value;
 } _hItem;
 typedef struct
 {

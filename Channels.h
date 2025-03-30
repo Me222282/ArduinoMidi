@@ -6,10 +6,10 @@
 
 typedef struct _noteList
 {
-    Note value;
-    int8_t index;
     _noteList* next;
     _noteList* last;
+    Note value;
+    int8_t index;
 } NoteList;
 typedef struct
 {
@@ -17,12 +17,14 @@ typedef struct
     NoteList* noteStart;
     NoteList* noteEnd;
     NoteList** locations;
-    uint8_t noteCount;
     History history;
-    uint8_t voices;
-    uint8_t places;
+    
     uint16_t pitchBend;
     uint16_t modulation;
+    
+    uint8_t noteCount;
+    uint8_t voices;
+    uint8_t places;
     int8_t position;
 } Channel;
 
