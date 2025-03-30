@@ -205,12 +205,12 @@ void insertNote(NoteList** list, NoteList* nl)
         appendNote(list, nl);
         return;
     }
-    // insert into list
+    // insert into list before ins
     nl->last = ins->last;
     nl->next = ins;
     ins->last = nl;
     if (nl->last) { nl->last->next = nl; }
-    if (start == ins) { list[0] = nl; }
+    else { list[0] = nl; }
 }
 void removeNote(NoteList** list, NoteList* nl)
 {

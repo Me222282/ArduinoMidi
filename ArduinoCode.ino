@@ -267,6 +267,7 @@ void specialOptions()
                         alwaysDelay = false;
                         setNote = _setNoteNorm;
                         setArpTime = false;
+                        sortNotes = false;
                         digit = 0;
                         initArps();
                         channelArps[0] = false;

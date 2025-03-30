@@ -69,7 +69,7 @@ void _remove(Channel* c, NoteList* nl)
 int8_t removeNote(Channel* c, uint8_t chI, uint8_t key)
 {
     NoteList* nl;
-    // prioritises removing old notes first - important for arpeggios
+    // only remove 1 note - important for arpeggios
     for (nl = c->noteStart; nl; nl = nl->next)
     {
         if (nl->value.key != key) { continue; }
@@ -172,14 +172,37 @@ NoteList* _getNextNote(Channel* c)
 }
 // for taking a used slot
 NoteList* _getLosableNote(Channel* c)
-{   
-    if (mode2 == 0) { return nullptr; }
+{
+    NoteList* nl;
+    
+    if (mode2 == 0)
+    {
+        if (sortNotes)
+        {
+            // start from top of stack
+            if (c->noteCount < (c->voices * 2))
+            {
+                for (nl = c->noteEnd; nl; nl = nl->last)
+                {
+                    if (nl->index >= 0) { return nl; }
+                }
+                
+                return nullptr;
+            }
+            
+            // start from bottom of stack
+            for (nl = c->noteStart; nl; nl = nl->next)
+            {
+                if (nl->index < 0) { return nl->last; }
+            }
+        }
+        
+        return nullptr;
+    }
     
     // for newest note priority
     if (mode2 == 1)
-    {
-        NoteList* nl;
-        
+    {    
         // start from bottom of stack
         if (c->noteCount < (c->voices * 2))
         {
