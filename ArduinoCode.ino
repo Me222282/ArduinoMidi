@@ -9,6 +9,9 @@
 
 Midi MIDI(Serial0);
 
+void saveSate();
+void loadSate();
+
 void setup()
 {
     pinMode(OCTAVE, INPUT);
@@ -40,7 +43,7 @@ void setup()
     
     MIDI.begin();
     // Serial.begin(38400);
-    EEPROM.begin(35);
+    EEPROM.begin(45);
     
     SPI.begin();
     
@@ -55,6 +58,7 @@ void setup()
     
     setChannels(1, 1);
     loadArps();
+    loadSate();
 }
 
 bool specOps = false;
@@ -300,6 +304,25 @@ void specialOptions()
                         shouldInvokeArp();
                         return;
                     }
+                    case NoteName::_A4:
+                        sortNotes = !sortNotes;
+                        return;
+                    case NoteName::B4:
+                        saveSate();
+                        return;
+                    case NoteName::C5:
+                        loadSate();
+                        
+                        clearArps();
+                        clearNotes(&channels[0]);
+                        clearNotes(&channels[1]);
+                        clearNotes(&channels[2]);
+                        clearNotes(&channels[3]);
+                        clearNotes(&channels[4]);
+                        
+                        gate = 0;
+                        setGate(0);
+                        return;
                     case NoteName::C3:
                     {
                         setArpTime = !setArpTime;
@@ -341,4 +364,37 @@ void specialOptions()
             }
         }
     }
+}
+
+void saveSate()
+{
+    EEPROM.write(35, retriggerOld);
+    EEPROM.write(36, retriggerNew);
+    EEPROM.write(37, alwaysDelay);
+    EEPROM.write(38, setNote == _setSubNote);
+    EEPROM.write(39, sortNotes);
+    
+    EEPROM.write(40, channelArps[0]);
+    EEPROM.write(41, channelArps[1]);
+    EEPROM.write(42, channelArps[2]);
+    EEPROM.write(43, channelArps[3]);
+    EEPROM.write(44, channelArps[4]);
+    EEPROM.commit();
+}
+void loadSate()
+{
+    retriggerOld = EEPROM.read(35);
+    retriggerNew = EEPROM.read(36);
+    alwaysDelay = EEPROM.read(37);
+    bool microtone = EEPROM.read(38);
+    sortNotes = EEPROM.read(39);
+    
+    setNote = microtone ? _setSubNote : _setNoteNorm;
+    
+    channelArps[0] = EEPROM.read(40);
+    channelArps[1] = EEPROM.read(41);
+    channelArps[2] = EEPROM.read(42);
+    channelArps[3] = EEPROM.read(43);
+    channelArps[4] = EEPROM.read(44);
+    shouldInvokeArp();
 }

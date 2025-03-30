@@ -10,22 +10,17 @@ NoteList* _getLosableNote(Channel* c);
 
 bool retriggerNew = true;
 bool retriggerOld = false;
+bool sortNotes = false;
 
 void _add(Channel* c, NoteList* nl)
 {
-    NoteList* end = c->noteEnd;
-    if (!end)
-    {
-        c->noteStart = nl;
-    }
-    else
-    {
-        end->next = nl;
-        nl->last = end;
-    }
-    
     c->noteCount++;
-    c->noteEnd = nl;
+    if (sortNotes)
+    {
+        insertNote((NoteList**)c, nl);
+        return;
+    }
+    appendNote((NoteList**)c, nl);
 }
 int8_t pushNote(Channel* c, uint8_t chI, Note n)
 {
@@ -68,28 +63,7 @@ int8_t pushNote(Channel* c, uint8_t chI, Note n)
 }
 void _remove(Channel* c, NoteList* nl)
 {
-    NoteList* nE = nl->last;
-    NoteList* nS = nl->next;
-    
-    if (c->noteEnd == nl)
-    {
-        c->noteEnd = nE;
-    }
-    if (c->noteStart == nl)
-    {
-        c->noteStart = nS;
-    }
-    
-    if (nE)
-    {
-        nE->next = nS;
-    }
-    if (nS)
-    {
-        nS->last = nE;
-    }
-    
-    free(nl);
+    removeNote((NoteList**)c, nl);
     c->noteCount--;
 }
 int8_t removeNote(Channel* c, uint8_t chI, uint8_t key)

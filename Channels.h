@@ -13,6 +13,7 @@ typedef struct _noteList
 } NoteList;
 typedef struct
 {
+    // dont change order
     // list is ordered by start time (oldest - newest)
     NoteList* noteStart;
     NoteList* noteEnd;
@@ -174,6 +175,66 @@ void reTrigChannelNote(uint8_t ci, uint8_t vi)
             reTrigNote(i);
         }
     }
+}
+
+void appendNote(NoteList** list, NoteList* nl)
+{
+    NoteList* end = list[1];
+    if (!end)
+    {
+        list[0] = nl;
+    }
+    else
+    {
+        end->next = nl;
+        nl->last = end;
+    }
+    list[1] = nl;
+}
+void insertNote(NoteList** list, NoteList* nl)
+{
+    NoteList* start = list[0];
+    
+    // add in order
+    NoteList* ins;
+    for (ins = start; ins && ins->value.key < n.key; ins = ins->next) { }
+    // none found - add to end like normal
+    if (!ins)
+    {
+        appendNote(list, nl);
+        return;
+    }
+    // insert into list
+    nl->last = ins->last;
+    nl->next = ins;
+    ins->last = nl;
+    if (nl->last) { nl->last->next = nl; }
+    if (start == ins) { list[0] = nl; }
+}
+void removeNote(NoteList** list, NoteList* nl)
+{
+    NoteList* nE = nl->last;
+    NoteList* nS = nl->next;
+    
+    if (list[1] == nl)
+    {
+        list[1] = nE;
+    }
+    if (list[0] == nl)
+    {
+        list[0] = nS;
+    }
+    
+    if (nE)
+    {
+        nE->next = nS;
+    }
+    if (nS)
+    {
+        nS->last = nE;
+    }
+    
+    free(nl);
 }
 
 #endif

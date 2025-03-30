@@ -3,6 +3,7 @@
 
 typedef struct
 {
+    // dont change order
     NoteList* start;
     NoteList* end;
     NoteList* current;
@@ -33,30 +34,8 @@ void swap(uint8_t channel, NoteList* out, NoteList* in)
 
 void _removeArpNote(Arpeggio* a, NoteList* nl)
 {
-    // remove from linked list
-    NoteList* nE = nl->last;
-    NoteList* nS = nl->next;
-    
-    if (a->end == nl)
-    {
-        a->end = nE;
-    }
-    if (a->start == nl)
-    {
-        a->start = nS;
-    }
-    
-    if (nE)
-    {
-        nE->next = nS;
-    }
-    if (nS)
-    {
-        nS->last = nE;
-    }
-    
+    removeNote((NoteList**)a, nl);
     a->noteCount--;
-    free(nl);
 }
 void _triggerNextArp(uint8_t i, Arpeggio* a)
 {
@@ -244,35 +223,8 @@ void arpAddNote(uint8_t channel, Note n)
     
     Arpeggio* a = &arps[channel];
     
-    if (a->sort)
-    {
-        // add in order
-        NoteList* ins;
-        for (ins = a->start; ins && ins->value.key < n.key; ins = ins->next) { }
-        // none found - add to end like normal
-        if (!ins) { goto APPEND; }
-        // insert into list
-        nl->last = ins->last;
-        nl->next = ins;
-        ins->last = nl;
-        if (nl->last) { nl->last->next = nl; }
-        if (a->start == ins) { a->start = nl; }
-    }
-    else
-    {
-    APPEND:
-        NoteList* end = a->end;
-        if (!end)
-        {
-            a->start = nl;
-        }
-        else
-        {
-            end->next = nl;
-            nl->last = end;
-        }
-        a->end = nl;
-    }
+    if (a->sort) { insertNote((NoteList**)a, nl); }
+    else { appendNote((NoteList**)a, nl); }
     
     a->noteCount++;
     // if no current note
