@@ -1,5 +1,6 @@
 #include "Notes.h"
 #include "Coms.h"
+#include "Midi.h"
 // #include "Channels.h"
 
 void _updateSlot(uint8_t com, Note n)

@@ -1,7 +1,7 @@
 #include <SPI.h>
 // #include "Notes.h"
 // #include "Coms.h"
-#include "Midi.h"
+// #include "Midi.h"
 // #include "Channels.h"
 // #include "Callbacks.h"
 #include "Arpeggio.h"
@@ -9,6 +9,7 @@
 
 Midi MIDI(Serial0);
 
+void resetValues();
 void saveSate();
 void loadSate();
 
@@ -174,7 +175,14 @@ void loop()
             }
             case MidiCode::CC:
             {
-                onControlChange(channel, MIDI.getCC(), MIDI.getData2());
+                CCType number = MIDI.getCC();
+                if (number == CCType::ResetAllControllers)
+                {
+                    resetValues();
+                    return;
+                }
+                
+                onControlChange(channel, number, MIDI.getData2());
                 return;
             }
             case MidiCode::PitchWheel:
@@ -261,23 +269,8 @@ void specialOptions()
                 {
                     // set to defaults
                     case NoteName::B3:
-                    {
-                        retriggerNew = true;
-                        retriggerOld = false;
-                        alwaysDelay = false;
-                        setNote = _setNoteNorm;
-                        setArpTime = false;
-                        sortNotes = false;
-                        digit = 0;
-                        initArps();
-                        channelArps[0] = false;
-                        channelArps[1] = false;
-                        channelArps[2] = false;
-                        channelArps[3] = false;
-                        channelArps[4] = false;
-                        invokeArp = false;
+                        resetValues();
                         return;
-                    }
                     case NoteName::C4:
                         retriggerOld = !retriggerOld;
                         return;
@@ -371,6 +364,24 @@ void specialOptions()
             }
         }
     }
+}
+
+void resetValues()
+{
+    retriggerNew = true;
+    retriggerOld = false;
+    alwaysDelay = false;
+    setNote = _setNoteNorm;
+    setArpTime = false;
+    sortNotes = false;
+    digit = 0;
+    initArps();
+    channelArps[0] = false;
+    channelArps[1] = false;
+    channelArps[2] = false;
+    channelArps[3] = false;
+    channelArps[4] = false;
+    invokeArp = false;
 }
 
 void saveSate()
