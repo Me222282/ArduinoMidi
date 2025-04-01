@@ -1,3 +1,6 @@
+#ifndef __mid
+#define __mid
+
 enum MidiCode: uint8_t
 {
     NoteOFF = 0x8,
@@ -232,3 +235,5 @@ private:
     
     uint8_t _channel;
 };
+
+#endif

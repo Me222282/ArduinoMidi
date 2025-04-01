@@ -1,3 +1,6 @@
+#ifndef __comical
+#define __comical
+
 #include <SPI.h>
 #include "Globals.h"
 
@@ -89,3 +92,5 @@ void setPot(uint8_t pin, bool bPot, uint8_t value)
     
     _ic(pin, value, c);
 }
+
+#endif

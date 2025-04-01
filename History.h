@@ -1,3 +1,6 @@
+#ifndef __history
+#define __history
+
 #include "Globals.h"
 
 typedef struct _item
@@ -84,3 +87,5 @@ uint8_t pullHistory(History* h)
     free(i);
     return v;
 }
+
+#endif

@@ -1,3 +1,6 @@
+#ifndef __comical
+#define __comical
+
 #include "Globals.h"
 
 uint8_t pins[5] = {
@@ -52,3 +55,5 @@ uint8_t readControl(uint8_t index)
     nc[index] = count;
     return current;
 }
+
+#endif

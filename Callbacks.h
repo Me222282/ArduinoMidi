@@ -1,3 +1,6 @@
+#ifndef __calls
+#define __calls
+
 #include "Notes.h"
 #include "Coms.h"
 #include "Midi.h"
@@ -242,3 +245,5 @@ void updateOtherPorts()
     
     _updateMod(c, c->modulation);
 }
+
+#endif

@@ -1,3 +1,6 @@
+#ifndef __arpeg
+#define __arpeg
+
 #include "Callbacks.h"
 
 typedef struct
@@ -253,3 +256,5 @@ void arpRemoveNote(uint8_t channel, uint8_t key)
         return;
     }
 }
+
+#endif
