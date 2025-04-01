@@ -22,8 +22,6 @@ bool setArpTime = false;
 uint8_t digit = 0;
 uint32_t lv = 0;
 uint8_t arpDigits[4] = { 0, 0, 0, 0 };
-// consts
-const uint16_t digitPlaces[5] = { 1, 10, 100, 1000, 10000 };
 uint8_t getDigit(NoteName n)
 {
     switch (n)

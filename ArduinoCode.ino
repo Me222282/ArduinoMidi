@@ -7,6 +7,7 @@
 #include "Arpeggio.h"
 #include "Controls.h"
 #include "SpeicalOps.h"
+#include "sequen/Sequencer.h"
 
 Midi MIDI(Serial0);
 
@@ -64,7 +65,9 @@ void setup()
 }
 
 bool specOps = false;
+bool sequencer = false;
 bool a0Pressed = false;
+bool b0Pressed = false;
 void readControls()
 {
     int8_t oldOO = octaveOffset;
@@ -100,16 +103,21 @@ void readControls()
         setGate(0);
         specOps = a0Pressed;
         a0Pressed = false;
+        sequencer = b0Pressed;
+        onParamChange();
     }
     if (activeChannels != oldC || activeVoices != oldV)
     {
         clearArps();
         setChannels(activeChannels, activeVoices);
+        
         gate = 0;
         setGate(gate);
         updateAllPBs();
         specOps = a0Pressed;
         a0Pressed = false;
+        sequencer = b0Pressed;
+        onParamChange();
     }
     else
     {
@@ -131,6 +139,13 @@ void readControls()
 void loop()
 {
     readControls();
+    
+    if (sequencer)
+    {
+        sequencer = seqLoopInvoke();
+        b0Pressed = sequencer;
+        return;
+    }
     
     if (specOps)
     {
@@ -154,6 +169,7 @@ void loop()
                 if (type == MidiCode::NoteOFF || vel == 0)
                 {
                     if (n == NoteName::_A0) { a0Pressed = false; }
+                    if (n == NoteName::_B0) { b0Pressed = false; }
                     if (channelArps[channel])
                     {
                         arpRemoveNote(channel, n);
@@ -164,6 +180,7 @@ void loop()
                 }
                 
                 if (n == NoteName::_A0) { a0Pressed = true; }
+                if (n == NoteName::_B0) { b0Pressed = true; }
                 if (channelArps[channel])
                 {
                     arpAddNote(channel, { n, vel });
@@ -185,10 +202,8 @@ void loop()
                 return;
             }
             case MidiCode::PitchWheel:
-            {
                 onPitchBend(channel, MIDI.getCombinedData());
                 return;
-            }
             case MidiCode::TimingClock:
                 if (invokeArp && arpClocked) { clockedArp(); }
                 return;
