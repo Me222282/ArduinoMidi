@@ -17,6 +17,8 @@ void shouldInvokeArp()
     }
     invokeArp = v;
 }
+bool tapTempo = false;
+uint32_t tapTempoTime = 0;
 bool choseFilter = false;
 bool setArpTime = false;
 uint8_t digit = 0;
@@ -175,6 +177,16 @@ void specialOptions()
                         }
                         return;
                     }
+                    case NoteName::_Db3:
+                        if (tapTempo)
+                        {
+                            setArpTimeOut(channel, millis() - tapTempoTime);
+                            tapTempo = false;
+                            return;
+                        }
+                        tapTempo = true;
+                        tapTempoTime = millis();
+                        return;
                     case NoteName::_D3:
                         setArpMode(channel, 0);
                         return;
