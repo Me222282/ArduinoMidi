@@ -45,7 +45,7 @@ void setup()
     
     MIDI.begin();
     // Serial.begin(38400);
-    EEPROM.begin(45);
+    EEPROM.begin(48);
     
     SPI.begin();
     
@@ -189,6 +189,9 @@ void loop()
                 onPitchBend(channel, MIDI.getCombinedData());
                 return;
             }
+            case MidiCode::TimingClock:
+                if (invokeArp && arpClocked) { clockedArp(); }
+                return;
         }
     }
 }

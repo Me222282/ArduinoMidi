@@ -20,6 +20,7 @@ typedef struct
 
 Arpeggio arps[5];
 uint32_t tElapsed;
+bool arpClocked = false;
 
 void swap(uint8_t channel, NoteList* out, NoteList* in)
 {
@@ -88,8 +89,20 @@ void _triggerNextArp(uint8_t i, Arpeggio* a)
         a->freeCurrent = false;
     }
 }
+void clockedArp()
+{
+    for (uint8_t i = 0; i < 5; i++)
+    {
+        Arpeggio* a = &arps[i];
+        if (!a->start) { continue; }
+        // there must be a current note here
+        _triggerNextArp(i, a);
+    }
+}
 void invokeArps()
 {
+    if (arpClocked) { return; }
+    
     // change in time
     uint32_t dt = tElapsed;
     tElapsed = millis();

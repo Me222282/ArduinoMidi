@@ -1,9 +1,7 @@
 #ifndef __spec
 #define __spec
 
-#include "Midi.h"
-#include "Channels.h"
-#include "Callbacks.h"
+#include "Arpeggio.h"
 
 bool invokeArp = false;
 bool channelArps[5] = { false, false, false, false, false };
@@ -190,6 +188,9 @@ void specialOptions()
                     case NoteName::_D3:
                         setArpMode(channel, 0);
                         return;
+                    case NoteName::_Eb3:
+                        arpClocked = !arpClocked;
+                        return;
                     case NoteName::E3:
                         setArpMode(channel, 1);
                         return;
@@ -228,6 +229,7 @@ void resetValues()
     
     filterKeys = false;
     filter = Notes::C;
+    arpClocked = false;
 }
 
 void saveSate()
@@ -246,6 +248,7 @@ void saveSate()
     
     eeWrite(45, filterKeys);
     eeWrite(46, filter);
+    eeWrite(47, arpClocked);
     EEPROM.commit();
 }
 void loadSate()
@@ -267,6 +270,7 @@ void loadSate()
     
     filterKeys = EEPROM.read(45);
     filter = EEPROM.read(46);
+    arpClocked = EEPROM.read(47);
 }
 
 #endif
