@@ -9,7 +9,21 @@ enum MidiCode: uint8_t
     CC = 0xB,
     PC = 0xC,
     ChannelAftertouch = 0xD,
-    PitchWheel = 0xE
+    PitchWheel = 0xE,
+    
+    SystemExclusiveStart = 0xF0,
+    SystemExclusiveEnd = 0xF7,
+    SongPointer = 0xF2,
+    SongSelect = 0xF3,
+    TuneRequest = 0xF6,
+    QuarterFrame = 0xF1,
+    TimingClock = 0xF8,
+    MeasureEnd = 0xF9,
+    Start = 0xFA,
+    Continue = 0xFB,
+    Stop = 0xFC,
+    ActiveSensing = 0xFE,
+    Reset = 0xFF,
 };
 
 enum CCType: uint8_t
@@ -171,6 +185,32 @@ enum NoteName: uint8_t
     G9 = 127U
 };
 
+enum Notes: uint8_t
+{
+    C = NoteName::C_1,
+    Db = NoteName::Db_1,
+    D = NoteName::D_1,
+    Eb = NoteName::Eb_1,
+    E = NoteName::E_1,
+    F = NoteName::F_1,
+    Gb = NoteName::Gb_1,
+    G = NoteName::G_1,
+    Ab = NoteName::Ab_1,
+    A = NoteName::A_1,
+    Bb = NoteName::Bb_1,
+    B = NoteName::B_1
+};
+
+bool noteEquals(NoteName n1, Notes n2)
+{
+    return (n1 % 12) == n2;
+}
+bool notInKey(NoteName note, Notes key)
+{
+    uint8_t v = (note + 12 - key) % 12;
+    return v == 1 || v == 3 || v == 6 || v == 8 || v == 10;
+}
+
 class Midi
 {
 public:
@@ -192,8 +232,15 @@ public:
             _data2 = (uint8_t)_serial.read();
             
             _channel = status & 0b00001111;
-            _type = (MidiCode)((status & 0b11110000) >> 4);
-            return true;
+            uint8_t type = (status & 0b11110000) >> 4;
+            if (type == 0xF)
+            {
+                _type = status;
+                _channel = 0;
+                return true;
+            }
+            
+            _type = type;
         }
         
         return false;
