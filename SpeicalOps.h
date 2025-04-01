@@ -17,6 +17,7 @@ void shouldInvokeArp()
     }
     invokeArp = v;
 }
+bool choseFilter = false;
 bool setArpTime = false;
 uint8_t digit = 0;
 uint32_t lv = 0;
@@ -64,6 +65,16 @@ void specialOptions()
                 if (MIDI.getData2() == 0) { return; }
                 NoteName n = MIDI.getNote();
                 
+                if (choseFilter)
+                {
+                    uint8_t fk = n - NoteName::C1;
+                    if (fk < 12)
+                    {
+                        filter = (Notes)fk;
+                        choseFilter = false;
+                        return;
+                    }
+                }
                 // enter time - digit must start at 0
                 if (setArpTime)
                 {
@@ -88,8 +99,14 @@ void specialOptions()
                     case NoteName::C4:
                         retriggerOld = !retriggerOld;
                         return;
+                    case NoteName::Db4:
+                        filterKeys = !filterKeys;
+                        return;
                     case NoteName::_D4:
                         retriggerNew = !retriggerNew;
+                        return;
+                    case NoteName::Eb4:
+                        choseFilter = !choseFilter;
                         return;
                     case NoteName::E4:
                         alwaysDelay = !alwaysDelay;
@@ -196,6 +213,9 @@ void resetValues()
     channelArps[3] = false;
     channelArps[4] = false;
     invokeArp = false;
+    
+    filterKeys = false;
+    filter = Notes::C;
 }
 
 void saveSate()
@@ -211,6 +231,9 @@ void saveSate()
     eeWrite(42, channelArps[2]);
     eeWrite(43, channelArps[3]);
     eeWrite(44, channelArps[4]);
+    
+    eeWrite(45, filterKeys);
+    eeWrite(46, filter);
     EEPROM.commit();
 }
 void loadSate()
@@ -229,6 +252,9 @@ void loadSate()
     channelArps[3] = EEPROM.read(43);
     channelArps[4] = EEPROM.read(44);
     shouldInvokeArp();
+    
+    filterKeys = EEPROM.read(45);
+    filter = EEPROM.read(46);
 }
 
 #endif

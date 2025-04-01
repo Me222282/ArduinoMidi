@@ -41,9 +41,14 @@ void _updateSlot(uint8_t com, Note n)
     }
 }
 bool alwaysDelay = false;
+bool filterKeys = false;
+Notes filter = Notes::C;
 void onNoteOn(uint8_t channel, uint8_t note, uint8_t velocity)
 {
-    if (channel >= activeChannels) { return; }
+    if (channel >= activeChannels ||
+        // key filter
+        (filter && notInKey(note, filter))) { return; }
+    
     Channel* c = &channels[channel];
     Note n = { note, velocity };
     int8_t vi = pushNote(c, channel, n);
