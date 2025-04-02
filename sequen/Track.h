@@ -12,11 +12,12 @@ typedef struct
     
     uint8_t size;
     uint8_t position;
+    uint8_t channel;
     bool playing;
     bool useMod;
 } Track;
 
-Track* createTrack();
+Track* createTrack(uint8_t channel);
 void deleteTrack(Track* t);
 
 bool addTrackValue(Track* t, Note n, uint16_t m);

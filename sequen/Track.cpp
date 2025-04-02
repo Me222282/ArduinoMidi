@@ -1,12 +1,13 @@
 #include "Track.h"
 #include "../core/Globals.h"
 
-Track* createTrack()
+Track* createTrack(uint8_t channel)
 {
     Track* t = CREATE(Track);
     t->notes = CREATE_ARRAY(Track, 256);
     t->mods = CREATE_ARRAY(uint16_t, 256);
     t->size = 256;
+    t->channel = channel;
     
     return t;
 }

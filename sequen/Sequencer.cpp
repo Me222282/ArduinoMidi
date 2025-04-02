@@ -16,22 +16,32 @@ Track* tracks[5];
 
 void onParamChange() { playMode = false; }
 
+Track* trackSet = nullptr;
+
 bool tapTempo_S = false;
 uint32_t tapTempoTime_S = 0;
 
 bool setSeqTime = false;
-uint8_t digit_S = 0;
-uint32_t lv_S = 0;
+uint8_t digit = 0;
+uint32_t lv = 0;
 uint8_t seqDigits[4] = { 0, 0, 0, 0 };
-void manageSeqNote(NoteName n, uint8_t channel)
+
+void trackManager(NoteName n, uint8_t vel);
+void manageSeqNote(NoteName n, uint8_t vel, uint8_t channel)
 {
+    if (trackSet)
+    {
+        trackManager(n, vel);
+        return;
+    }
+    
     switch (n)
     {
         case NoteName::C4:
             if (playing) { playStep = 0; }
             playing = true;
             return;
-        case NoteName::D4:
+        case NoteName::_D4:
             playing = false;
             return;
         case NoteName::E4:
@@ -39,8 +49,9 @@ void manageSeqNote(NoteName n, uint8_t channel)
             playStep = 0;
             return;
         case NoteName::F4:
-            deleteTrack(tracks[0]);
-            tracks[0] = createTrack();
+            deleteTrack(tracks[channel]);
+            trackSet = createTrack(channel);
+            tracks[channel] = trackSet;
             return;
         
         case NoteName::C3:
@@ -50,9 +61,9 @@ void manageSeqNote(NoteName n, uint8_t channel)
             if (!setSeqTime)
             {
                 // digit is the number of digits entered
-                if (digit_S == 0)
+                if (digit == 0)
                 {
-                    tempoTime = 60000 / lv_S;
+                    tempoTime = 60000 / lv;
                     return;
                 }
                 uint32_t bpm = 0;
@@ -63,13 +74,13 @@ void manageSeqNote(NoteName n, uint8_t channel)
                     bpm += seqDigits[i] * digitPlaces[place];
                     place++;
                 }
-                digit_S = 0;
-                lv_S = bpm;
+                digit = 0;
+                lv = bpm;
                 tempoTime = 60000 / bpm;
             }
             return;
         }
-        case NoteName::_Db3:
+        case NoteName::Db3:
             if (tapTempo_S)
             {
                 tempoTime = millis() - tapTempoTime_S;
@@ -79,10 +90,10 @@ void manageSeqNote(NoteName n, uint8_t channel)
             tapTempo_S = true;
             tapTempoTime_S = millis();
             return;
-        case NoteName::D3:
+        case NoteName::_D3:
             playMode = true;
             return;
-        case NoteName::_Eb3:
+        case NoteName::Eb3:
             seqClocked = !seqClocked;
             return;
     }
@@ -107,7 +118,7 @@ bool seqLoopInvoke()
                 {
                     if (vel != 0 && type == MidiCode::NoteON)
                     {
-                        manageSeqNote(MIDI.getNote(), channel);
+                        manageSeqNote(MIDI.getNote(), vel, channel);
                     }
                     return true;
                 }
@@ -123,14 +134,63 @@ bool seqLoopInvoke()
                 return true;
             }
             case MidiCode::CC:
-                onControlChange(channel, number, MIDI.getData2());
+                onControlChange(channel, MIDI.getCC(), MIDI.getData2());
                 return true;
             case MidiCode::PitchWheel:
                 onPitchBend(channel, MIDI.getCombinedData());
                 return true;
             case MidiCode::TimingClock:
-                if (invokeArp && arpClocked) { clockedArp(); }
+                
                 return true;
         }
+    }
+}
+
+NoteName rangeBottom;
+NoteName rangeTop;
+bool trackSetState = 0;
+void trackManager(NoteName n, uint8_t vel)
+{
+    if (trackSetState == 0)
+    {
+        rangeBottom = n;
+        trackSetState = 1;
+        return;
+    }
+    if (trackSetState == 1)
+    {
+        trackSetState = 2;
+        if (n < rangeBottom)
+        {
+            rangeTop = rangeBottom;
+            rangeBottom = n;
+            return;
+        }
+        rangeTop = n;
+        return;
+    }
+    
+    uint16_t mod = channels[trackSet->channel]->modulation;
+    // in range
+    if (rangeBottom <= n && rangeTop >= n)
+    {
+        addTrackValue(trackSet, { n, vel }, mod);
+        return;
+    }
+    
+    Notes q = (Notes)(n % 12);
+    
+    switch (q)
+    {
+        case Notes::C:
+            finaliseTrack(trackSet);
+            trackSet = nullptr;
+            break;
+        case Notes::D:
+            addTrackValue(trackSet, { 0xFF, 0x00 }, mod);
+            break;
+        case Notes::E:
+            addTrackValue(trackSet, { 0xFF, 0xff }, mod);
+            break;
     }
 }
