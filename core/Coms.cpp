@@ -1,5 +1,17 @@
+#include "Arduino.h"
 #include <SPI.h>
 #include "Coms.h"
+
+void configureGate()
+{
+    SPI.beginTransaction(GATESPI);
+    digitalWrite(GATEIC, LOW);
+    SPI.transfer16(0x4000);
+    // Set direction to output
+    SPI.transfer(0x00);
+    digitalWrite(GATEIC, HIGH);
+    SPI.endTransaction();
+}
 
 uint8_t gateCurrent;
 void setGate(uint8_t value)

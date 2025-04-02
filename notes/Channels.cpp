@@ -1,3 +1,4 @@
+#include "Arduino.h"
 #include "Channels.h"
 
 uint8_t _ss0[5] = { 0x00, 0x00, 0x00, 0x00, 0x00 };

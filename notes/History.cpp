@@ -1,3 +1,4 @@
+#include "Arduino.h"
 #include "History.h"
 #include "../core/Globals.h"
 

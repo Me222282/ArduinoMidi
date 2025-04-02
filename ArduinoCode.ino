@@ -1,13 +1,13 @@
 #include <SPI.h>
-#include "Arpeggio.h"
+#include <EEPROM.h>
 #include "Controls.h"
+#include "core/Coms.h"
+#include "Arpeggio.h"
 #include "SpeicalOps.h"
 #include "sequen/Sequencer.h"
 #include "core/Globals.h"
-#include "core/Coms.h"
 #include "notes/Channels.h"
-
-Midi MIDI(Serial0);
+#include "core/Midi.h"
 
 void resetValues();
 void saveSate();

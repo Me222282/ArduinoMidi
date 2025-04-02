@@ -1,3 +1,4 @@
+#include "Arduino.h"
 #include "Globals.h"
 #include <EEPROM.h>
 #include <Arduino.h>

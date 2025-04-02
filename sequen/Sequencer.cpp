@@ -1,3 +1,4 @@
+#include "Arduino.h"
 #include "Sequencer.h"
 
 #include "../Callbacks.h"
@@ -170,7 +171,7 @@ void trackManager(NoteName n, uint8_t vel)
         return;
     }
     
-    uint16_t mod = channels[trackSet->channel]->modulation;
+    uint16_t mod = channels[trackSet->channel].modulation;
     // in range
     if (rangeBottom <= n && rangeTop >= n)
     {

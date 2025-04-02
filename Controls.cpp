@@ -1,3 +1,4 @@
+#include "Arduino.h"
 #include "Controls.h"
 #include "core/Globals.h"
 

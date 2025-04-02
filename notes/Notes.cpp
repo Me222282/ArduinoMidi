@@ -1,3 +1,4 @@
+#include "Arduino.h"
 #include "Notes.h"
 
 int8_t _findNextIndex(Channel* c);

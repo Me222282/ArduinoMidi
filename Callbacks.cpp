@@ -1,3 +1,4 @@
+#include "Arduino.h"
 #include "Callbacks.h"
 #include "notes/Notes.h"
 #include "notes/Channels.h"
@@ -45,7 +46,7 @@ void onNoteOn(uint8_t channel, uint8_t note, uint8_t velocity)
 {
     if (channel >= activeChannels ||
         // key filter
-        (filter && notInKey(note, filter))) { return; }
+        (filter && notInKey((NoteName)note, filter))) { return; }
     
     Channel* c = &channels[channel];
     Note n = { note, velocity };

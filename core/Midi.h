@@ -231,4 +231,6 @@ private:
     uint8_t _channel;
 };
 
+extern Midi MIDI;
+
 #endif

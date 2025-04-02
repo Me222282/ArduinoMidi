@@ -1,5 +1,5 @@
-#ifndef __comical
-#define __comical
+#ifndef __conical_flask
+#define __conical_flask
 
 extern uint8_t pins[5];
 

@@ -1,4 +1,5 @@
-#include <EEPROM>
+#include "Arduino.h"
+#include <EEPROM.h>
 #include "Arpeggio.h"
 #include "notes/Channels.h"
 #include "notes/Notes.h"
@@ -178,7 +179,7 @@ void loadArps()
         {
             nullptr, nullptr, nullptr,
             timeA + timeB + timeC + timeD,
-            0, mode, 0, false, sort, ht
+            0, mode, 0, false, (bool)sort, (bool)ht
         };
     }
 }

@@ -1,3 +1,5 @@
+#include "Arduino.h"
+#include <EEPROM.h>
 #include "SpeicalOps.h"
 
 #include "Arpeggio.h"
@@ -271,6 +273,6 @@ void loadSate()
     shouldInvokeArp();
     
     filterKeys = EEPROM.read(45);
-    filter = EEPROM.read(46);
+    filter = (Notes)EEPROM.read(46);
     arpClocked = EEPROM.read(47);
 }

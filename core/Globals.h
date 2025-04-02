@@ -27,7 +27,7 @@
 #define GATEIC 10
 #define OPTIONMODE 12
 
-#define RETRIGTIME 2 = 0
+#define RETRIGTIME 2
 
 #ifndef __nnNote
 #define __nnNote
