@@ -1,21 +1,5 @@
-#ifndef __history
-#define __history
-
-#include "Globals.h"
-
-typedef struct _item
-{
-    _item* next;
-    uint8_t value;
-} _hItem;
-typedef struct
-{
-    // count and range solves small problem - user can just reset by changing other parameter
-    // uint8_t cap;
-    // uint8_t count;
-    _item* first;
-    _item* last;
-} History;
+#include "History.h"
+#include "../core/Globals.h"
 
 History allocateHistory(uint8_t range)
 {
@@ -87,5 +71,3 @@ uint8_t pullHistory(History* h)
     free(i);
     return v;
 }
-
-#endif

@@ -1,13 +1,11 @@
 #include <SPI.h>
-// #include "Notes.h"
-// #include "Coms.h"
-// #include "Midi.h"
-// #include "Channels.h"
-// #include "Callbacks.h"
 #include "Arpeggio.h"
 #include "Controls.h"
 #include "SpeicalOps.h"
 #include "sequen/Sequencer.h"
+#include "core/Globals.h"
+#include "core/Coms.h"
+#include "notes/Channels.h"
 
 Midi MIDI(Serial0);
 

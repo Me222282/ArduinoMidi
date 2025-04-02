@@ -201,78 +201,26 @@ enum Notes: uint8_t
     B = NoteName::B_1
 };
 
-bool noteEquals(NoteName n1, Notes n2)
-{
-    return (n1 % 12) == n2;
-}
-bool notInKey(NoteName note, Notes key)
-{
-    uint8_t v = (note + 12 - key) % 12;
-    return v == 1 || v == 3 || v == 6 || v == 8 || v == 10;
-}
+bool noteEquals(NoteName n1, Notes n2);
+bool notInKey(NoteName note, Notes key);
 
 class Midi
 {
 public:
-    Midi(HardwareSerial &serial) :
+    inline Midi(HardwareSerial &serial) :
         _serial(serial)
     {
         
     }
-    void begin()
-    {
-        _serial.begin(31250);
-    }
-    bool read()
-    {
-        if (_serial.available() >= 3)
-        {
-            uint8_t status = (uint8_t)_serial.read();
-            _data1 = (uint8_t)_serial.read();
-            _data2 = (uint8_t)_serial.read();
-            
-            _channel = status & 0b00001111;
-            uint8_t type = (status & 0b11110000) >> 4;
-            if (type == 0xF)
-            {
-                _type = status;
-                _channel = 0;
-                return true;
-            }
-            
-            _type = type;
-        }
-        
-        return false;
-    }
-    CCType getCC()
-    {
-        return (CCType)_data1;
-    }
-    NoteName getNote()
-    {
-        return (NoteName)_data1;
-    }
-    MidiCode getType()
-    {
-        return _type;
-    }
-    uint8_t getData1()
-    {
-        return _data1;
-    }
-    uint8_t getData2()
-    {
-        return _data2;
-    }
-    uint8_t getChannel()
-    {
-        return _channel;
-    }
-    uint16_t getCombinedData()
-    {
-        return (_data2 << 7) | _data1;
-    }
+    void begin();
+    bool read();
+    CCType getCC();
+    NoteName getNote();
+    MidiCode getType();
+    uint8_t getData1();
+    uint8_t getData2();
+    uint8_t getChannel();
+    uint16_t getCombinedData();
     
 private:
     HardwareSerial &_serial;

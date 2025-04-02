@@ -1,13 +1,5 @@
-#ifndef __comical
-#define __comical
-
 #include <SPI.h>
-#include "Globals.h"
-
-#define GATESPI SPISettings(10000000, MSBFIRST, SPI_MODE0)
-#define DAC8SPI SPISettings(20000000, MSBFIRST, SPI_MODE0)
-#define DAC12SPI SPISettings(20000000, MSBFIRST, SPI_MODE0)
-#define POTSPI SPISettings(10000000, MSBFIRST, SPI_MODE0)
+#include "Coms.h"
 
 uint8_t gateCurrent;
 void setGate(uint8_t value)
@@ -79,18 +71,16 @@ void setMod(uint16_t value)
     _ic(PITCHDAC3, value, 0xF000);
 }
 
-void configurePot(uint8_t pin)
-{
-    // ic(pin, 0xE0, 0x5100);
-    _ic(pin, 0xFF, 0x4100);
-}
+// void configurePot(uint8_t pin)
+// {
+//     // ic(pin, 0xE0, 0x5100);
+//     _ic(pin, 0xFF, 0x4100);
+// }
 
-void setPot(uint8_t pin, bool bPot, uint8_t value)
-{
-    uint16_t c = 0x1000;
-    if (bPot) { c = 0x2000; }
+// void setPot(uint8_t pin, bool bPot, uint8_t value)
+// {
+//     uint16_t c = 0x1000;
+//     if (bPot) { c = 0x2000; }
     
-    _ic(pin, value, c);
-}
-
-#endif
+//     _ic(pin, value, c);
+// }

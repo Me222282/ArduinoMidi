@@ -1,8 +1,4 @@
-#ifndef __notes
-#define __notes
-
-#include "Channels.h"
-#include "Globals.h"
+#include "Notes.h"
 
 int8_t _findNextIndex(Channel* c);
 NoteList* _getNextNote(Channel* c);
@@ -340,5 +336,3 @@ NoteList* _getLosableNote(Channel* c, uint8_t key)
     }
     return _losableUNote(c);
 }
-
-#endif
