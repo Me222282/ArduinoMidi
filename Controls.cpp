@@ -1,6 +1,6 @@
-#include "Arduino.h"
+#include <Arduino.h>
 #include "Controls.h"
-#include "core/Globals.h"
+#include "src/core/Globals.h"
 
 uint8_t pins[5] = {
     OCTAVE,

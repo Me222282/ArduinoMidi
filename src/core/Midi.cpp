@@ -1,4 +1,4 @@
-#include "Arduino.h"
+#include <Arduino.h>
 #include "Midi.h"
 
 bool noteEquals(NoteName n1, Notes n2)

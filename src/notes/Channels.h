@@ -4,6 +4,10 @@
 #include "../core/Globals.h"
 #include "History.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef struct _noteList
 {
     _noteList* next;
@@ -41,8 +45,12 @@ void clearChannel(Channel* c);
 void gateChannelNote(uint8_t ci, uint8_t vi, bool v);
 void reTrigChannelNote(uint8_t ci, uint8_t vi);
 
-void appendNote(NoteList** list, NoteList* nl);
-void insertNote(NoteList** list, NoteList* nl);
-void removeNote(NoteList** list, NoteList* nl);
+void appendNoteList(NoteList** list, NoteList* nl);
+void insertNoteList(NoteList** list, NoteList* nl);
+void removeNoteList(NoteList** list, NoteList* nl);
+
+#ifdef __cplusplus
+} // extern "C"
+#endif
 
 #endif

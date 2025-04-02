@@ -1,4 +1,4 @@
-#include "Arduino.h"
+#include <Arduino.h>
 #include "Channels.h"
 
 uint8_t _ss0[5] = { 0x00, 0x00, 0x00, 0x00, 0x00 };
@@ -148,7 +148,7 @@ void reTrigChannelNote(uint8_t ci, uint8_t vi)
     }
 }
 
-void appendNote(NoteList** list, NoteList* nl)
+void appendNoteList(NoteList** list, NoteList* nl)
 {
     NoteList* end = list[1];
     if (!end)
@@ -162,7 +162,7 @@ void appendNote(NoteList** list, NoteList* nl)
     }
     list[1] = nl;
 }
-void insertNote(NoteList** list, NoteList* nl)
+void insertNoteList(NoteList** list, NoteList* nl)
 {
     NoteList* start = list[0];
     uint8_t key = nl->value.key;
@@ -173,7 +173,7 @@ void insertNote(NoteList** list, NoteList* nl)
     // none found - add to end like normal
     if (!ins)
     {
-        appendNote(list, nl);
+        appendNoteList(list, nl);
         return;
     }
     // insert into list before ins
@@ -183,7 +183,7 @@ void insertNote(NoteList** list, NoteList* nl)
     if (nl->last) { nl->last->next = nl; }
     else { list[0] = nl; }
 }
-void removeNote(NoteList** list, NoteList* nl)
+void removeNoteList(NoteList** list, NoteList* nl)
 {
     NoteList* nE = nl->last;
     NoteList* nS = nl->next;

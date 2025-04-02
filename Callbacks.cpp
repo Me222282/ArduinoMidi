@@ -1,9 +1,9 @@
-#include "Arduino.h"
+#include <Arduino.h>
 #include "Callbacks.h"
-#include "notes/Notes.h"
-#include "notes/Channels.h"
-#include "core/Coms.h"
-#include "core/Globals.h"
+#include "src/notes/Notes.h"
+#include "src/notes/Channels.h"
+#include "src/core/Coms.h"
+#include "src/core/Globals.h"
 
 void _updateSlot(uint8_t com, Note n)
 {

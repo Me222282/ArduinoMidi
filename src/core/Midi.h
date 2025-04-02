@@ -201,8 +201,16 @@ enum Notes: uint8_t
     B = NoteName::B_1
 };
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 bool noteEquals(NoteName n1, Notes n2);
 bool notInKey(NoteName note, Notes key);
+
+#ifdef __cplusplus
+} // extern "C"
+#endif
 
 class Midi
 {

@@ -4,13 +4,17 @@
 #include "../core/Globals.h"
 #include "Cubic.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef struct
 {
     Note* notes;
     uint16_t* mods;
     Cubic cub;
     
-    uint8_t size;
+    uint16_t size;
     uint8_t position;
     uint8_t channel;
     bool playing;
@@ -22,5 +26,9 @@ void deleteTrack(Track* t);
 
 bool addTrackValue(Track* t, Note n, uint16_t m);
 void finaliseTrack(Track* t);
+
+#ifdef __cplusplus
+} // extern "C"
+#endif
 
 #endif

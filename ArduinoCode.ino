@@ -1,13 +1,13 @@
 #include <SPI.h>
 #include <EEPROM.h>
 #include "Controls.h"
-#include "core/Coms.h"
+#include "src/core/Coms.h"
 #include "Arpeggio.h"
 #include "SpeicalOps.h"
-#include "sequen/Sequencer.h"
-#include "core/Globals.h"
-#include "notes/Channels.h"
-#include "core/Midi.h"
+#include "src/sequen/Sequencer.h"
+#include "src/core/Globals.h"
+#include "src/notes/Channels.h"
+#include "src/core/Midi.h"
 
 void resetValues();
 void saveSate();

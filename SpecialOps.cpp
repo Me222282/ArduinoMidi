@@ -1,12 +1,12 @@
-#include "Arduino.h"
+#include <Arduino.h>
 #include <EEPROM.h>
 #include "SpeicalOps.h"
 
 #include "Arpeggio.h"
-#include "core/Midi.h"
-#include "core/Globals.h"
-#include "core/Coms.h"
-#include "notes/Notes.h"
+#include "src/core/Midi.h"
+#include "src/core/Globals.h"
+#include "src/core/Coms.h"
+#include "src/notes/Notes.h"
 #include "Callbacks.h"
 
 bool invokeArp = false;

@@ -29,6 +29,10 @@
 
 #define RETRIGTIME 2
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #ifndef __nnNote
 #define __nnNote
 typedef struct
@@ -65,5 +69,9 @@ extern uint8_t reTrig;
 void setGateNote(uint8_t n, bool value);
 void reTrigNote(uint8_t n);
 void eeWrite(int address, uint8_t v);
+
+#ifdef __cplusplus
+} // extern "C"
+#endif
 
 #endif

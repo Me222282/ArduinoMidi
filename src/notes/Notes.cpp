@@ -1,4 +1,4 @@
-#include "Arduino.h"
+#include <Arduino.h>
 #include "Notes.h"
 
 int8_t _findNextIndex(Channel* c);
@@ -14,10 +14,10 @@ void _add(Channel* c, NoteList* nl)
     c->noteCount++;
     if (sortNotes)
     {
-        insertNote((NoteList**)c, nl);
+        insertNoteList((NoteList**)c, nl);
         return;
     }
-    appendNote((NoteList**)c, nl);
+    appendNoteList((NoteList**)c, nl);
 }
 int8_t pushNote(Channel* c, uint8_t chI, Note n)
 {
@@ -60,7 +60,7 @@ int8_t pushNote(Channel* c, uint8_t chI, Note n)
 }
 void _remove(Channel* c, NoteList* nl)
 {
-    removeNote((NoteList**)c, nl);
+    removeNoteList((NoteList**)c, nl);
     c->noteCount--;
 }
 int8_t removeNote(Channel* c, uint8_t chI, uint8_t key)

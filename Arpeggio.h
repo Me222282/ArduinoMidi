@@ -1,8 +1,12 @@
 #ifndef __arpeg
 #define __arpeg
 
-#include "core/Globals.h"
-#include "notes/Channels.h"
+#include "src/core/Globals.h"
+#include "src/notes/Channels.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 typedef struct
 {
@@ -37,5 +41,9 @@ void setArpHT(uint8_t channel, bool halfTime);
 void arpAddNote(uint8_t channel, Note n);
 
 void arpRemoveNote(uint8_t channel, uint8_t key);
+
+#ifdef __cplusplus
+} // extern "C"
+#endif
 
 #endif

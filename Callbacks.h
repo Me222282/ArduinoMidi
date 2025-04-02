@@ -1,7 +1,11 @@
 #ifndef __calls
 #define __calls
 
-#include "core/Midi.h"
+#include "src/core/Midi.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 extern bool alwaysDelay;
 extern bool filterKeys;
@@ -14,5 +18,9 @@ void onControlChange(uint8_t channel, CCType number, uint8_t value);
 void updateAllNotes();
 void updateAllPBs();
 void updateOtherPorts();
+
+#ifdef __cplusplus
+} // extern "C"
+#endif
 
 #endif

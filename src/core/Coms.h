@@ -8,6 +8,10 @@
 #define DAC12SPI SPISettings(20000000, MSBFIRST, SPI_MODE0)
 #define POTSPI SPISettings(10000000, MSBFIRST, SPI_MODE0)
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 extern uint8_t gateCurrent;
 void setGate(uint8_t value);
 
@@ -25,5 +29,9 @@ void configureGate();
 // void configurePot(uint8_t pin);
 
 // void setPot(uint8_t pin, bool bPot, uint8_t value);
+
+#ifdef __cplusplus
+} // extern "C"
+#endif
 
 #endif

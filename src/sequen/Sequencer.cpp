@@ -1,7 +1,7 @@
-#include "Arduino.h"
+#include <Arduino.h>
 #include "Sequencer.h"
 
-#include "../Callbacks.h"
+#include "../../Callbacks.h"
 #include "../core/Midi.h"
 #include "../core/Globals.h"
 #include "../notes/Channels.h"
@@ -23,8 +23,8 @@ bool tapTempo_S = false;
 uint32_t tapTempoTime_S = 0;
 
 bool setSeqTime = false;
-uint8_t digit = 0;
-uint32_t lv = 0;
+uint8_t digit_S = 0;
+uint32_t lv_S = 0;
 uint8_t seqDigits[4] = { 0, 0, 0, 0 };
 
 void trackManager(NoteName n, uint8_t vel);
@@ -62,21 +62,21 @@ void manageSeqNote(NoteName n, uint8_t vel, uint8_t channel)
             if (!setSeqTime)
             {
                 // digit is the number of digits entered
-                if (digit == 0)
+                if (digit_S == 0)
                 {
-                    tempoTime = 60000 / lv;
+                    tempoTime = 60000 / lv_S;
                     return;
                 }
                 uint32_t bpm = 0;
                 uint8_t place = 0;
                 // read in reverse order
-                for (int8_t i = digit - 1; i >= 0; i--)
+                for (int8_t i = digit_S - 1; i >= 0; i--)
                 {
                     bpm += seqDigits[i] * digitPlaces[place];
                     place++;
                 }
-                digit = 0;
-                lv = bpm;
+                digit_S = 0;
+                lv_S = bpm;
                 tempoTime = 60000 / bpm;
             }
             return;
@@ -145,6 +145,8 @@ bool seqLoopInvoke()
                 return true;
         }
     }
+    
+    return true;
 }
 
 NoteName rangeBottom;

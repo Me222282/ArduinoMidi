@@ -1,8 +1,8 @@
-#include "Arduino.h"
+#include <Arduino.h>
 #include <EEPROM.h>
 #include "Arpeggio.h"
-#include "notes/Channels.h"
-#include "notes/Notes.h"
+#include "src/notes/Channels.h"
+#include "src/notes/Notes.h"
 #include "Callbacks.h"
 
 Arpeggio arps[5];
@@ -24,7 +24,7 @@ void swap(uint8_t channel, NoteList* out, NoteList* in)
 
 void _removeArpNote(Arpeggio* a, NoteList* nl)
 {
-    removeNote((NoteList**)a, nl);
+    removeNoteList((NoteList**)a, nl);
     a->noteCount--;
 }
 void _triggerNextArp(uint8_t i, Arpeggio* a)
@@ -225,8 +225,8 @@ void arpAddNote(uint8_t channel, Note n)
     
     Arpeggio* a = &arps[channel];
     
-    if (a->sort) { insertNote((NoteList**)a, nl); }
-    else { appendNote((NoteList**)a, nl); }
+    if (a->sort) { insertNoteList((NoteList**)a, nl); }
+    else { appendNoteList((NoteList**)a, nl); }
     
     a->noteCount++;
     // if no current note
