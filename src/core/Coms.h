@@ -1,8 +1,6 @@
 #ifndef __comical
 #define __comical
 
-#include "Globals.h"
-
 #define GATESPI SPISettings(10000000, MSBFIRST, SPI_MODE0)
 #define DAC8SPI SPISettings(20000000, MSBFIRST, SPI_MODE0)
 #define DAC12SPI SPISettings(20000000, MSBFIRST, SPI_MODE0)

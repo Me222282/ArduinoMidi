@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include <SPI.h>
 #include "Coms.h"
+#include "Globals.h"
 
 void configureGate()
 {
@@ -42,15 +43,24 @@ void _dac8(uint8_t n, uint8_t value, uint16_t command)
 }
 void setVel(uint8_t n, uint8_t value)
 {
+    if (oldValues[n].vel == value) { return; }
+    oldValues[n].vel = value;
+    
     _dac8(n, value, 0xF000);
 }
 
 void _setNoteNorm(uint8_t n, uint8_t value)
 {
+    if (oldValues[n].key == value) { return; }
+    oldValues[n].key = value;
+    
     _dac8(n, value << 1, 0x3000);
 }
 void _setSubNote(uint8_t n, uint8_t value)
 {
+    if (oldValues[n].key == value) { return; }
+    oldValues[n].key = value;
+    
     _dac8(n, value + 60, 0x3000);
 }
 void (*setNote)(uint8_t, uint8_t) = _setNoteNorm;

@@ -15,16 +15,8 @@ void _updateSlot(uint8_t com, Note n)
         uint8_t v = slotAllocation[i];
         if (v != com) { continue; }
         
-        Note old = oldValues[i];
-        if (old.key != n.key)
-        {
-            setNote(i, n.key);
-        }
-        if (!option && old.vel != n.vel)
-        {
-            setVel(i, n.vel);
-        }
-        oldValues[i] = n;
+        setNote(i, n.key);
+        setVel(i, n.vel);
     }
     
     // other velocity
@@ -123,8 +115,6 @@ void _updateMod(Channel* c, uint16_t mod)
         uint8_t end = c->position + c->places;
         for (uint8_t i = c->position; i < end; i++)
         {
-            if (oldValues[i].vel == mod) { continue; }
-            oldValues[i].vel = mod;
             setVel(i, mod);
         }
         return;
@@ -184,13 +174,8 @@ void updateAllNotes()
         if (!nl) { continue; }
         uint8_t n = nl->value.key;
         n += (octaveOffset * 12);
-        uint8_t old = oldValues[i].key;
         // changes to make
-        if (old != n)
-        {
-            setNote(i, n);
-        }
-        oldValues[i].key = n;
+        setNote(i, n);
     }
 }
 void updateAllPBs()
@@ -241,10 +226,7 @@ void updateOtherPorts()
         NoteList* nl = c->locations[vI];
         if (!nl) { continue; }
         uint16_t vel = nl->value.vel << 1;
-        if (oldValues[i].vel != vel)
-        {
-            setVel(i, vel);
-        }
+        setVel(i, vel);
     }
     
     _updateMod(c, c->modulation);
