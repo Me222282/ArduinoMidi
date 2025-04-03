@@ -8,16 +8,26 @@
 #include "Track.h"
 
 bool playMode = false;
-uint32_t tempoTime = 500;
+// half the tempo time
+uint32_t tempoTime = 250;
 bool seqClocked = false;
 bool playing = false;
 uint16_t playStep = 0;
 
-Track* tracks[5];
+Track tracks[5];
 
 void onParamChange() { playMode = false; }
+void restartTracks()
+{
+    tracks[0].position = 0;
+    tracks[1].position = 0;
+    tracks[2].position = 0;
+    tracks[3].position = 0;
+    tracks[4].position = 0;
+}
 
 Track* trackSet = nullptr;
+bool exit = false;
 
 bool tapTempo_S = false;
 uint32_t tapTempoTime_S = 0;
@@ -26,6 +36,9 @@ bool setSeqTime = false;
 uint8_t digit_S = 0;
 uint32_t lv_S = 0;
 uint8_t seqDigits[4] = { 0, 0, 0, 0 };
+
+uint32_t playingTime = 0;
+uint32_t elapsedTime = 0;
 
 void trackManager(NoteName n, uint8_t vel);
 void manageSeqNote(NoteName n, uint8_t vel, uint8_t channel)
@@ -38,9 +51,18 @@ void manageSeqNote(NoteName n, uint8_t vel, uint8_t channel)
     
     switch (n)
     {
+        case NoteName::B3:
+            exit = true;
+            return;
         case NoteName::C4:
-            if (playing) { playStep = 0; }
+            if (playing)
+            {
+                playStep = 0;
+                return;
+            }
             playing = true;
+            triggerTracks();
+            playingTime = 0;
             return;
         case NoteName::_D4:
             playing = false;
@@ -50,9 +72,28 @@ void manageSeqNote(NoteName n, uint8_t vel, uint8_t channel)
             playStep = 0;
             return;
         case NoteName::F4:
-            deleteTrack(tracks[channel]);
-            trackSet = createTrack(channel);
-            tracks[channel] = trackSet;
+        {
+            Track* tac = &tracks[channel];
+            deleteTrack(tac);
+            createTrack(tac, channel);
+            trackSet = tac;
+            return;
+        }
+        
+        case NoteName::C5:
+            tracks[0].playing = !tracks[0].playing;
+            return;
+        case NoteName::_D5:
+            tracks[1].playing = !tracks[1].playing;
+            return;
+        case NoteName::E5:
+            tracks[2].playing = !tracks[2].playing;
+            return;
+        case NoteName::F5:
+            tracks[3].playing = !tracks[3].playing;
+            return;
+        case NoteName::G5:
+            tracks[4].playing = !tracks[4].playing;
             return;
         
         case NoteName::C3:
@@ -64,10 +105,11 @@ void manageSeqNote(NoteName n, uint8_t vel, uint8_t channel)
                 // digit is the number of digits entered
                 if (digit_S == 0)
                 {
-                    tempoTime = 60000 / lv_S;
+                    tempoTime = 30000 / lv_S;
                     return;
                 }
-                uint32_t bpm = 0;
+                uint32_t bpm = 0;if (playing) { playStep = 0; }
+                playing = true;
                 uint8_t place = 0;
                 // read in reverse order
                 for (int8_t i = digit_S - 1; i >= 0; i--)
@@ -77,7 +119,7 @@ void manageSeqNote(NoteName n, uint8_t vel, uint8_t channel)
                 }
                 digit_S = 0;
                 lv_S = bpm;
-                tempoTime = 60000 / bpm;
+                tempoTime = 30000 / bpm;
             }
             return;
         }
@@ -100,9 +142,25 @@ void manageSeqNote(NoteName n, uint8_t vel, uint8_t channel)
     }
 }
 
+void triggerTracks();
+void modTracks(uint32_t pt);
+
 bool seqLoopInvoke()
 {
-    
+    if (playing && !seqClocked)
+    {
+        uint32_t time = millis();
+        playingTime += time - elapsedTime;
+        elapsedTime = time;
+        
+        if (playingTime >= tempoTime)
+        {
+            playingTime -= tempoTime;
+            triggerTracks();
+        }
+        
+        modTracks(playingTime);
+    }
     
     if (MIDI.read())
     {
@@ -121,7 +179,9 @@ bool seqLoopInvoke()
                     {
                         manageSeqNote(MIDI.getNote(), vel, channel);
                     }
-                    return true;
+                    bool con = !exit;
+                    exit = false;
+                    return con;
                 }
                 
                 uint8_t n = MIDI.getData1();
@@ -135,18 +195,39 @@ bool seqLoopInvoke()
                 return true;
             }
             case MidiCode::CC:
+                if (playing && !seqClocked &&
+                    tracks[channel].playing && tracks[channel].useMod)
+                    { return true; }
                 onControlChange(channel, MIDI.getCC(), MIDI.getData2());
                 return true;
             case MidiCode::PitchWheel:
                 onPitchBend(channel, MIDI.getCombinedData());
                 return true;
             case MidiCode::TimingClock:
-                
+                if (playing && seqClocked) { triggerTracks(); }
                 return true;
         }
     }
     
     return true;
+}
+
+void triggerTracks()
+{
+    for (uint8_t i = 0; i < 5; i++)
+    {
+        triggerTrack(&tracks[i], i, playStep);
+    }
+    
+    playStep++;
+}
+void modTracks(uint32_t pt)
+{
+    CubicInput ci = getInput(pt / (float)tempoTime);
+    for (uint8_t i = 0; i < 5; i++)
+    {
+        modTrack(&tracks[i], i, ci);
+    }
 }
 
 NoteName rangeBottom;
@@ -186,14 +267,25 @@ void trackManager(NoteName n, uint8_t vel)
     switch (q)
     {
         case Notes::C:
-            finaliseTrack(trackSet);
+            if (!finaliseTrack(trackSet))
+            {
+                // play some sound
+                return;
+            }
             trackSet = nullptr;
-            break;
+            trackSetState = 0;
+            return;
         case Notes::D:
             addTrackValue(trackSet, { 0xFF, 0x00 }, mod);
-            break;
+            return;
         case Notes::E:
             addTrackValue(trackSet, { 0xFF, 0xff }, mod);
-            break;
+            return;
+        case Notes::F:
+            trackSet->useMod = !trackSet->useMod;
+            return;
+        case Notes::G:
+            trackSet->halfTime = !trackSet->halfTime;
+            return;
     }
 }
