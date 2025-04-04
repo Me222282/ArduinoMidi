@@ -4,6 +4,9 @@
 #include "../core/Globals.h"
 #include "Cubic.h"
 
+#define NOTEHOLD (Note){ 0xFF, 0xFF }
+#define NOTEOFF (Note){ 0xFF, 0x00 }
+
 #ifdef __cplusplus
 extern "C" {
 #endif

@@ -3,6 +3,11 @@
 
 #include "src/core/Midi.h"
 
+#define NOTEFAIL_S NoteName::C2
+#define NOTEON_S NoteName::_D4
+#define NOTEOFF_S NoteName::C4
+#define NOTESELECT_S NoteName::C3
+
 #ifdef __cplusplus
 extern "C" {
 #endif

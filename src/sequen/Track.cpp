@@ -50,7 +50,12 @@ void noteOn(Track* t, uint8_t channel)
 {
     uint8_t pos = t->position;
     Note n = t->notes[pos];
-    onNoteOn(channel, n.key, n.vel);
+    if (noteEquals(n, NOTEHOLD)) { return; }
+    if (!noteEquals(n, NOTEOFF))
+    {
+        onNoteOn(channel, n.key, n.vel);
+    }
+    if (t->halfTime) { return; }
     if (pos == 0)
     {
         onNoteOff(channel, t->notes[t->size - 1].key);
@@ -67,6 +72,16 @@ uint16_t wrapMods(Track* t, uint8_t pos, uint16_t size)
     }
     
     return t->mods[pos];
+}
+Note wrapNote(Track* t, uint8_t pos)
+{
+    uint8_t size = t->size;
+    if (pos >= size)
+    {
+        return t->notes[pos - size];
+    }
+    
+    return t->notes[pos];
 }
 // track size must be >= 4
 void newCubic(Track* t)
@@ -88,7 +103,8 @@ void triggerTrack(Track* t, uint8_t channel, uint16_t playStep)
     if (!t->playing) { return; }
     if (playStep & 1U)
     {
-        if (t->halfTime)
+        uint8_t cPos = t->position;
+        if (t->halfTime && !noteEquals(wrapNote(t, cPos + 1), NOTEHOLD))
         {
             onNoteOff(channel, t->notes[t->position].key);
         }

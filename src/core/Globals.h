@@ -33,14 +33,11 @@
 extern "C" {
 #endif
 
-#ifndef __nnNote
-#define __nnNote
 typedef struct
 {
     uint8_t key;
     uint8_t vel;
 } Note;
-#endif
 
 // divisions to make pb smaller
 extern const float pbDiv[6];
@@ -69,6 +66,7 @@ extern uint8_t reTrig;
 void setGateNote(uint8_t n, bool value);
 void reTrigNote(uint8_t n);
 void eeWrite(int address, uint8_t v);
+inline bool noteEquals(Note a, Note b);
 
 #ifdef __cplusplus
 } // extern "C"

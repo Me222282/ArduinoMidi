@@ -2,6 +2,7 @@
 #include "Sequencer.h"
 
 #include "../../Callbacks.h"
+#include "../../MenuFeedback.h"
 #include "../core/Midi.h"
 #include "../core/Globals.h"
 #include "../notes/Channels.h"
@@ -40,6 +41,23 @@ uint8_t seqDigits[4] = { 0, 0, 0, 0 };
 uint32_t playingTime = 0;
 uint32_t elapsedTime = 0;
 
+void resetSequence()
+{
+    clearNotes(&channels[0]);
+    clearNotes(&channels[1]);
+    clearNotes(&channels[2]);
+    clearNotes(&channels[3]);
+    clearNotes(&channels[4]);
+    
+    playStep = 0;
+    playing = false;
+    tracks[0].position = 0;
+    tracks[1].position = 0;
+    tracks[2].position = 0;
+    tracks[3].position = 0;
+    tracks[4].position = 0;
+}
+
 void trackManager(NoteName n, uint8_t vel);
 void manageSeqNote(NoteName n, uint8_t vel, uint8_t channel)
 {
@@ -61,6 +79,7 @@ void manageSeqNote(NoteName n, uint8_t vel, uint8_t channel)
                 return;
             }
             playing = true;
+            if (playStep != 0) { return; }
             triggerTracks();
             playingTime = 0;
             return;
@@ -68,17 +87,22 @@ void manageSeqNote(NoteName n, uint8_t vel, uint8_t channel)
             playing = false;
             return;
         case NoteName::E4:
-            playing = false;
-            playStep = 0;
+            resetSequence();
             return;
         case NoteName::F4:
         {
+            resetSequence();
             Track* tac = &tracks[channel];
             deleteTrack(tac);
             createTrack(tac, channel);
             trackSet = tac;
             return;
         }
+        case NoteName::G4:
+            trackSet = &tracks[channel];
+            trackSetState = 3;
+            resetSequence();
+            return;
         
         case NoteName::C5:
             tracks[0].playing = !tracks[0].playing;
@@ -138,6 +162,7 @@ void manageSeqNote(NoteName n, uint8_t vel, uint8_t channel)
             return;
         case NoteName::Eb3:
             seqClocked = !seqClocked;
+            playStep &= 0xFFFE;
             return;
     }
 }
@@ -147,11 +172,13 @@ void modTracks(uint32_t pt);
 
 bool seqLoopInvoke()
 {
+    uint32_t time = millis();
+    uint32_t dt = time - elapsedTime;
+    elapsedTime = time;
+    
     if (playing && !seqClocked)
     {
-        uint32_t time = millis();
-        playingTime += time - elapsedTime;
-        elapsedTime = time;
+        playingTime += dt;
         
         if (playingTime >= tempoTime)
         {
@@ -161,6 +188,9 @@ bool seqLoopInvoke()
         
         modTracks(playingTime);
     }
+    
+    // mf only for track set
+    if (trackSet) { invokeMF(); }
     
     if (MIDI.read())
     {
@@ -220,6 +250,7 @@ void triggerTracks()
     }
     
     playStep++;
+    if (seqClocked) { playStep++; }
 }
 void modTracks(uint32_t pt)
 {
@@ -254,11 +285,13 @@ void trackManager(NoteName n, uint8_t vel)
         return;
     }
     
-    uint16_t mod = channels[trackSet->channel].modulation;
+    uint8_t channel = trackSet->channel;
+    uint16_t mod = channels[channel].modulation;
     // in range
-    if (rangeBottom <= n && rangeTop >= n)
+    if (trackSetState == 2 && rangeBottom <= n && rangeTop >= n)
     {
         addTrackValue(trackSet, { n, vel }, mod);
+        playNoteC(n, channel, 125);
         return;
     }
     
@@ -269,18 +302,27 @@ void trackManager(NoteName n, uint8_t vel)
         case Notes::C:
             if (!finaliseTrack(trackSet))
             {
-                // play some sound
+                playNoteC(NoteName::C2, channel, 125);
                 return;
             }
             trackSet = nullptr;
             trackSetState = 0;
             return;
         case Notes::D:
-            addTrackValue(trackSet, { 0xFF, 0x00 }, mod);
+            if (trackSetState == 3) { return; }
+            addTrackValue(trackSet, NOTEOFF, mod);
             return;
         case Notes::E:
-            addTrackValue(trackSet, { 0xFF, 0xff }, mod);
+        {
+            if (trackSetState == 3) { return; }
+            uint8_t pos = trackSet->position;
+            addTrackValue(trackSet, NOTEHOLD, mod);
+            if (pos != 0)
+            {
+                playNoteC((NoteName)trackSet->notes[pos - 1].key, channel, 125);
+            }
             return;
+        }
         case Notes::F:
             trackSet->useMod = !trackSet->useMod;
             return;
