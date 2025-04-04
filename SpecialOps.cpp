@@ -8,6 +8,7 @@
 #include "src/core/Coms.h"
 #include "src/notes/Notes.h"
 #include "Callbacks.h"
+#include "MenuFeedback.h"
 
 bool invokeArp = false;
 bool channelArps[5] = { false, false, false, false, false };
@@ -55,8 +56,18 @@ uint8_t getDigit(NoteName n)
     }
     return 11;
 }
+inline void triggerFeedback(bool v)
+{
+    playNote(v ? NOTEON_S : NOTEOFF_S, MF_DURATION);
+}
+inline void triggerFeedbackC(bool v, uint8_t c)
+{
+    playNoteC(v ? NOTEON_S : NOTEOFF_S, c, MF_DURATION);
+}
 void specialOptions()
 {
+    invokeMF();
+    
     if (MIDI.read())
     {
         MidiCode type = MIDI.getType();
@@ -76,6 +87,7 @@ void specialOptions()
                     {
                         filter = (Notes)fk;
                         choseFilter = false;
+                        playNote((NoteName)(fk + NoteName::C4), MF_DURATION);
                         return;
                     }
                 }
@@ -90,6 +102,7 @@ void specialOptions()
                         if (digit >= 4) { return; }
                         arpDigits[digit] = dv;
                         digit++;
+                        playNote((NoteName)(n + (NoteName::_A3 - NoteName::_A0)), MF_DURATION);
                         return;
                     }
                 }
@@ -99,36 +112,44 @@ void specialOptions()
                     // set to defaults
                     case NoteName::B3:
                         resetValues();
+                        triggerFeedback(true);
                         return;
                     case NoteName::C4:
                         retriggerOld = !retriggerOld;
+                        triggerFeedback(retriggerOld);
                         return;
                     case NoteName::Db4:
                         filterKeys = !filterKeys;
+                        triggerFeedback(filterKeys);
                         return;
                     case NoteName::_D4:
                         retriggerNew = !retriggerNew;
+                        triggerFeedback(retriggerNew);
                         return;
                     case NoteName::Eb4:
                         choseFilter = !choseFilter;
                         return;
                     case NoteName::E4:
                         alwaysDelay = !alwaysDelay;
+                        triggerFeedback(alwaysDelay);
                         return;
                     case NoteName::F4:
                     {
                         if (setNote == _setNoteNorm)
                         {
                             setNote = _setSubNote;
+                            triggerFeedback(true);
                             return;
                         }
                         setNote = _setNoteNorm;
+                        triggerFeedback(false);
                         return;
                     }
                     case NoteName::G4:
                     {
                         bool v = !channelArps[channel];
                         channelArps[channel] = v;
+                        triggerFeedbackC(v, channel);
                         if (!v) { clearArp(channel); }
                         else { clearNotes(&channels[channel]); }
                         shouldInvokeArp();
@@ -136,6 +157,7 @@ void specialOptions()
                     }
                     case NoteName::_A4:
                         sortNotes = !sortNotes;
+                        triggerFeedback(sortNotes);
                         return;
                     case NoteName::B4:
                         saveSate();
@@ -188,24 +210,31 @@ void specialOptions()
                         }
                         tapTempo = true;
                         tapTempoTime = millis();
+                        playNote(NOTEOPTION_S, 75);
                         return;
                     case NoteName::_D3:
                         setArpMode(channel, 0);
+                        playNoteC(NOTEOPTION_S, channel, MF_DURATION);
                         return;
                     case NoteName::Eb3:
                         arpClocked = !arpClocked;
+                        triggerFeedback(arpClocked);
                         return;
                     case NoteName::E3:
                         setArpMode(channel, 1);
+                        playNoteC(NOTEOPTION_S, channel, MF_DURATION);
                         return;
                     case NoteName::F3:
                         setArpMode(channel, 2);
+                        playNoteC(NOTEOPTION_S, channel, MF_DURATION);
                         return;
                     case NoteName::G3:
                         setArpSort(channel, !arps[channel].sort);
+                        triggerFeedbackC(arps[channel].sort, channel);
                         return;
                     case NoteName::_A3:
                         setArpHT(channel, !arps[channel].halfTime);
+                        triggerFeedbackC(arps[channel].halfTime, channel);
                         return;
                 }
                 return;

@@ -1,5 +1,5 @@
-#ifndef __arpeg
-#define __arpeg
+#ifndef __MFG
+#define __MFG
 
 #include "src/core/Midi.h"
 
@@ -7,6 +7,9 @@
 #define NOTEON_S NoteName::_D4
 #define NOTEOFF_S NoteName::C4
 #define NOTESELECT_S NoteName::C3
+#define NOTEOPTION_S NoteName::G3
+
+#define MF_DURATION 125
 
 #ifdef __cplusplus
 extern "C" {

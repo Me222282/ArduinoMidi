@@ -291,7 +291,7 @@ void trackManager(NoteName n, uint8_t vel)
     if (trackSetState == 2 && rangeBottom <= n && rangeTop >= n)
     {
         addTrackValue(trackSet, { n, vel }, mod);
-        playNoteC(n, channel, 125);
+        playNoteC(n, channel, MF_DURATION);
         return;
     }
     
@@ -302,7 +302,7 @@ void trackManager(NoteName n, uint8_t vel)
         case Notes::C:
             if (!finaliseTrack(trackSet))
             {
-                playNoteC(NoteName::C2, channel, 125);
+                playNoteC(NoteName::C2, channel, MF_DURATION);
                 return;
             }
             trackSet = nullptr;
@@ -319,7 +319,7 @@ void trackManager(NoteName n, uint8_t vel)
             addTrackValue(trackSet, NOTEHOLD, mod);
             if (pos != 0)
             {
-                playNoteC((NoteName)trackSet->notes[pos - 1].key, channel, 125);
+                playNoteC((NoteName)trackSet->notes[pos - 1].key, channel, MF_DURATION);
             }
             return;
         }
