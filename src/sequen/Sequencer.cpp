@@ -209,11 +209,7 @@ void manageSeqNote(NoteName n, uint8_t vel, uint8_t channel)
             exit = true;
             return;
         case NoteName::C4:
-            if (playing)
-            {
-                playStep = 0;
-                return;
-            }
+            if (playing) { return; }
             playing = true;
             if (playStep != 0) { return; }
             triggerTracks();
@@ -391,6 +387,16 @@ bool seqLoopInvoke()
                 return true;
             case MidiCode::TimingClock:
                 if (playing && seqClocked) { triggerTracks(); }
+                return true;
+            case MidiCode::Start:
+                if (playing) { return; }
+                playing = true;
+                if (playStep != 0) { return; }
+                triggerTracks();
+                playingTime = 0;
+                return true;
+            case MidiCode::Stop:
+                resetSequence();
                 return true;
         }
     }
