@@ -35,6 +35,9 @@ bool finaliseTrack(Track* t);
 void triggerTrack(Track* t, uint8_t channel, uint16_t playStep);
 void modTrack(Track* t, uint8_t channel, CubicInput time);
 
+void saveTrack(Track* t, uint8_t slot);
+void loadTrack(Track* t, uint8_t slot, uint8_t channel);
+
 #ifdef __cplusplus
 } // extern "C"
 #endif

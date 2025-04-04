@@ -5,6 +5,13 @@
 #include "../notes/Notes.h"
 #include "../../Callbacks.h"
 
+#define NVMADDRESS 0x290000
+const uint32_t nvmLocations[16]
+{
+    0, 1034, 2068, 3102, 4136, 5170, 6204, 7238,
+    8272, 9306, 10340, 11374, 12408, 13442, 14476, 15510
+};
+
 void createTrack(Track* t, uint8_t channel)
 {
     t->notes = CREATE_ARRAY(Note, 256);
@@ -130,4 +137,67 @@ void modTrack(Track* t, uint8_t channel, CubicInput time)
     // set mod;
     onControlChange(channel, CCType::ModulationWheel_MSB, act >> 7);
     onControlChange(channel, CCType::ModulationWheel_LSB, act & 0x7F);
+}
+
+template<typename T>
+void FlashWrite(uint32_t address, T value)
+{
+    ESP.flashEraseSector(address >> 12);
+    ESP.flashWrite(address, (uint32_t*)&value, sizeof(T));
+}
+template<typename T>
+void FlashWrite(uint32_t address, const T* value, uint16_t size)
+{
+    ESP.flashEraseSector(address >> 12);
+    ESP.flashWrite(address, (uint32_t*)&value, sizeof(T) * size);
+}
+template<typename T>
+T FlashRead(uint32_t address)
+{
+    T value;
+    ESP.flashRead(address, (uint32_t*)&value, sizeof(T));
+    return value;
+}
+template<typename T>
+T* FlashRead(uint32_t address, uint16_t size)
+{
+    T* values = CREATE_ARRAY(T, size);
+    ESP.flashRead(address, (uint32_t*)values, sizeof(T) * size);
+    return values;
+}
+
+void saveTrack(Track* t, uint8_t slot)
+{
+    uint32_t address = NVMADDRESS + nvmLocations[slot];
+    
+    uint16_t size = t->size;
+    FlashWrite<uint8_t>(address, t->clockDivision);
+    FlashWrite<bool>(address + 1, t->useMod);
+    FlashWrite<bool>(address + 2, t->halfTime);
+    FlashWrite<uint16_t>(address + 3, size);
+    FlashWrite<Note>(address + 4, t->notes, size);
+    if (t->useMod)
+    {
+        FlashWrite<uint16_t>(address + 4 + 512, t->mods, size);
+    }
+}
+void loadTrack(Track* t, uint8_t slot, uint8_t channel)
+{
+    uint32_t address = NVMADDRESS + nvmLocations[slot];
+    
+    t->position = 0;
+    t->playing = true;
+    t->channel = channel;
+    
+    uint16_t size = t->size;
+    t->clockDivision = FlashRead<uint8_t>(address);
+    t->useMod = FlashRead<bool>(address + 1);
+    t->halfTime = FlashRead<bool>(address + 2);
+    uint16_t size = FlashRead<uint16_t>(address + 3);
+    t->size = size;
+    t->notes = FlashRead<Note>(address + 4, size);
+    if (t->useMod)
+    {
+        t->mods = FlashRead<uint16_t>(address + 4 + 512, size);
+    }
 }

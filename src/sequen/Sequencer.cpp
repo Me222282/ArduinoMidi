@@ -3,10 +3,12 @@
 
 #include "../../Callbacks.h"
 #include "../../MenuFeedback.h"
+#include "../../SpeicalOps.h"
 #include "../core/Midi.h"
 #include "../core/Globals.h"
 #include "../notes/Channels.h"
 #include "Track.h"
+#include "../core/Coms.h"
 
 bool playMode = false;
 // half the tempo time
@@ -38,6 +40,8 @@ uint8_t digit_S = 0;
 uint32_t lv_S = 0;
 uint8_t seqDigits[4] = { 0, 0, 0, 0 };
 
+uint8_t trackSlotSelect = 0;
+
 uint32_t playingTime = 0;
 uint32_t elapsedTime = 0;
 
@@ -56,14 +60,146 @@ void resetSequence()
     tracks[2].position = 0;
     tracks[3].position = 0;
     tracks[4].position = 0;
+    gate = 0;
+    setGate(0);
 }
 
 void trackManager(NoteName n, uint8_t vel);
+void playingFunc(NoteName n, uint8_t channel)
+{
+    switch (n)
+    {
+        case NoteName::C4:
+            if (playing)
+            {
+                playStep = 0;
+                return;
+            }
+            playing = true;
+            if (playStep != 0) { return; }
+            triggerTracks();
+            playingTime = 0;
+            return;
+        case NoteName::_D4:
+            playing = false;
+            return;
+        case NoteName::E4:
+            resetSequence();
+            return;
+            
+        case NoteName::C5:
+            tracks[0].playing = !tracks[0].playing;
+            return;
+        case NoteName::_D5:
+            tracks[1].playing = !tracks[1].playing;
+            return;
+        case NoteName::E5:
+            tracks[2].playing = !tracks[2].playing;
+            return;
+        case NoteName::F5:
+            tracks[3].playing = !tracks[3].playing;
+            return;
+        case NoteName::G5:
+            tracks[4].playing = !tracks[4].playing;
+            return;
+    }
+    return;
+}
+uint8_t getSaveSlot(NoteName n)
+{
+    switch (n)
+    {
+        case NoteName::_A0:
+            return 0;
+        case NoteName::_B0:
+            return 1;
+        case NoteName::C1:
+            return 2;
+        case NoteName::_D1:
+            return 3;
+        case NoteName::E1:
+            return 4;
+        case NoteName::F1:
+            return 5;
+        case NoteName::G1:
+            return 6;
+        case NoteName::_A1:
+            return 7;
+        case NoteName::_B1:
+            return 8;
+        case NoteName::C2:
+            return 9;
+        case NoteName::_D2:
+            return 10;
+        case NoteName::E2:
+            return 11;
+        case NoteName::F2:
+            return 12;
+        case NoteName::G2:
+            return 13;
+        case NoteName::_A2:
+            return 14;
+        case NoteName::B2:
+            return 15;
+    }
+    return 16;
+}
 void manageSeqNote(NoteName n, uint8_t vel, uint8_t channel)
 {
+    if (playing)
+    {
+        playingFunc(n, channel);
+        return;
+    }
+    
     if (trackSet)
     {
         trackManager(n, vel);
+        return;
+    }
+    
+    // enter time - digit must start at 0
+    if (setSeqTime)
+    {
+        uint8_t dv = getDigit(n);
+        // valid digit
+        if (dv <= 9)
+        {
+            // no more digits
+            if (digit_S >= 4) { return; }
+            seqDigits[digit_S] = dv;
+            digit_S++;
+            playNote((NoteName)(n + (NoteName::_A3 - NoteName::_A0)), MF_DURATION);
+            return;
+        }
+        if (n != NoteName::C3) { return; }
+    }
+    if (trackSlotSelect)
+    {
+        uint8_t slot = getSaveSlot(n);
+        trackSlotSelect = 0;
+        // valid slot
+        if (slot <= 15)
+        {
+            if (trackSlotSelect == 1)
+            {
+                // empty track
+                if (!tracks[channel].notes)
+                {
+                    playNoteC(NOTEFAIL_S, channel, MF_DURATION);
+                    return;
+                }
+                saveTrack(&tracks[channel], slot);
+            }
+            else
+            {
+                deleteTrack(&tracks[channel]);
+                loadTrack(&tracks[channel], slot, channel);
+            }
+            playNoteC((NoteName)(n + (NoteName::_A3 - NoteName::_A0)), channel, MF_DURATION);
+            return;
+        }
+        playNoteC(NOTEFAIL_S, channel, MF_DURATION);
         return;
     }
     
@@ -83,9 +219,9 @@ void manageSeqNote(NoteName n, uint8_t vel, uint8_t channel)
             triggerTracks();
             playingTime = 0;
             return;
-        case NoteName::_D4:
-            playing = false;
-            return;
+        // case NoteName::_D4:
+        //     playing = false;
+        //     return;
         case NoteName::E4:
             resetSequence();
             return;
@@ -96,33 +232,41 @@ void manageSeqNote(NoteName n, uint8_t vel, uint8_t channel)
             deleteTrack(tac);
             createTrack(tac, channel);
             trackSet = tac;
+            playNote(NOTESELECT_S, MF_DURATION);
             return;
         }
         case NoteName::G4:
             trackSet = &tracks[channel];
             trackSetState = 3;
             resetSequence();
+            playNote(NOTESELECT_S, MF_DURATION);
             return;
         
         case NoteName::C5:
             tracks[0].playing = !tracks[0].playing;
+            triggerFeedbackC(tracks[0].playing, 0);
             return;
         case NoteName::_D5:
             tracks[1].playing = !tracks[1].playing;
+            triggerFeedbackC(tracks[1].playing, 1);
             return;
         case NoteName::E5:
             tracks[2].playing = !tracks[2].playing;
+            triggerFeedbackC(tracks[2].playing, 2);
             return;
         case NoteName::F5:
             tracks[3].playing = !tracks[3].playing;
+            triggerFeedbackC(tracks[3].playing, 3);
             return;
         case NoteName::G5:
             tracks[4].playing = !tracks[4].playing;
+            triggerFeedbackC(tracks[4].playing, 4);
             return;
         
         case NoteName::C3:
         {
             setSeqTime = !setSeqTime;
+            playNote(NOTESELECT_S, MF_DURATION);
             // set arp time value
             if (!setSeqTime)
             {
@@ -152,17 +296,30 @@ void manageSeqNote(NoteName n, uint8_t vel, uint8_t channel)
             {
                 tempoTime = millis() - tapTempoTime_S;
                 tapTempo_S = false;
+                playNote(NOTEOPTION_S, MF_DURATION_SHORT);
                 return;
             }
             tapTempo_S = true;
             tapTempoTime_S = millis();
+            playNote(NOTEOPTION_S, MF_DURATION_SHORT);
             return;
         case NoteName::_D3:
             playMode = true;
             return;
         case NoteName::Eb3:
             seqClocked = !seqClocked;
+            triggerFeedback(seqClocked);
             playStep &= 0xFFFE;
+            return;
+        case NoteName::E3:
+            // save
+            trackSlotSelect = 1;
+            playNote(NOTESELECT_S, MF_DURATION);
+            return;
+        case NoteName::F3:
+            // load
+            trackSlotSelect = 2;
+            playNote(NOTESELECT_S, MF_DURATION);
             return;
     }
 }
@@ -189,8 +346,7 @@ bool seqLoopInvoke()
         modTracks(playingTime);
     }
     
-    // mf only for track set
-    if (trackSet) { invokeMF(); }
+    if (!playing) { invokeMF(); }
     
     if (MIDI.read())
     {

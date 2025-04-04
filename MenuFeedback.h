@@ -10,6 +10,7 @@
 #define NOTEOPTION_S NoteName::G3
 
 #define MF_DURATION 125
+#define MF_DURATION_SHORT 75
 
 #ifdef __cplusplus
 extern "C" {

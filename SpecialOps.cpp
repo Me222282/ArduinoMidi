@@ -3,7 +3,6 @@
 #include "SpeicalOps.h"
 
 #include "Arpeggio.h"
-#include "src/core/Midi.h"
 #include "src/core/Globals.h"
 #include "src/core/Coms.h"
 #include "src/notes/Notes.h"
@@ -90,6 +89,7 @@ void specialOptions()
                         playNote((NoteName)(fk + NoteName::C4), MF_DURATION);
                         return;
                     }
+                    if (n != NoteName::Eb4) { return; }
                 }
                 // enter time - digit must start at 0
                 if (setArpTime)
@@ -105,6 +105,7 @@ void specialOptions()
                         playNote((NoteName)(n + (NoteName::_A3 - NoteName::_A0)), MF_DURATION);
                         return;
                     }
+                    if (n != NoteName::C3) { return; }
                 }
                 
                 switch (n)
@@ -128,6 +129,7 @@ void specialOptions()
                         return;
                     case NoteName::Eb4:
                         choseFilter = !choseFilter;
+                        playNote(NOTESELECT_S, MF_DURATION);
                         return;
                     case NoteName::E4:
                         alwaysDelay = !alwaysDelay;
@@ -149,10 +151,10 @@ void specialOptions()
                     {
                         bool v = !channelArps[channel];
                         channelArps[channel] = v;
-                        triggerFeedbackC(v, channel);
                         if (!v) { clearArp(channel); }
                         else { clearNotes(&channels[channel]); }
                         shouldInvokeArp();
+                        triggerFeedbackC(v, channel);
                         return;
                     }
                     case NoteName::_A4:
@@ -161,6 +163,7 @@ void specialOptions()
                         return;
                     case NoteName::B4:
                         saveSate();
+                        playNote(NOTEOPTION_S, MF_DURATION);
                         return;
                     case NoteName::C5:
                         loadSate();
@@ -174,10 +177,12 @@ void specialOptions()
                         
                         gate = 0;
                         setGate(0);
+                        playNote(NOTEOPTION_S, MF_DURATION);
                         return;
                     case NoteName::C3:
                     {
                         setArpTime = !setArpTime;
+                        playNote(NOTESELECT_S, MF_DURATION);
                         // set arp time value
                         if (!setArpTime)
                         {
@@ -206,11 +211,12 @@ void specialOptions()
                         {
                             setArpTimeOut(channel, millis() - tapTempoTime);
                             tapTempo = false;
+                            playNote(NOTEOPTION_S, MF_DURATION_SHORT);
                             return;
                         }
                         tapTempo = true;
                         tapTempoTime = millis();
-                        playNote(NOTEOPTION_S, 75);
+                        playNote(NOTEOPTION_S, MF_DURATION_SHORT);
                         return;
                     case NoteName::_D3:
                         setArpMode(channel, 0);
