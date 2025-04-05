@@ -18,6 +18,7 @@ typedef struct
     Cubic cub;
     
     uint16_t size;
+    Note lastNote;
     uint8_t position;
     uint8_t channel;
     uint8_t clockDivision;

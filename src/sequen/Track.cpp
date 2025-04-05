@@ -18,6 +18,7 @@ void createTrack(Track* t, uint8_t channel)
     t->mods = CREATE_ARRAY(uint16_t, 256);
     t->cub = { 0, 0, 0, 0 };
     t->size = 256;
+    t->lastNote = { 0, 0 };
     t->channel = channel;
     t->position = 0;
     t->useMod = false;
@@ -62,14 +63,10 @@ void noteOn(Track* t, uint8_t channel)
     if (!noteEquals(n, NOTEOFF))
     {
         onNoteOn(channel, n.key, n.vel);
+        t->lastNote = n;
     }
     if (t->halfTime) { return; }
-    if (pos == 0)
-    {
-        onNoteOff(channel, t->notes[t->size - 1].key);
-        return;
-    }
-    onNoteOff(channel, t->notes[pos - 1].key);
+    onNoteOff(channel, t->lastNote.key);
 }
 
 uint16_t wrapMods(Track* t, uint8_t pos, uint16_t size)
@@ -115,12 +112,7 @@ void triggerTrack(Track* t, uint8_t channel, uint16_t playStep)
         uint8_t cPos = t->position;
         if (t->halfTime && !noteEquals(t->notes[cPos], NOTEHOLD))
         {
-            if (cPos == 0)
-            {
-                onNoteOff(channel, t->notes[t->size - 1].key);
-                return;
-            }
-            onNoteOff(channel, t->notes[cPos - 1].key);
+            onNoteOff(channel, t->lastNote.key);
         }
         return;
     }
