@@ -48,7 +48,7 @@ uint32_t elapsedTime = 0;
 // edit tracks
 NoteName rangeBottom;
 NoteName rangeTop;
-bool trackSetState = 0;
+uint8_t trackSetState = 0;
 
 void triggerTracks();
 void modTracks(uint32_t pt);
@@ -90,6 +90,13 @@ void playingFunc(NoteName n, uint8_t channel)
             return;
         case NoteName::_D4:
             playing = false;
+            clearNotes(&channels[0]);
+            clearNotes(&channels[1]);
+            clearNotes(&channels[2]);
+            clearNotes(&channels[3]);
+            clearNotes(&channels[4]);
+            gate = 0;
+            setGate(0);
             return;
         case NoteName::E4:
             resetSequence();
@@ -109,6 +116,10 @@ void playingFunc(NoteName n, uint8_t channel)
             return;
         case NoteName::G5:
             tracks[4].playing = !tracks[4].playing;
+            return;
+        
+        case NoteName::_D3:
+            playMode = true;
             return;
     }
     return;
@@ -280,8 +291,7 @@ void manageSeqNote(NoteName n, uint8_t vel, uint8_t channel)
                     tempoTime = 30000 / lv_S;
                     return;
                 }
-                uint32_t bpm = 0;if (playing) { playStep = 0; }
-                playing = true;
+                uint32_t bpm = 0;
                 uint8_t place = 0;
                 // read in reverse order
                 for (int8_t i = digit_S - 1; i >= 0; i--)
@@ -428,6 +438,7 @@ void modTracks(uint32_t pt)
     }
 }
 
+bool clockDivSet = false;
 void trackManager(NoteName n, uint8_t vel)
 {
     if (trackSetState == 0)
@@ -449,24 +460,43 @@ void trackManager(NoteName n, uint8_t vel)
         return;
     }
     
+    Notes q = (Notes)(n % 12);
+    
+    if (clockDivSet)
+    {
+        uint8_t dv = getDigit(n);
+        // valid digit
+        if (dv <= 9)
+        {
+            // no more digits
+            if (digit_S >= 3) { return; }
+            seqDigits[digit_S] = dv;
+            digit_S++;
+            playNote((NoteName)(n + (NoteName::_A3 - NoteName::_A0)), MF_DURATION);
+            return;
+        }
+        if (q != Notes::A) { return; }
+    }
+    
     uint8_t channel = trackSet->channel;
     uint16_t mod = channels[channel].modulation;
     // in range
     if (trackSetState == 2 && rangeBottom <= n && rangeTop >= n)
     {
+        // filter keys
+        if (filterKeys && notInKey(n, filter)) { return; }
+        
         addTrackValue(trackSet, { n, vel }, mod);
         playNoteC(n, channel, MF_DURATION);
         return;
     }
-    
-    Notes q = (Notes)(n % 12);
     
     switch (q)
     {
         case Notes::C:
             if (!finaliseTrack(trackSet))
             {
-                playNoteC(NoteName::C2, channel, MF_DURATION);
+                playNoteC(NOTEFAIL_S, channel, MF_DURATION);
                 return;
             }
             trackSet = nullptr;
@@ -489,9 +519,31 @@ void trackManager(NoteName n, uint8_t vel)
         }
         case Notes::F:
             trackSet->useMod = !trackSet->useMod;
+            triggerFeedbackC(trackSet->useMod, channel);
             return;
         case Notes::G:
             trackSet->halfTime = !trackSet->halfTime;
+            triggerFeedbackC(trackSet->halfTime, channel);
+            return;
+        case Notes::A:
+            clockDivSet = !clockDivSet;
+            playNote(NOTESELECT_S, MF_DURATION);
+            // set arp time value
+            if (!clockDivSet)
+            {
+                // digit is the number of digits entered
+                if (digit_S == 0) { return; }
+                uint8_t value = 0;
+                uint8_t place = 0;
+                // read in reverse order
+                for (int8_t i = digit_S - 1; i >= 0; i--)
+                {
+                    value += seqDigits[i] * digitPlaces[place];
+                    place++;
+                }
+                digit_S = 0;
+                trackSet->clockDivision = value;
+            }
             return;
     }
 }

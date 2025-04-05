@@ -7,7 +7,7 @@
 const float pbDiv[6] = { 1.0f / 24.0f, 1.0f / 12.0f, 1.0f / 6.0f, 5.0f / 12.0f, 7.0f / 12.0f, 1.0f };
 
 // consts
-const uint16_t digitPlaces[5] = { 1, 10, 100, 1000, 10000 };
+const uint16_t digitPlaces[4] = { 1, 10, 100, 1000 };
 
 uint8_t activeChannels = 1;
 uint8_t activeVoices = 1;

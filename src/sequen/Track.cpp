@@ -8,8 +8,8 @@
 #define NVMADDRESS 0x290000
 const uint32_t nvmLocations[16]
 {
-    0, 1034, 2068, 3102, 4136, 5170, 6204, 7238,
-    8272, 9306, 10340, 11374, 12408, 13442, 14476, 15510
+    0, 1032, 2064, 3096, 4128, 5160, 6192, 7224,
+    8256, 9288, 10320, 11352, 12384, 13416, 14448, 15480
 };
 
 void createTrack(Track* t, uint8_t channel)
@@ -43,12 +43,13 @@ bool addTrackValue(Track* t, Note n, uint16_t m)
 bool finaliseTrack(Track* t)
 {
     uint8_t size = t->position;
-    if (size == 0) { return true; }
+    if (size == 0) { t->playing = true; return true; }
     if (size < 4) { return false; }
     
-    t->notes = (Note*)realloc(t->notes, size);
-    t->mods = (uint16_t*)realloc(t->mods, size);
+    t->notes = (Note*)realloc(t->notes, size * sizeof(Note));
+    t->mods = (uint16_t*)realloc(t->mods, size * sizeof(uint16_t));
     t->position = 0;
+    t->size = size;
     t->playing = true;
     return true;
 }
@@ -107,18 +108,24 @@ void newCubic(Track* t)
 
 void triggerTrack(Track* t, uint8_t channel, uint16_t playStep)
 {
-    if (!t->playing) { return; }
-    if (playStep & 1U)
+    if (!(t->playing && t->notes)) { return; }
+    uint8_t ht = playStep & 1U;
+    if (ht)
     {
         uint8_t cPos = t->position;
-        if (t->halfTime && !noteEquals(wrapNote(t, cPos + 1), NOTEHOLD))
+        if (t->halfTime && !noteEquals(t->notes[cPos], NOTEHOLD))
         {
-            onNoteOff(channel, t->notes[t->position].key);
+            if (cPos == 0)
+            {
+                onNoteOff(channel, t->notes[t->size - 1].key);
+                return;
+            }
+            onNoteOff(channel, t->notes[cPos - 1].key);
         }
         return;
     }
     
-    uint16_t div = playStep % t->clockDivision;
+    uint16_t div = (playStep >> 1) % t->clockDivision;
     if (div) { return; }
     // div == 0
     
@@ -131,7 +138,7 @@ void triggerTrack(Track* t, uint8_t channel, uint16_t playStep)
 
 void modTrack(Track* t, uint8_t channel, CubicInput time)
 {
-    if (!t->useMod) { return; }
+    if (!(t->useMod && t->playing && t->notes)) { return; }
     float m = getCubicValue(t->cub, time);
     uint16_t act = (uint16_t)m;
     // set mod;
@@ -142,13 +149,13 @@ void modTrack(Track* t, uint8_t channel, CubicInput time)
 template<typename T>
 void FlashWrite(uint32_t address, T value)
 {
-    ESP.flashEraseSector(address >> 12);
+    // ESP.flashEraseSector(address >> 12);
     ESP.flashWrite(address, (uint32_t*)&value, sizeof(T));
 }
 template<typename T>
 void FlashWrite(uint32_t address, const T* value, uint16_t size)
 {
-    ESP.flashEraseSector(address >> 12);
+    // ESP.flashEraseSector(address >> 12);
     ESP.flashWrite(address, (uint32_t*)&value, sizeof(T) * size);
 }
 template<typename T>
@@ -178,12 +185,15 @@ void saveTrack(Track* t, uint8_t slot)
     FlashWrite<Note>(address + 4, t->notes, size);
     if (t->useMod)
     {
-        FlashWrite<uint16_t>(address + 4 + 512, t->mods, size);
+        FlashWrite<uint16_t>(address + 516, t->mods, size);
     }
 }
 void loadTrack(Track* t, uint8_t slot, uint8_t channel)
 {
     uint32_t address = NVMADDRESS + nvmLocations[slot];
+    
+    uint16_t size = FlashRead<uint16_t>(address + 3);
+    if (size < 4 || size > 256) { return; }
     
     t->position = 0;
     t->playing = true;
@@ -192,11 +202,10 @@ void loadTrack(Track* t, uint8_t slot, uint8_t channel)
     t->clockDivision = FlashRead<uint8_t>(address);
     t->useMod = FlashRead<bool>(address + 1);
     t->halfTime = FlashRead<bool>(address + 2);
-    uint16_t size = FlashRead<uint16_t>(address + 3);
     t->size = size;
     t->notes = FlashRead<Note>(address + 4, size);
     if (t->useMod)
     {
-        t->mods = FlashRead<uint16_t>(address + 4 + 512, size);
+        t->mods = FlashRead<uint16_t>(address + 516, size);
     }
 }
