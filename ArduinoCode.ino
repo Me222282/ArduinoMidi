@@ -43,7 +43,7 @@ void setup()
     digitalWrite(GATEIC, HIGH);
     
     MIDI.begin();
-    // Serial.begin(38400);
+    Serial.begin(38400);
     EEPROM.begin(48);
     
     SPI.begin();

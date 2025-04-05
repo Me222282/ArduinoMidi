@@ -19,25 +19,23 @@ void Midi::begin()
 }
 bool Midi::read()
 {
-    if (_serial.available() >= 3)
+    if (_serial.available() < 3) { return false; }
+    
+    uint8_t status = (uint8_t)_serial.read();
+    _data1 = (uint8_t)_serial.read();
+    _data2 = (uint8_t)_serial.read();
+    
+    _channel = status & 0b00001111;
+    uint8_t type = (status & 0b11110000) >> 4;
+    if (type == 0xF)
     {
-        uint8_t status = (uint8_t)_serial.read();
-        _data1 = (uint8_t)_serial.read();
-        _data2 = (uint8_t)_serial.read();
-        
-        _channel = status & 0b00001111;
-        uint8_t type = (status & 0b11110000) >> 4;
-        if (type == 0xF)
-        {
-            _type = (MidiCode)status;
-            _channel = 0;
-            return true;
-        }
-        
-        _type = (MidiCode)type;
+        _type = (MidiCode)status;
+        _channel = 0;
+        return true;
     }
     
-    return false;
+    _type = (MidiCode)type;
+    return true;
 }
 CCType Midi::getCC()
 {

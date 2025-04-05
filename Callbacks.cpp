@@ -38,7 +38,7 @@ void onNoteOn(uint8_t channel, uint8_t note, uint8_t velocity)
 {
     if (channel >= activeChannels ||
         // key filter
-        (filter && notInKey((NoteName)note, filter))) { return; }
+        (filterKeys && notInKey((NoteName)note, filter))) { return; }
     
     Channel* c = &channels[channel];
     Note n = { note, velocity };
