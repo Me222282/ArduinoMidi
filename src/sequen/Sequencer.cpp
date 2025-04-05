@@ -30,7 +30,7 @@ void restartTracks()
 }
 
 Track* trackSet = nullptr;
-bool exit = false;
+bool exitSeq = false;
 
 bool tapTempo_S = false;
 uint32_t tapTempoTime_S = 0;
@@ -44,6 +44,14 @@ uint8_t trackSlotSelect = 0;
 
 uint32_t playingTime = 0;
 uint32_t elapsedTime = 0;
+
+// edit tracks
+NoteName rangeBottom;
+NoteName rangeTop;
+bool trackSetState = 0;
+
+void triggerTracks();
+void modTracks(uint32_t pt);
 
 void resetSequence()
 {
@@ -206,7 +214,7 @@ void manageSeqNote(NoteName n, uint8_t vel, uint8_t channel)
     switch (n)
     {
         case NoteName::B3:
-            exit = true;
+            exitSeq = true;
             return;
         case NoteName::C4:
             if (playing) { return; }
@@ -320,9 +328,6 @@ void manageSeqNote(NoteName n, uint8_t vel, uint8_t channel)
     }
 }
 
-void triggerTracks();
-void modTracks(uint32_t pt);
-
 bool seqLoopInvoke()
 {
     uint32_t time = millis();
@@ -361,8 +366,8 @@ bool seqLoopInvoke()
                     {
                         manageSeqNote(MIDI.getNote(), vel, channel);
                     }
-                    bool con = !exit;
-                    exit = false;
+                    bool con = !exitSeq;
+                    exitSeq = false;
                     return con;
                 }
                 
@@ -389,9 +394,9 @@ bool seqLoopInvoke()
                 if (playing && seqClocked) { triggerTracks(); }
                 return true;
             case MidiCode::Start:
-                if (playing) { return; }
+                if (playing) { return true; }
                 playing = true;
-                if (playStep != 0) { return; }
+                if (playStep != 0) { return true; }
                 triggerTracks();
                 playingTime = 0;
                 return true;
@@ -423,9 +428,6 @@ void modTracks(uint32_t pt)
     }
 }
 
-NoteName rangeBottom;
-NoteName rangeTop;
-bool trackSetState = 0;
 void trackManager(NoteName n, uint8_t vel)
 {
     if (trackSetState == 0)

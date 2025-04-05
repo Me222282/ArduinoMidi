@@ -205,7 +205,7 @@ enum Notes: uint8_t
 extern "C" {
 #endif
 
-bool noteEquals(NoteName n1, Notes n2);
+// bool noteEquals(NoteName n1, Notes n2);
 bool notInKey(NoteName note, Notes key);
 
 #ifdef __cplusplus

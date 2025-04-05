@@ -66,7 +66,10 @@ extern uint8_t reTrig;
 void setGateNote(uint8_t n, bool value);
 void reTrigNote(uint8_t n);
 void eeWrite(int address, uint8_t v);
-inline bool noteEquals(Note a, Note b);
+inline bool noteEquals(Note a, Note b)
+{
+    return a.key == b.key && a.vel == b.vel;
+}
 
 #ifdef __cplusplus
 } // extern "C"

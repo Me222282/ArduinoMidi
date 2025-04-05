@@ -1,10 +1,10 @@
 #include <Arduino.h>
 #include "Midi.h"
 
-bool noteEquals(NoteName n1, Notes n2)
-{
-    return (n1 % 12) == n2;
-}
+// bool noteEquals(NoteName n1, Notes n2)
+// {
+//     return (n1 % 12) == n2;
+// }
 bool notInKey(NoteName note, Notes key)
 {
     uint8_t v = (note + 12 - key) % 12;

@@ -55,14 +55,6 @@ uint8_t getDigit(NoteName n)
     }
     return 11;
 }
-inline void triggerFeedback(bool v)
-{
-    playNote(v ? NOTEON_S : NOTEOFF_S, MF_DURATION);
-}
-inline void triggerFeedbackC(bool v, uint8_t c)
-{
-    playNoteC(v ? NOTEON_S : NOTEOFF_S, c, MF_DURATION);
-}
 void specialOptions()
 {
     invokeMF();

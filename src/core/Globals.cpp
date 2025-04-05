@@ -49,7 +49,3 @@ void eeWrite(int address, uint8_t v)
     if (EEPROM.read(address) == v) { return; }
     EEPROM.write(address, v);
 }
-inline bool noteEquals(Note a, Note b)
-{
-    return a.key == b.key && a.vel == b.vel;
-}

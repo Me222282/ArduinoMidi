@@ -189,7 +189,6 @@ void loadTrack(Track* t, uint8_t slot, uint8_t channel)
     t->playing = true;
     t->channel = channel;
     
-    uint16_t size = t->size;
     t->clockDivision = FlashRead<uint8_t>(address);
     t->useMod = FlashRead<bool>(address + 1);
     t->halfTime = FlashRead<bool>(address + 2);
