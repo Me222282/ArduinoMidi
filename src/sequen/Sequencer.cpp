@@ -314,7 +314,7 @@ void manageSeqNote(NoteName n, uint8_t vel, uint8_t channel)
         case NoteName::Db3:
             tapTempo_S = true;
             tapTempoTime_S = millis();
-            playNote(NOTEOPTION_S, MF_DURATION_SHORT);
+            playNote(NOTESELECT_S, MF_DURATION_SHORT);
             return;
         case NoteName::_D3:
             playMode = true;
@@ -430,7 +430,13 @@ void triggerTracks()
 }
 void modTracks(uint32_t pt)
 {
-    CubicInput ci = getInput(pt / (float)tempoTime);
+    // second half of step
+    if ((bool)(playStep & 1U))
+    {
+        pt += tempoTime;
+    }
+    
+    CubicInput ci = getInput(pt / (float)(tempoTime << 1));
     for (uint8_t i = 0; i < 5; i++)
     {
         modTrack(&tracks[i], i, ci);

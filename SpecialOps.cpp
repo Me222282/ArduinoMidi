@@ -208,7 +208,7 @@ void specialOptions()
                     case NoteName::Db3:
                         tapTempo = true;
                         tapTempoTime = millis();
-                        playNote(NOTEOPTION_S, MF_DURATION_SHORT);
+                        playNote(NOTESELECT_S, MF_DURATION_SHORT);
                         return;
                     case NoteName::_D3:
                         setArpMode(channel, 0);
