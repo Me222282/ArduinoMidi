@@ -165,12 +165,18 @@ uint8_t getSaveSlot(NoteName n)
 }
 void manageSeqNote(NoteName n, uint8_t vel, uint8_t channel)
 {
+    if (tapTempo_S)
+    {
+        tempoTime = (millis() - tapTempoTime_S) >> 1;
+        tapTempo_S = false;
+        playNote(NOTEOPTION_S, MF_DURATION_SHORT);
+        return;
+    }
     if (playing)
     {
         playingFunc(n, channel);
         return;
     }
-    
     if (trackSet)
     {
         trackManager(n, vel);
@@ -306,13 +312,6 @@ void manageSeqNote(NoteName n, uint8_t vel, uint8_t channel)
             return;
         }
         case NoteName::Db3:
-            if (tapTempo_S)
-            {
-                tempoTime = millis() - tapTempoTime_S;
-                tapTempo_S = false;
-                playNote(NOTEOPTION_S, MF_DURATION_SHORT);
-                return;
-            }
             tapTempo_S = true;
             tapTempoTime_S = millis();
             playNote(NOTEOPTION_S, MF_DURATION_SHORT);

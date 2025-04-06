@@ -71,6 +71,13 @@ void specialOptions()
                 if (MIDI.getData2() == 0) { return; }
                 NoteName n = MIDI.getNote();
                 
+                if (tapTempo)
+                {
+                    setArpTimeOut(channel, millis() - tapTempoTime);
+                    tapTempo = false;
+                    playNote(NOTEOPTION_S, MF_DURATION_SHORT);
+                    return;
+                }
                 if (choseFilter)
                 {
                     uint8_t fk = n - NoteName::C1;
@@ -199,13 +206,6 @@ void specialOptions()
                         return;
                     }
                     case NoteName::Db3:
-                        if (tapTempo)
-                        {
-                            setArpTimeOut(channel, millis() - tapTempoTime);
-                            tapTempo = false;
-                            playNote(NOTEOPTION_S, MF_DURATION_SHORT);
-                            return;
-                        }
                         tapTempo = true;
                         tapTempoTime = millis();
                         playNote(NOTEOPTION_S, MF_DURATION_SHORT);
