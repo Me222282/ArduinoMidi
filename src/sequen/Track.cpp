@@ -60,13 +60,14 @@ void noteOn(Track* t, uint8_t channel)
     uint8_t pos = t->position;
     Note n = t->notes[pos];
     if (noteEquals(n, NOTEHOLD)) { return; }
+    Note last = t->lastNote;
     if (!noteEquals(n, NOTEOFF))
     {
         onNoteOn(channel, n.key, n.vel);
         t->lastNote = n;
     }
     if (t->halfTime) { return; }
-    onNoteOff(channel, t->lastNote.key);
+    onNoteOff(channel, last.key);
 }
 
 uint16_t wrapMods(Track* t, uint8_t pos, uint16_t size)

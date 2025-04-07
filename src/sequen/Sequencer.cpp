@@ -491,6 +491,7 @@ void trackManager(NoteName n, uint8_t vel)
         if (filterKeys && notInKey(n, filter)) { return; }
         
         addTrackValue(trackSet, { n, vel }, mod);
+        trackSet->lastNote = { n, vel };
         playNoteC(n, channel, MF_DURATION);
         return;
     }
@@ -503,6 +504,7 @@ void trackManager(NoteName n, uint8_t vel)
                 playNoteC(NOTEFAIL_S, channel, MF_DURATION);
                 return;
             }
+            trackSet->lastNote = { 0, 0 };
             trackSet = nullptr;
             trackSetState = 0;
             return;
@@ -517,7 +519,7 @@ void trackManager(NoteName n, uint8_t vel)
             addTrackValue(trackSet, NOTEHOLD, mod);
             if (pos != 0)
             {
-                playNoteC((NoteName)trackSet->notes[pos - 1].key, channel, MF_DURATION);
+                playNoteC((NoteName)trackSet->lastNote.key, channel, MF_DURATION);
             }
             return;
         }
