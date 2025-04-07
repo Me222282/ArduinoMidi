@@ -77,17 +77,17 @@ void playingFunc(NoteName n, uint8_t channel)
 {
     switch (n)
     {
-        case NoteName::C4:
-            if (playing)
-            {
-                playStep = 0;
-                return;
-            }
-            playing = true;
-            if (playStep != 0) { return; }
-            triggerTracks();
-            playingTime = 0;
-            return;
+        // case NoteName::C4:
+        //     if (playing)
+        //     {
+        //         playStep = 0;
+        //         return;
+        //     }
+        //     playing = true;
+        //     if (playStep != 0) { return; }
+        //     triggerTracks();
+        //     playingTime = 0;
+        //     return;
         case NoteName::_D4:
             playing = false;
             clearNotes(&channels[0]);
@@ -234,7 +234,6 @@ void manageSeqNote(NoteName n, uint8_t vel, uint8_t channel)
             exitSeq = true;
             return;
         case NoteName::C4:
-            if (playing) { return; }
             playing = true;
             if (playStep != 0) { return; }
             triggerTracks();
