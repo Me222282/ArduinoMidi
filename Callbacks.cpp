@@ -15,7 +15,7 @@ void _updateSlot(uint8_t com, Note n)
         if (v != com) { continue; }
         
         setNote(i, n.key);
-        setVel(i, n.vel);
+        if (!option) { setVel(i, n.vel); }
     }
     
     // other velocity

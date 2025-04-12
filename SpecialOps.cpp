@@ -154,7 +154,7 @@ void manageSpecie(uint8_t channel, NoteName n)
             saveOpsState();
             playNote(NOTEOPTION_S, MF_DURATION);
             return;
-        case NoteName::C5:
+        case NoteName::Bb4:
             loadOpsState();
             
             clearArps();

@@ -35,15 +35,17 @@ uint8_t getSetPosLocation(NoteName pos)
 }
 void setNumber(NoteName pos)
 {
-    if (ccSetPos != 255U && ccSetPos != pos) { return; }
+    if (ccSetPos != 0 && ccSetPos != pos) { return; }
     
     uint8_t index = getSetPosLocation(pos);
     
+    ccSetPos = pos;
     setCCSource = !setCCSource;
     playNote(NOTESELECT_S, MF_DURATION);
     // set arp time value
     if (!setCCSource)
     {
+        ccSetPos = (NoteName)0;
         // digit is the number of digits entered
         if (digit_cc == 0)
         {
@@ -119,7 +121,7 @@ void manageMenuNotes(NoteName n)
             saveCCMState();
             playNote(NOTEOPTION_S, MF_DURATION);
             return;
-        case NoteName::C5:
+        case NoteName::Bb4:
             loadCCMState();
             playNote(NOTEOPTION_S, MF_DURATION);
             return;

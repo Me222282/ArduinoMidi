@@ -18,6 +18,7 @@ uint8_t mode2 = 0;
 bool mode1 = false;
 
 int8_t octaveOffset = 0;
+// false for normal
 bool option = false;
 
 Note oldValues[5];
