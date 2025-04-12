@@ -15,6 +15,7 @@ bool playMode = false;
 // half the tempo time
 uint32_t tempoTime = 250;
 bool seqClocked = false;
+uint32_t seqClockCount = 0;
 bool playing = false;
 uint16_t playStep = 0;
 
@@ -63,7 +64,9 @@ void resetSequence()
     clearNotes(&channels[4]);
     
     playStep = 0;
+    playingTime = 0;
     playing = false;
+    seqClockCount = 0;
     tracks[0].position = 0;
     tracks[1].position = 0;
     tracks[2].position = 0;
@@ -237,8 +240,8 @@ void manageSeqNote(NoteName n, uint8_t vel, uint8_t channel)
         case NoteName::C4:
             playing = true;
             if (playStep != 0) { return; }
-            triggerTracks();
             playingTime = 0;
+            triggerTracks();
             return;
         // case NoteName::_D4:
         //     playing = false;
@@ -314,7 +317,7 @@ void manageSeqNote(NoteName n, uint8_t vel, uint8_t channel)
         case NoteName::Db3:
             tapTempo_S = true;
             tapTempoTime_S = millis();
-            playNote(NOTESELECT_S, MF_DURATION_SHORT);
+            playNote(NOTEOPTION_S, MF_DURATION_SHORT);
             return;
         case NoteName::_D3:
             playMode = true;
@@ -400,13 +403,23 @@ bool seqLoopInvoke()
                 onPitchBend(channel, MIDI.getCombinedData());
                 return true;
             case MidiCode::TimingClock:
-                if (playing && seqClocked) { triggerTracks(); }
+            {
+                if (playing && seqClocked)
+                {
+                    uint32_t acc = seqClockCount;
+                    seqClockCount++;
+                    if (acc % 3 == 0)
+                    {
+                        triggerTracks();
+                    }
+                }
                 return true;
+            }
             case MidiCode::Start:
                 if (playing) { return true; }
                 playing = true;
                 if (playStep != 0) { return true; }
-                triggerTracks();
+                if (!seqClocked) { triggerTracks(); }
                 playingTime = 0;
                 return true;
             case MidiCode::Stop:
@@ -426,7 +439,6 @@ void triggerTracks()
     }
     
     playStep++;
-    if (seqClocked) { playStep++; }
 }
 void modTracks(uint32_t pt)
 {

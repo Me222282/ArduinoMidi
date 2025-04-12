@@ -12,7 +12,7 @@ extern bool filterKeys;
 extern Notes filter;
 
 extern uint8_t ccListeners[5];
-extern bool ccChannelMode = false;
+extern bool ccChannelMode;
 
 void onNoteOn(uint8_t channel, uint8_t note, uint8_t velocity);
 void onNoteOff(uint8_t channel, uint8_t note);

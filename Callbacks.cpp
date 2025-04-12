@@ -122,6 +122,7 @@ void _updateMod(Channel* c, uint16_t mod)
         return;
     }
     
+    // cc 01 is mod wheel
     if (c->position != 0) { return; }
     // goes to mod
     mod >>= 2;
@@ -160,7 +161,6 @@ void ccUpdate(Channel* c, CCType number, uint8_t value)
 }
 void onControlChange(uint8_t channel, CCType number, uint8_t value)
 {
-    // cc 01 is mod wheel
     if (channel >= activeChannels) { return; }
     Channel* c = &channels[channel];
     

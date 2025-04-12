@@ -76,14 +76,33 @@ void _triggerNextArp(uint8_t i, Arpeggio* a)
         a->freeCurrent = false;
     }
 }
+uint32_t arpClockCount;
 void clockedArp()
 {
-    for (uint8_t i = 0; i < 5; i++)
+    uint32_t acc = arpClockCount;
+    arpClockCount++;
+    
+    if (acc % 6 == 0)
     {
-        Arpeggio* a = &arps[i];
-        if (!a->start) { continue; }
-        // there must be a current note here
-        _triggerNextArp(i, a);
+        for (uint8_t i = 0; i < 5; i++)
+        {
+            Arpeggio* a = &arps[i];
+            if (!a->start) { continue; }
+            // there must be a current note here
+            _triggerNextArp(i, a);
+        }
+        return;
+    }
+    // half time
+    if (acc % 3 == 0)
+    {
+        for (uint8_t i = 0; i < 5; i++)
+        {
+            Arpeggio* a = &arps[i];
+            if (!a->start) { continue; }
+            onNoteOff(i, a->current->value.key);
+        }
+        return;
     }
 }
 void invokeArps()

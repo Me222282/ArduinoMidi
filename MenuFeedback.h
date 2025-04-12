@@ -3,11 +3,11 @@
 
 #include "src/core/Midi.h"
 
-#define NOTEFAIL_S NoteName::C2
-#define NOTEON_S NoteName::_D4
-#define NOTEOFF_S NoteName::C4
+#define NOTEFAIL_S NoteName::_B1
+#define NOTEON_S NoteName::C4
+#define NOTEOFF_S NoteName::G3
 #define NOTESELECT_S NoteName::C3
-#define NOTEOPTION_S NoteName::G3
+#define NOTEOPTION_S NoteName::G4
 
 #define MF_DURATION 125
 #define MF_DURATION_SHORT 75

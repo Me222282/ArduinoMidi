@@ -198,7 +198,7 @@ void manageSpecie(uint8_t channel, NoteName n)
         case NoteName::Db3:
             tapTempo = true;
             tapTempoTime = millis();
-            playNote(NOTESELECT_S, MF_DURATION_SHORT);
+            playNote(NOTEOPTION_S, MF_DURATION_SHORT);
             return;
         case NoteName::_D3:
             setArpMode(channel, 0);

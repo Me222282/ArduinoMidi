@@ -27,7 +27,7 @@
 #define GATEIC 10
 #define OPTIONMODE 12
 
-#define RETRIGTIME 2
+#define RETRIGTIME 3
 
 #ifdef __cplusplus
 extern "C" {

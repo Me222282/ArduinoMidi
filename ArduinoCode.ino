@@ -50,13 +50,7 @@ void setup()
     SPI.begin();
     
     // Setup GATEIC
-    SPI.beginTransaction(GATESPI);
-    digitalWrite(GATEIC, LOW);
-    SPI.transfer16(0x4000);
-    // Set direction to output
-    SPI.transfer(0x00);
-    digitalWrite(GATEIC, HIGH);
-    SPI.endTransaction();
+    configureGate();
     
     setChannels(1, 1);
     loadArps();
@@ -90,7 +84,7 @@ void readControls()
     bool oldOp = option;
     option = digitalRead(OPTIONMODE);
     
-    if (oldM2 != mode2 || oldM1 != mode1)
+    if (oldM2 != mode2)
     {
         clearArps();
         clearNotes(&channels[0]);
@@ -106,7 +100,7 @@ void readControls()
         ccMenu = lastNote == NoteName::C1;
         onParamChange();
     }
-    if (activeChannels != oldC || activeVoices != oldV)
+    if (activeChannels != oldC || activeVoices != oldV || oldM1 != mode1)
     {
         clearArps();
         setChannels(activeChannels, activeVoices);
