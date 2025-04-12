@@ -18,7 +18,7 @@ void createTrack(Track* t, uint8_t channel)
     t->mods = CREATE_ARRAY(uint16_t, 256);
     t->cub = { 0, 0, 0, 0 };
     t->size = 256;
-    t->lastNote = { 0, 0 };
+    t->lastNote = { 255, 0 };
     t->channel = channel;
     t->position = 0;
     t->useMod = false;

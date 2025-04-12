@@ -55,25 +55,31 @@ uint8_t trackSetState = 0;
 void triggerTracks();
 void modTracks(uint32_t pt);
 
-void resetSequence()
+void stopSequence()
 {
     clearNotes(&channels[0]);
     clearNotes(&channels[1]);
     clearNotes(&channels[2]);
     clearNotes(&channels[3]);
     clearNotes(&channels[4]);
-    
-    playStep = 0;
-    playingTime = 0;
-    playing = false;
-    seqClockCount = 0;
-    tracks[0].position = 0;
-    tracks[1].position = 0;
-    tracks[2].position = 0;
-    tracks[3].position = 0;
-    tracks[4].position = 0;
     gate = 0;
     setGate(0);
+}
+void resetSequence()
+{
+    playStep = 0;
+    seqClockCount = 0;
+    playingTime = 0;
+    tracks[0].position = 0;
+    tracks[0].lastNote = { 255, 0 };
+    tracks[1].position = 0;
+    tracks[1].lastNote = { 255, 0 };
+    tracks[2].position = 0;
+    tracks[2].lastNote = { 255, 0 };
+    tracks[3].position = 0;
+    tracks[3].lastNote = { 255, 0 };
+    tracks[4].position = 0;
+    tracks[4].lastNote = { 255, 0 };
 }
 
 void trackManager(NoteName n, uint8_t vel);
@@ -81,29 +87,15 @@ void playingFunc(NoteName n, uint8_t channel)
 {
     switch (n)
     {
-        // case NoteName::C4:
-        //     if (playing)
-        //     {
-        //         playStep = 0;
-        //         return;
-        //     }
-        //     playing = true;
-        //     if (playStep != 0) { return; }
-        //     triggerTracks();
-        //     playingTime = 0;
-        //     return;
-        case NoteName::_D4:
-            playing = false;
-            clearNotes(&channels[0]);
-            clearNotes(&channels[1]);
-            clearNotes(&channels[2]);
-            clearNotes(&channels[3]);
-            clearNotes(&channels[4]);
-            gate = 0;
-            setGate(0);
-            return;
-        case NoteName::E4:
+        case NoteName::C4:
             resetSequence();
+            return;
+        // case NoteName::_D4:
+        //     playing = true;
+        //     return;
+        case NoteName::E4:
+            playing = false;
+            stopSequence();
             return;
             
         case NoteName::C5:
@@ -238,17 +230,16 @@ void manageSeqNote(NoteName n, uint8_t vel, uint8_t channel)
             exitSeq = true;
             return;
         case NoteName::C4:
-            playing = true;
-            if (playStep != 0) { return; }
-            playingTime = 0;
-            triggerTracks();
-            return;
-        // case NoteName::_D4:
-        //     playing = false;
-        //     return;
-        case NoteName::E4:
             resetSequence();
+            playing = true;
+            if (!seqClocked) { triggerTracks(); }
             return;
+        case NoteName::_D4:
+            playing = true;
+            return;
+        // case NoteName::E4:
+        //     resetSequence();
+        //     return;
         case NoteName::F4:
         {
             resetSequence();
@@ -260,9 +251,9 @@ void manageSeqNote(NoteName n, uint8_t vel, uint8_t channel)
             return;
         }
         case NoteName::G4:
+            resetSequence();
             trackSet = &tracks[channel];
             trackSetState = 3;
-            resetSequence();
             playNote(NOTESELECT_S, MF_DURATION);
             return;
         
@@ -416,14 +407,16 @@ bool seqLoopInvoke()
                 return true;
             }
             case MidiCode::Start:
-                if (playing) { return true; }
                 playing = true;
-                if (playStep != 0) { return true; }
+                resetSequence();
                 if (!seqClocked) { triggerTracks(); }
-                playingTime = 0;
+                return true;
+            case MidiCode::Continue:
+                playing = true;
                 return true;
             case MidiCode::Stop:
-                resetSequence();
+                playing = false;
+                stopSequence();
                 return true;
         }
     }

@@ -30,6 +30,7 @@ void _removeArpNote(Arpeggio* a, NoteList* nl)
 void _triggerNextArp(uint8_t i, Arpeggio* a)
 {
     NoteList* previous = a->current;
+    if (!previous) { previous = a->start; }
     NoteList* nextN;
     
     switch (a->mode)
@@ -64,10 +65,10 @@ void _triggerNextArp(uint8_t i, Arpeggio* a)
     if (a->noteCount == 1 && a->freeCurrent) { nextN = nullptr; }
     // should not be called if freeCurrent && noteCount > 1
     else if (!nextN) { nextN = previous; }
-    a->current = nextN;
     
     NoteList* rem = previous;
-    if (a->halfTime) { rem = nullptr; }
+    if (a->halfTime || !a->current) { rem = nullptr; }
+    a->current = nextN;
     swap(i, rem, nextN);
     
     if (a->freeCurrent)
@@ -88,7 +89,6 @@ void clockedArp()
         {
             Arpeggio* a = &arps[i];
             if (!a->start) { continue; }
-            // there must be a current note here
             _triggerNextArp(i, a);
         }
         return;
@@ -99,7 +99,7 @@ void clockedArp()
         for (uint8_t i = 0; i < 5; i++)
         {
             Arpeggio* a = &arps[i];
-            if (!a->start) { continue; }
+            if (!a->current || !a->halfTime) { continue; }
             onNoteOff(i, a->current->value.key);
         }
         return;
@@ -249,7 +249,7 @@ void arpAddNote(uint8_t channel, Note n)
     
     a->noteCount++;
     // if no current note
-    if (!a->current)
+    if (!arpClocked && !a->current)
     {
         a->current = nl;
         // instant start
