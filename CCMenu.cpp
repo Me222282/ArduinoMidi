@@ -87,7 +87,7 @@ void manageMenuNotes(NoteName n)
     {
         // set to defaults
         case NoteName::B3:
-            // resetValues();
+            resetCCMValues();
             triggerFeedback(true);
             return;
         case NoteName::C4:
@@ -116,22 +116,12 @@ void manageMenuNotes(NoteName n)
             return;
         
         case NoteName::B4:
-            // saveOpsState();
-            // playNote(NOTEOPTION_S, MF_DURATION);
+            saveCCMState();
+            playNote(NOTEOPTION_S, MF_DURATION);
             return;
         case NoteName::C5:
-            // loadOpsState();
-            
-            // clearArps();
-            // clearNotes(&channels[0]);
-            // clearNotes(&channels[1]);
-            // clearNotes(&channels[2]);
-            // clearNotes(&channels[3]);
-            // clearNotes(&channels[4]);
-            
-            // gate = 0;
-            // setGate(0);
-            // playNote(NOTEOPTION_S, MF_DURATION);
+            loadCCMState();
+            playNote(NOTEOPTION_S, MF_DURATION);
             return;
         case NoteName::C3:
             setNumber(n);
@@ -173,4 +163,53 @@ void ccMenuFunction()
                 return;
         }
     }
+}
+
+void resetCCMValues()
+{
+    ccListeners[0] = 0;
+    ccListeners[1] = 0;
+    ccListeners[2] = 0;
+    ccListeners[3] = 0;
+    ccListeners[4] = 0;
+    ccOutputs[0] = false;
+    ccOutputs[1] = false;
+    ccOutputs[2] = false;
+    ccOutputs[3] = false;
+    ccOutputs[4] = false;
+    ccChannelMode = false;
+}
+
+void saveCCMState()
+{
+    eeWrite(49, ccListeners[0]);
+    eeWrite(50, ccListeners[1]);
+    eeWrite(51, ccListeners[2]);
+    eeWrite(52, ccListeners[3]);
+    eeWrite(53, ccListeners[4]);
+    
+    eeWrite(54, ccOutputs[0]);
+    eeWrite(55, ccOutputs[1]);
+    eeWrite(56, ccOutputs[2]);
+    eeWrite(57, ccOutputs[3]);
+    eeWrite(58, ccOutputs[4]);
+    
+    eeWrite(59, ccChannelMode);
+    EEPROM.commit();
+}
+void loadCCMState()
+{
+    ccListeners[0] = EEPROM.read(49);
+    ccListeners[1] = EEPROM.read(50);
+    ccListeners[2] = EEPROM.read(51);
+    ccListeners[3] = EEPROM.read(52);
+    ccListeners[4] = EEPROM.read(53);
+    
+    ccOutputs[0] = EEPROM.read(54);
+    ccOutputs[1] = EEPROM.read(55);
+    ccOutputs[2] = EEPROM.read(56);
+    ccOutputs[3] = EEPROM.read(57);
+    ccOutputs[4] = EEPROM.read(58);
+    
+    ccChannelMode = EEPROM.read(59);
 }

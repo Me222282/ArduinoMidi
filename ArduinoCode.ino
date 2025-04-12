@@ -10,7 +10,7 @@
 #include "src/notes/Channels.h"
 #include "src/core/Midi.h"
 
-void resetValues();
+void resetOpsValues();
 void saveOpsState();
 void loadOpsState();
 
@@ -45,7 +45,7 @@ void setup()
     
     MIDI.begin();
     Serial.begin(38400);
-    EEPROM.begin(48);
+    EEPROM.begin(60);
     
     SPI.begin();
     
@@ -61,6 +61,7 @@ void setup()
     setChannels(1, 1);
     loadArps();
     loadOpsState();
+    loadCCMState();
 }
 
 bool specOps = false;
@@ -199,7 +200,8 @@ void loop()
                 CCType number = MIDI.getCC();
                 if (number == CCType::ResetAllControllers)
                 {
-                    resetValues();
+                    resetOpsValues();
+                    resetCCMValues();
                     return;
                 }
                 

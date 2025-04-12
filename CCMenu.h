@@ -10,6 +10,11 @@ extern "C" {
 
 void ccMenuFunction();
 
+void resetCCMValues();
+
+void saveCCMState();
+void loadCCMState();
+
 #ifdef __cplusplus
 } // extern "C"
 #endif

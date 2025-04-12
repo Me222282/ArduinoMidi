@@ -97,7 +97,7 @@ void manageSpecie(uint8_t channel, NoteName n)
     {
         // set to defaults
         case NoteName::B3:
-            resetValues();
+            resetOpsValues();
             triggerFeedback(true);
             return;
         case NoteName::C4:
@@ -250,7 +250,7 @@ void specialOptions()
     }
 }
 
-void resetValues()
+void resetOpsValues()
 {
     retriggerNew = true;
     retriggerOld = false;
@@ -270,6 +270,7 @@ void resetValues()
     filterKeys = false;
     filter = Notes::C;
     arpClocked = false;
+    forgetNotes = false;
 }
 
 void saveOpsState()
@@ -289,6 +290,7 @@ void saveOpsState()
     eeWrite(45, filterKeys);
     eeWrite(46, filter);
     eeWrite(47, arpClocked);
+    eeWrite(48, forgetNotes);
     EEPROM.commit();
 }
 void loadOpsState()
@@ -311,4 +313,5 @@ void loadOpsState()
     filterKeys = EEPROM.read(45);
     filter = (Notes)EEPROM.read(46);
     arpClocked = EEPROM.read(47);
+    forgetNotes = EEPROM.read(48);
 }

@@ -13,7 +13,7 @@ extern bool channelArps[5];
 
 void specialOptions();
 
-// void resetValues();
+void resetOpsValues();
 
 void saveOpsState();
 void loadOpsState();
