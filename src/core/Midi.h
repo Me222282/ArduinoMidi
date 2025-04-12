@@ -8,21 +8,21 @@ enum MidiCode: uint8_t
     PolyphonicAftertouch = 0xA,
     CC = 0xB,
     PC = 0xC,
-    ChannelAftertouch = 0xD,
+    ChannelPressure = 0xD,
     PitchWheel = 0xE,
     
-    SystemExclusiveStart = 0xF0,
-    SystemExclusiveEnd = 0xF7,
+    // SystemExclusiveStart = 0xF0,
+    // SystemExclusiveEnd = 0xF7,
     SongPointer = 0xF2,
     SongSelect = 0xF3,
     TuneRequest = 0xF6,
     QuarterFrame = 0xF1,
     TimingClock = 0xF8,
-    MeasureEnd = 0xF9,
+    Tick = 0xF9,
     Start = 0xFA,
     Continue = 0xFB,
     Stop = 0xFC,
-    ActiveSensing = 0xFE,
+    ActiveSens = 0xFE,
     Reset = 0xFF,
 };
 
@@ -237,6 +237,8 @@ private:
     uint8_t _data2;
     
     uint8_t _channel;
+    bool _secondByte;
+    bool _inExclusive;
 };
 
 extern Midi MIDI;
