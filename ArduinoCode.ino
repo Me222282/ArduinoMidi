@@ -4,14 +4,15 @@
 #include "src/core/Coms.h"
 #include "Arpeggio.h"
 #include "SpeicalOps.h"
+#include "CCMenu.h"
 #include "src/sequen/Sequencer.h"
 #include "src/core/Globals.h"
 #include "src/notes/Channels.h"
 #include "src/core/Midi.h"
 
 void resetValues();
-void saveSate();
-void loadSate();
+void saveOpsState();
+void loadOpsState();
 
 void setup()
 {
@@ -59,13 +60,13 @@ void setup()
     
     setChannels(1, 1);
     loadArps();
-    loadSate();
+    loadOpsState();
 }
 
 bool specOps = false;
 bool sequencer = false;
-bool a0Pressed = false;
-bool b0Pressed = false;
+bool ccMenu = false;
+NoteName lastNote;
 void readControls()
 {
     int8_t oldOO = octaveOffset;
@@ -99,9 +100,9 @@ void readControls()
         
         gate = 0;
         setGate(0);
-        specOps = a0Pressed;
-        a0Pressed = false;
-        sequencer = b0Pressed;
+        specOps = lastNote == NoteName::_A0;
+        sequencer = lastNote == NoteName::_B0;
+        ccMenu = lastNote == NoteName::C1;
         onParamChange();
     }
     if (activeChannels != oldC || activeVoices != oldV)
@@ -112,9 +113,9 @@ void readControls()
         gate = 0;
         setGate(gate);
         updateAllPBs();
-        specOps = a0Pressed;
-        a0Pressed = false;
-        sequencer = b0Pressed;
+        specOps = lastNote == NoteName::_A0;
+        sequencer = lastNote == NoteName::_B0;
+        ccMenu = lastNote == NoteName::C1;
         onParamChange();
     }
     else
@@ -141,13 +142,21 @@ void loop()
     if (sequencer)
     {
         sequencer = seqLoopInvoke();
-        b0Pressed = sequencer;
+        if (!sequencer) { lastNote = (NoteName)255U; }
         return;
     }
     
     if (specOps)
     {
         specialOptions();
+        lastNote = (NoteName)255U;
+        return;
+    }
+    
+    if (ccMenu)
+    {
+        ccMenuFunction();
+        lastNote = (NoteName)255U;
         return;
     }
     
@@ -166,8 +175,7 @@ void loop()
                 uint8_t vel = MIDI.getData2();
                 if (type == MidiCode::NoteOFF || vel == 0)
                 {
-                    if (n == NoteName::_A0) { a0Pressed = false; }
-                    if (n == NoteName::_B0) { b0Pressed = false; }
+                    if (n == lastNote) { lastNote = (NoteName)255U; }
                     if (channelArps[channel])
                     {
                         arpRemoveNote(channel, n);
@@ -177,8 +185,7 @@ void loop()
                     return;
                 }
                 
-                if (n == NoteName::_A0) { a0Pressed = true; }
-                if (n == NoteName::_B0) { b0Pressed = true; }
+                lastNote = (NoteName)n;
                 if (channelArps[channel])
                 {
                     arpAddNote(channel, { n, vel });

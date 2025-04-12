@@ -10,10 +10,13 @@
 extern "C" {
 #endif
 
+extern bool ccOutputs[5];
+
 extern uint8_t gateCurrent;
 void setGate(uint8_t value);
 
 void setVel(uint8_t n, uint8_t value);
+void setCCOut(uint8_t n, uint8_t value);
 
 void _setNoteNorm(uint8_t n, uint8_t value);
 void _setSubNote(uint8_t n, uint8_t value);

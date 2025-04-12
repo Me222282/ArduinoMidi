@@ -3,6 +3,8 @@
 #include "Coms.h"
 #include "Globals.h"
 
+bool ccOutputs[5];
+
 void configureGate()
 {
     SPI.beginTransaction(GATESPI);
@@ -43,7 +45,14 @@ void _dac8(uint8_t n, uint8_t value, uint16_t command)
 }
 void setVel(uint8_t n, uint8_t value)
 {
-    if (oldValues[n].vel == value) { return; }
+    if (ccOutputs[n] || oldValues[n].vel == value) { return; }
+    oldValues[n].vel = value;
+    
+    _dac8(n, value, 0xF000);
+}
+void setCCOut(uint8_t n, uint8_t value)
+{
+    if (!ccOutputs[n] || oldValues[n].vel == value) { return; }
     oldValues[n].vel = value;
     
     _dac8(n, value, 0xF000);
@@ -51,6 +60,8 @@ void setVel(uint8_t n, uint8_t value)
 
 void _setNoteNorm(uint8_t n, uint8_t value)
 {
+    value += octaveOffset * 12;
+    
     if (oldValues[n].key == value) { return; }
     oldValues[n].key = value;
     
@@ -58,6 +69,8 @@ void _setNoteNorm(uint8_t n, uint8_t value)
 }
 void _setSubNote(uint8_t n, uint8_t value)
 {
+    value += octaveOffset * 24;
+    
     if (oldValues[n].key == value) { return; }
     oldValues[n].key = value;
     

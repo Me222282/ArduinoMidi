@@ -1,4 +1,5 @@
 #include <Arduino.h>
+#include <EEPROM.h>
 #include "Sequencer.h"
 
 #include "../../Callbacks.h"
@@ -194,7 +195,7 @@ void manageSeqNote(NoteName n, uint8_t vel, uint8_t channel)
             if (digit_S >= 4) { return; }
             seqDigits[digit_S] = dv;
             digit_S++;
-            playNote((NoteName)(n + (NoteName::_A3 - NoteName::_A0)), MF_DURATION);
+            playNumber(n);
             return;
         }
         if (n != NoteName::C3) { return; }

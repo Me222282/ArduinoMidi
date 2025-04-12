@@ -24,18 +24,16 @@ void velocityMF(uint8_t i)
 
 void playNote(NoteName n, uint32_t duration)
 {
-    uint8_t nn = n + (octaveOffset * 12);
-    
     velocityMF(0);
-    setNote(0, nn);
+    setNote(0, n);
     velocityMF(1);
-    setNote(1, nn);
+    setNote(1, n);
     velocityMF(2);
-    setNote(2, nn);
+    setNote(2, n);
     velocityMF(3);
-    setNote(3, nn);
+    setNote(3, n);
     velocityMF(4);
-    setNote(4, nn);
+    setNote(4, n);
     setGate(0b11111);
     
     is_MF = true;
@@ -50,15 +48,13 @@ const uint8_t gatePlaces[5] =
 
 void playNoteC(NoteName n, uint8_t channel, uint32_t duration)
 {
-    uint8_t nn = n + (octaveOffset * 12);
-    
     Channel* c = &channels[channel];
     uint8_t end = c->position + c->places;
     uint8_t gate = 0;
     for (uint8_t i = c->position; i < end; i++)
     {
         velocityMF(i);
-        setNote(i, nn);
+        setNote(i, n);
         gate |= gatePlaces[i];
     }
     setGate(gateCurrent | gate);

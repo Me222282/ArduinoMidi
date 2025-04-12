@@ -13,20 +13,12 @@ extern bool channelArps[5];
 
 void specialOptions();
 
-void resetValues();
+// void resetValues();
 
-void saveSate();
-void loadSate();
+void saveOpsState();
+void loadOpsState();
 
 uint8_t getDigit(NoteName n);
-inline void triggerFeedback(bool v)
-{
-    playNote(v ? NOTEON_S : NOTEOFF_S, MF_DURATION);
-}
-inline void triggerFeedbackC(bool v, uint8_t c)
-{
-    playNoteC(v ? NOTEON_S : NOTEOFF_S, c, MF_DURATION);
-}
 
 #ifdef __cplusplus
 } // extern "C"

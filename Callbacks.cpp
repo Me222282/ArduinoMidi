@@ -7,7 +7,6 @@
 
 void _updateSlot(uint8_t com, Note n)
 {
-    n.key += (octaveOffset * 12);
     n.vel <<= 1;
     
     for (uint8_t i = 0; i < 5; i++)
@@ -31,6 +30,9 @@ void _updateSlot(uint8_t com, Note n)
         }
     }
 }
+uint8_t ccListeners[5];
+bool ccChannelMode = false;
+
 bool alwaysDelay = false;
 bool filterKeys = false;
 Notes filter = Notes::C;
@@ -136,11 +138,33 @@ void _gateOff(Channel* c)
     }
     setGate(gate);
 }
+
+void ccUpdate(Channel* c, CCType number, uint8_t value)
+{
+    uint8_t offset = 0;
+    if (ccListeners[0] == number)       { offset = 0; }
+    else if (ccListeners[1] == number)  { offset = 1; }
+    else if (ccListeners[2] == number)  { offset = 2; }
+    else if (ccListeners[3] == number)  { offset = 3; }
+    else if (ccListeners[4] == number)  { offset = 4; }
+    else { return; }
+    
+    if (!ccChannelMode)
+    {
+        setCCOut(offset, value);
+        return;
+    }
+    
+    if (offset >= c->places) { return; }
+    setCCOut(offset + c->position, value);
+}
 void onControlChange(uint8_t channel, CCType number, uint8_t value)
 {
     // cc 01 is mod wheel
     if (channel >= activeChannels) { return; }
     Channel* c = &channels[channel];
+    
+    ccUpdate(c, number, value);
     
     if (number == CCType::AllNotesOff)
     {
@@ -173,7 +197,6 @@ void updateAllNotes()
         NoteList* nl = c->locations[vI];
         if (!nl) { continue; }
         uint8_t n = nl->value.key;
-        n += (octaveOffset * 12);
         // changes to make
         setNote(i, n);
     }

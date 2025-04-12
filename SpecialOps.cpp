@@ -55,6 +55,173 @@ uint8_t getDigit(NoteName n)
     }
     return 11;
 }
+void manageSpecie(uint8_t channel, NoteName n)
+{
+    if (tapTempo)
+    {
+        setArpTimeOut(channel, millis() - tapTempoTime);
+        tapTempo = false;
+        playNote(NOTEOPTION_S, MF_DURATION_SHORT);
+        return;
+    }
+    if (choseFilter)
+    {
+        uint8_t fk = n - NoteName::C1;
+        if (fk < 12)
+        {
+            filter = (Notes)fk;
+            choseFilter = false;
+            playNote((NoteName)(fk + NoteName::C4), MF_DURATION);
+            return;
+        }
+        if (n != NoteName::Eb4) { return; }
+    }
+    // enter time - digit must start at 0
+    if (setArpTime)
+    {
+        uint8_t dv = getDigit(n);
+        // valid digit
+        if (dv <= 9)
+        {
+            // no more digits
+            if (digit >= 4) { return; }
+            arpDigits[digit] = dv;
+            digit++;
+            playNumber(n);
+            return;
+        }
+        if (n != NoteName::C3) { return; }
+    }
+    
+    switch (n)
+    {
+        // set to defaults
+        case NoteName::B3:
+            resetValues();
+            triggerFeedback(true);
+            return;
+        case NoteName::C4:
+            retriggerOld = !retriggerOld;
+            triggerFeedback(retriggerOld);
+            return;
+        case NoteName::Db4:
+            filterKeys = !filterKeys;
+            triggerFeedback(filterKeys);
+            return;
+        case NoteName::_D4:
+            retriggerNew = !retriggerNew;
+            triggerFeedback(retriggerNew);
+            return;
+        case NoteName::Eb4:
+            choseFilter = !choseFilter;
+            playNote(NOTESELECT_S, MF_DURATION);
+            return;
+        case NoteName::E4:
+            alwaysDelay = !alwaysDelay;
+            triggerFeedback(alwaysDelay);
+            return;
+        case NoteName::F4:
+        {
+            if (setNote == _setNoteNorm)
+            {
+                setNote = _setSubNote;
+                triggerFeedback(true);
+                return;
+            }
+            setNote = _setNoteNorm;
+            triggerFeedback(false);
+            return;
+        }
+        case NoteName::G4:
+        {
+            bool v = !channelArps[channel];
+            channelArps[channel] = v;
+            if (!v) { clearArp(channel); }
+            else { clearNotes(&channels[channel]); }
+            shouldInvokeArp();
+            triggerFeedbackC(v, channel);
+            return;
+        }
+        case NoteName::_A4:
+            sortNotes = !sortNotes;
+            triggerFeedback(sortNotes);
+            return;
+        case NoteName::B4:
+            saveOpsState();
+            playNote(NOTEOPTION_S, MF_DURATION);
+            return;
+        case NoteName::C5:
+            loadOpsState();
+            
+            clearArps();
+            clearNotes(&channels[0]);
+            clearNotes(&channels[1]);
+            clearNotes(&channels[2]);
+            clearNotes(&channels[3]);
+            clearNotes(&channels[4]);
+            
+            gate = 0;
+            setGate(0);
+            playNote(NOTEOPTION_S, MF_DURATION);
+            return;
+        case NoteName::C3:
+        {
+            setArpTime = !setArpTime;
+            playNote(NOTESELECT_S, MF_DURATION);
+            // set arp time value
+            if (!setArpTime)
+            {
+                // digit is the number of digits entered
+                if (digit == 0)
+                {
+                    setArpTimeOut(channel, 60000 / lv);
+                    return;
+                }
+                uint32_t bpm = 0;
+                uint8_t place = 0;
+                // read in reverse order
+                for (int8_t i = digit - 1; i >= 0; i--)
+                {
+                    bpm += arpDigits[i] * digitPlaces[place];
+                    place++;
+                }
+                digit = 0;
+                lv = bpm;
+                setArpTimeOut(channel, 60000 / bpm);
+            }
+            return;
+        }
+        case NoteName::Db3:
+            tapTempo = true;
+            tapTempoTime = millis();
+            playNote(NOTESELECT_S, MF_DURATION_SHORT);
+            return;
+        case NoteName::_D3:
+            setArpMode(channel, 0);
+            playNoteC(NOTEOPTION_S, channel, MF_DURATION);
+            return;
+        case NoteName::Eb3:
+            arpClocked = !arpClocked;
+            triggerFeedback(arpClocked);
+            return;
+        case NoteName::E3:
+            setArpMode(channel, 1);
+            playNoteC(NOTEOPTION_S, channel, MF_DURATION);
+            return;
+        case NoteName::F3:
+            setArpMode(channel, 2);
+            playNoteC(NOTEOPTION_S, channel, MF_DURATION);
+            return;
+        case NoteName::G3:
+            setArpSort(channel, !arps[channel].sort);
+            triggerFeedbackC(arps[channel].sort, channel);
+            return;
+        case NoteName::_A3:
+            setArpHT(channel, !arps[channel].halfTime);
+            triggerFeedbackC(arps[channel].halfTime, channel);
+            return;
+    }
+}
 void specialOptions()
 {
     invokeMF();
@@ -69,174 +236,12 @@ void specialOptions()
             {
                 // OFF
                 if (MIDI.getData2() == 0) { return; }
-                NoteName n = MIDI.getNote();
-                
-                if (tapTempo)
-                {
-                    setArpTimeOut(channel, millis() - tapTempoTime);
-                    tapTempo = false;
-                    playNote(NOTEOPTION_S, MF_DURATION_SHORT);
-                    return;
-                }
-                if (choseFilter)
-                {
-                    uint8_t fk = n - NoteName::C1;
-                    if (fk < 12)
-                    {
-                        filter = (Notes)fk;
-                        choseFilter = false;
-                        playNote((NoteName)(fk + NoteName::C4), MF_DURATION);
-                        return;
-                    }
-                    if (n != NoteName::Eb4) { return; }
-                }
-                // enter time - digit must start at 0
-                if (setArpTime)
-                {
-                    uint8_t dv = getDigit(n);
-                    // valid digit
-                    if (dv <= 9)
-                    {
-                        // no more digits
-                        if (digit >= 4) { return; }
-                        arpDigits[digit] = dv;
-                        digit++;
-                        playNote((NoteName)(n + (NoteName::_A3 - NoteName::_A0)), MF_DURATION);
-                        return;
-                    }
-                    if (n != NoteName::C3) { return; }
-                }
-                
-                switch (n)
-                {
-                    // set to defaults
-                    case NoteName::B3:
-                        resetValues();
-                        triggerFeedback(true);
-                        return;
-                    case NoteName::C4:
-                        retriggerOld = !retriggerOld;
-                        triggerFeedback(retriggerOld);
-                        return;
-                    case NoteName::Db4:
-                        filterKeys = !filterKeys;
-                        triggerFeedback(filterKeys);
-                        return;
-                    case NoteName::_D4:
-                        retriggerNew = !retriggerNew;
-                        triggerFeedback(retriggerNew);
-                        return;
-                    case NoteName::Eb4:
-                        choseFilter = !choseFilter;
-                        playNote(NOTESELECT_S, MF_DURATION);
-                        return;
-                    case NoteName::E4:
-                        alwaysDelay = !alwaysDelay;
-                        triggerFeedback(alwaysDelay);
-                        return;
-                    case NoteName::F4:
-                    {
-                        if (setNote == _setNoteNorm)
-                        {
-                            setNote = _setSubNote;
-                            triggerFeedback(true);
-                            return;
-                        }
-                        setNote = _setNoteNorm;
-                        triggerFeedback(false);
-                        return;
-                    }
-                    case NoteName::G4:
-                    {
-                        bool v = !channelArps[channel];
-                        channelArps[channel] = v;
-                        if (!v) { clearArp(channel); }
-                        else { clearNotes(&channels[channel]); }
-                        shouldInvokeArp();
-                        triggerFeedbackC(v, channel);
-                        return;
-                    }
-                    case NoteName::_A4:
-                        sortNotes = !sortNotes;
-                        triggerFeedback(sortNotes);
-                        return;
-                    case NoteName::B4:
-                        saveSate();
-                        playNote(NOTEOPTION_S, MF_DURATION);
-                        return;
-                    case NoteName::C5:
-                        loadSate();
-                        
-                        clearArps();
-                        clearNotes(&channels[0]);
-                        clearNotes(&channels[1]);
-                        clearNotes(&channels[2]);
-                        clearNotes(&channels[3]);
-                        clearNotes(&channels[4]);
-                        
-                        gate = 0;
-                        setGate(0);
-                        playNote(NOTEOPTION_S, MF_DURATION);
-                        return;
-                    case NoteName::C3:
-                    {
-                        setArpTime = !setArpTime;
-                        playNote(NOTESELECT_S, MF_DURATION);
-                        // set arp time value
-                        if (!setArpTime)
-                        {
-                            // digit is the number of digits entered
-                            if (digit == 0)
-                            {
-                                setArpTimeOut(channel, 60000 / lv);
-                                return;
-                            }
-                            uint32_t bpm = 0;
-                            uint8_t place = 0;
-                            // read in reverse order
-                            for (int8_t i = digit - 1; i >= 0; i--)
-                            {
-                                bpm += arpDigits[i] * digitPlaces[place];
-                                place++;
-                            }
-                            digit = 0;
-                            lv = bpm;
-                            setArpTimeOut(channel, 60000 / bpm);
-                        }
-                        return;
-                    }
-                    case NoteName::Db3:
-                        tapTempo = true;
-                        tapTempoTime = millis();
-                        playNote(NOTESELECT_S, MF_DURATION_SHORT);
-                        return;
-                    case NoteName::_D3:
-                        setArpMode(channel, 0);
-                        playNoteC(NOTEOPTION_S, channel, MF_DURATION);
-                        return;
-                    case NoteName::Eb3:
-                        arpClocked = !arpClocked;
-                        triggerFeedback(arpClocked);
-                        return;
-                    case NoteName::E3:
-                        setArpMode(channel, 1);
-                        playNoteC(NOTEOPTION_S, channel, MF_DURATION);
-                        return;
-                    case NoteName::F3:
-                        setArpMode(channel, 2);
-                        playNoteC(NOTEOPTION_S, channel, MF_DURATION);
-                        return;
-                    case NoteName::G3:
-                        setArpSort(channel, !arps[channel].sort);
-                        triggerFeedbackC(arps[channel].sort, channel);
-                        return;
-                    case NoteName::_A3:
-                        setArpHT(channel, !arps[channel].halfTime);
-                        triggerFeedbackC(arps[channel].halfTime, channel);
-                        return;
-                }
+                manageSpecie(channel, MIDI.getNote());
                 return;
             }
+            case MidiCode::CC:
+                onControlChange(channel, MIDI.getCC(), MIDI.getData2());
+                return;
         }
     }
 }
@@ -263,7 +268,7 @@ void resetValues()
     arpClocked = false;
 }
 
-void saveSate()
+void saveOpsState()
 {
     eeWrite(35, retriggerOld);
     eeWrite(36, retriggerNew);
@@ -282,7 +287,7 @@ void saveSate()
     eeWrite(47, arpClocked);
     EEPROM.commit();
 }
-void loadSate()
+void loadOpsState()
 {
     retriggerOld = EEPROM.read(35);
     retriggerNew = EEPROM.read(36);
