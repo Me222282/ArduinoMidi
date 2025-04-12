@@ -11,6 +11,7 @@ extern "C" {
 extern bool retriggerNew;
 extern bool retriggerOld;
 extern bool sortNotes;
+extern bool forgetNotes;
 
 int8_t pushNote(Channel* c, uint8_t chI, Note n);
 int8_t removeNote(Channel* c, uint8_t chI, uint8_t key);

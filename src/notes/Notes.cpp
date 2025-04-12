@@ -8,6 +8,7 @@ NoteList* _getLosableNote(Channel* c, uint8_t key);
 bool retriggerNew = true;
 bool retriggerOld = false;
 bool sortNotes = false;
+bool forgetNotes = false;
 
 void _add(Channel* c, NoteList* nl)
 {
@@ -18,6 +19,11 @@ void _add(Channel* c, NoteList* nl)
         return;
     }
     appendNoteList((NoteList**)c, nl);
+}
+void _remove(Channel* c, NoteList* nl)
+{
+    removeNoteList((NoteList**)c, nl);
+    c->noteCount--;
 }
 int8_t pushNote(Channel* c, uint8_t chI, Note n)
 {
@@ -44,11 +50,17 @@ int8_t pushNote(Channel* c, uint8_t chI, Note n)
     // take a use slot
     NoteList* take = _getLosableNote(c, n.key);
     // add to list after slot chosen
+    if (take == nullptr)
+    {
+        if (!forgetNotes) { _add(c, nl); }
+        return -1;
+    }
     _add(c, nl);
-    if (take == nullptr) { return -1; }
     
     hole = take->index;
     take->index = -1;
+    // remove taken notes to forget
+    if (forgetNotes) { _remove(c, take); }
     nl->index = hole;
     c->locations[hole] = nl;
     if (retriggerNew)
@@ -57,11 +69,6 @@ int8_t pushNote(Channel* c, uint8_t chI, Note n)
         reTrigChannelNote(chI, hole);
     }
     return hole;
-}
-void _remove(Channel* c, NoteList* nl)
-{
-    removeNoteList((NoteList**)c, nl);
-    c->noteCount--;
 }
 int8_t removeNote(Channel* c, uint8_t chI, uint8_t key)
 {

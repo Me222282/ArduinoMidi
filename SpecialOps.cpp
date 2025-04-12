@@ -132,6 +132,10 @@ void manageSpecie(uint8_t channel, NoteName n)
             triggerFeedback(false);
             return;
         }
+        case NoteName::Gb4:
+            forgetNotes = !forgetNotes;
+            triggerFeedback(forgetNotes);
+            return;
         case NoteName::G4:
         {
             bool v = !channelArps[channel];
