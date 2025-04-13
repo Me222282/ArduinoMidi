@@ -162,7 +162,7 @@ void clearArps()
     clearArp(3);
     clearArp(4);
 }
-void initArps()
+void resetArps()
 {
     clearArps();
     arps[0] = { nullptr, nullptr, nullptr, 250, 0, 0, 0, false, true, false };
@@ -171,17 +171,17 @@ void initArps()
     arps[3] = { nullptr, nullptr, nullptr, 250, 0, 0, 0, false, true, false };
     arps[4] = { nullptr, nullptr, nullptr, 250, 0, 0, 0, false, true, false };
     
-    for (uint8_t i = 0; i < 5; i++)
-    {
-        uint8_t si = i * 7;
-        eeWrite(si, 0);
-        eeWrite(si + ARP_TIMEOUT_B, 0);
-        eeWrite(si + ARP_TIMEOUT_C, 0);
-        eeWrite(si + ARP_TIMEOUT_D, 250);
-        eeWrite(si + ARP_MODE, 0);
-        eeWrite(si + ARP_SORT, true);
-        eeWrite(si + ARP_HALFTIME, false);
-    }
+    // for (uint8_t i = 0; i < 5; i++)
+    // {
+    //     uint8_t si = i * 7;
+    //     eeWrite(si, 0);
+    //     eeWrite(si + ARP_TIMEOUT_B, 0);
+    //     eeWrite(si + ARP_TIMEOUT_C, 0);
+    //     eeWrite(si + ARP_TIMEOUT_D, 250);
+    //     eeWrite(si + ARP_MODE, 0);
+    //     eeWrite(si + ARP_SORT, true);
+    //     eeWrite(si + ARP_HALFTIME, false);
+    // }
 }
 void loadArps()
 {
@@ -203,38 +203,54 @@ void loadArps()
         };
     }
 }
-void setArpTimeOut(uint8_t channel, uint32_t time)
+void saveArps()
 {
-    uint8_t si = channel * 7;
-    arps[channel].timeOut = time;
+    for (uint8_t i = 0; i < 5; i++)
+    {
+        Arpeggio* a = &arps[i];
+        uint8_t si = i * 7;
+        uint32_t time = a->timeOut;
+        eeWrite(si, time >> 24);
+        eeWrite(si + ARP_TIMEOUT_B, (time >> 16) & 0xFF);
+        eeWrite(si + ARP_TIMEOUT_C, (time >> 8) & 0xFF);
+        eeWrite(si + ARP_TIMEOUT_D, time & 0xFF);
+        eeWrite(si + ARP_MODE, a->mode);
+        eeWrite(si + ARP_SORT, a->sort);
+        eeWrite(si + ARP_HALFTIME, a->halfTime);
+    }
+}
+// void setArpTimeOut(uint8_t channel, uint32_t time)
+// {
+//     uint8_t si = channel * 7;
+//     arps[channel].timeOut = time;
     
-    eeWrite(si, time >> 24);
-    eeWrite(si + ARP_TIMEOUT_B, (time >> 16) & 0xFF);
-    eeWrite(si + ARP_TIMEOUT_C, (time >> 8) & 0xFF);
-    eeWrite(si + ARP_TIMEOUT_D, time & 0xFF);
-    EEPROM.commit();
-}
-void setArpMode(uint8_t channel, uint8_t mode)
-{
-    uint8_t si = channel * 7;
-    arps[channel].mode = mode;
-    eeWrite(si + ARP_MODE, mode);
-    EEPROM.commit();
-}
-void setArpSort(uint8_t channel, bool sort)
-{
-    uint8_t si = channel * 7;
-    arps[channel].sort = sort;
-    eeWrite(si + ARP_SORT, sort);
-    EEPROM.commit();
-}
-void setArpHT(uint8_t channel, bool halfTime)
-{
-    uint8_t si = channel * 7;
-    arps[channel].halfTime = halfTime;
-    eeWrite(si + ARP_HALFTIME, halfTime);
-    EEPROM.commit();
-}
+//     eeWrite(si, time >> 24);
+//     eeWrite(si + ARP_TIMEOUT_B, (time >> 16) & 0xFF);
+//     eeWrite(si + ARP_TIMEOUT_C, (time >> 8) & 0xFF);
+//     eeWrite(si + ARP_TIMEOUT_D, time & 0xFF);
+//     EEPROM.commit();
+// }
+// void setArpMode(uint8_t channel, uint8_t mode)
+// {
+//     uint8_t si = channel * 7;
+//     arps[channel].mode = mode;
+//     eeWrite(si + ARP_MODE, mode);
+//     EEPROM.commit();
+// }
+// void setArpSort(uint8_t channel, bool sort)
+// {
+//     uint8_t si = channel * 7;
+//     arps[channel].sort = sort;
+//     eeWrite(si + ARP_SORT, sort);
+//     EEPROM.commit();
+// }
+// void setArpHT(uint8_t channel, bool halfTime)
+// {
+//     uint8_t si = channel * 7;
+//     arps[channel].halfTime = halfTime;
+//     eeWrite(si + ARP_HALFTIME, halfTime);
+//     EEPROM.commit();
+// }
 
 void arpAddNote(uint8_t channel, Note n)
 {

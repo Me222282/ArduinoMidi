@@ -60,7 +60,8 @@ void manageSpecie(uint8_t channel, NoteName n)
 {
     if (tapTempo)
     {
-        setArpTimeOut(channel, millis() - tapTempoTime);
+        // setArpTimeOut(channel, millis() - tapTempoTime);
+        arps[channel].timeOut = millis() - tapTempoTime;
         tapTempo = false;
         playNote(NOTEOPTION_S, MF_DURATION_SHORT);
         return;
@@ -156,8 +157,6 @@ void manageSpecie(uint8_t channel, NoteName n)
             playNote(NOTEOPTION_S, MF_DURATION);
             return;
         case NoteName::Bb4:
-            loadOpsState();
-            
             clearArps();
             clearNotes(&channels[0]);
             clearNotes(&channels[1]);
@@ -167,6 +166,7 @@ void manageSpecie(uint8_t channel, NoteName n)
             
             gate = 0;
             setGate(0);
+            loadOpsState();
             playNote(NOTEOPTION_S, MF_DURATION);
             return;
         case NoteName::C5:
@@ -193,7 +193,8 @@ void manageSpecie(uint8_t channel, NoteName n)
                 // digit is the number of digits entered
                 if (digit == 0)
                 {
-                    setArpTimeOut(channel, 60000 / lv);
+                    // setArpTimeOut(channel, 60000 / lv);
+                    arps[channel].timeOut = 60000 / lv;
                     return;
                 }
                 uint32_t bpm = 0;
@@ -206,7 +207,8 @@ void manageSpecie(uint8_t channel, NoteName n)
                 }
                 digit = 0;
                 lv = bpm;
-                setArpTimeOut(channel, 60000 / bpm);
+                // setArpTimeOut(channel, 60000 / bpm);
+                arps[channel].timeOut = 60000 / lv;
             }
             return;
         }
@@ -216,7 +218,8 @@ void manageSpecie(uint8_t channel, NoteName n)
             playNote(NOTEOPTION_S, MF_DURATION_SHORT);
             return;
         case NoteName::_D3:
-            setArpMode(channel, 0);
+            // setArpMode(channel, 0);
+            arps[channel].mode = 0;
             playNoteC(NOTEOPTION_S, channel, MF_DURATION);
             return;
         case NoteName::Eb3:
@@ -224,19 +227,23 @@ void manageSpecie(uint8_t channel, NoteName n)
             triggerFeedback(arpClocked);
             return;
         case NoteName::E3:
-            setArpMode(channel, 1);
+            // setArpMode(channel, 1);
+            arps[channel].mode = 1;
             playNoteC(NOTEOPTION_S, channel, MF_DURATION);
             return;
         case NoteName::F3:
-            setArpMode(channel, 2);
+            // setArpMode(channel, 2);
+            arps[channel].mode = 2;
             playNoteC(NOTEOPTION_S, channel, MF_DURATION);
             return;
         case NoteName::G3:
-            setArpSort(channel, !arps[channel].sort);
+            // setArpSort(channel, !arps[channel].sort);
+            arps[channel].sort = !arps[channel].sort;
             triggerFeedbackC(arps[channel].sort, channel);
             return;
         case NoteName::_A3:
-            setArpHT(channel, !arps[channel].halfTime);
+            // setArpHT(channel, !arps[channel].halfTime);
+            arps[channel].halfTime = !arps[channel].halfTime;
             triggerFeedbackC(arps[channel].halfTime, channel);
             return;
     }
@@ -275,7 +282,7 @@ void resetOpsValues()
     setArpTime = false;
     sortNotes = false;
     digit = 0;
-    initArps();
+    resetArps();
     channelArps[0] = false;
     channelArps[1] = false;
     channelArps[2] = false;
@@ -293,6 +300,8 @@ void resetOpsValues()
 
 void saveOpsState()
 {
+    saveArps();
+    
     eeWrite(RETRIG_OLD, retriggerOld);
     eeWrite(RETRIG_NEW, retriggerNew);
     eeWrite(ALWAYS_DELAY, alwaysDelay);
@@ -315,6 +324,8 @@ void saveOpsState()
 }
 void loadOpsState()
 {
+    loadArps();
+    
     retriggerOld = EEPROM.read(RETRIG_OLD);
     retriggerNew = EEPROM.read(RETRIG_NEW);
     alwaysDelay = EEPROM.read(ALWAYS_DELAY);

@@ -54,7 +54,6 @@ void setup()
     configureGate();
     
     setChannels(1, 1);
-    loadArps();
     loadOpsState();
     loadCCMState();
     loadSeqState();

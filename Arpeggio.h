@@ -31,12 +31,13 @@ void invokeArps();
 
 void clearArp(uint8_t channel);
 void clearArps();
-void initArps();
+void resetArps();
 void loadArps();
-void setArpTimeOut(uint8_t channel, uint32_t time);
-void setArpMode(uint8_t channel, uint8_t mode);
-void setArpSort(uint8_t channel, bool sort);
-void setArpHT(uint8_t channel, bool halfTime);
+void saveArps();
+// void setArpTimeOut(uint8_t channel, uint32_t time);
+// void setArpMode(uint8_t channel, uint8_t mode);
+// void setArpSort(uint8_t channel, bool sort);
+// void setArpHT(uint8_t channel, bool halfTime);
 
 void arpAddNote(uint8_t channel, Note n);
 
