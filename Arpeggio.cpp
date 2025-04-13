@@ -1,9 +1,10 @@
 #include <Arduino.h>
 #include <EEPROM.h>
 #include "Arpeggio.h"
-#include "src/notes/Channels.h"
+// #include "src/notes/Channels.h"
 #include "src/notes/Notes.h"
 #include "Callbacks.h"
+#include "MemLocations.h"
 
 Arpeggio arps[5];
 uint32_t tElapsed;
@@ -174,12 +175,12 @@ void initArps()
     {
         uint8_t si = i * 7;
         eeWrite(si, 0);
-        eeWrite(si + 1, 0);
-        eeWrite(si + 2, 0);
-        eeWrite(si + 3, 250);
-        eeWrite(si + 4, 0);
-        eeWrite(si + 5, true);
-        eeWrite(si + 6, false);
+        eeWrite(si + ARP_TIMEOUT_B, 0);
+        eeWrite(si + ARP_TIMEOUT_C, 0);
+        eeWrite(si + ARP_TIMEOUT_D, 250);
+        eeWrite(si + ARP_MODE, 0);
+        eeWrite(si + ARP_SORT, true);
+        eeWrite(si + ARP_HALFTIME, false);
     }
 }
 void loadArps()
@@ -188,12 +189,12 @@ void loadArps()
     {
         uint8_t si = i * 7;
         uint32_t timeA = EEPROM.read(si) << 24;
-        uint32_t timeB = EEPROM.read(si + 1) << 16;
-        uint32_t timeC = EEPROM.read(si + 2) << 8;
-        uint32_t timeD = EEPROM.read(si + 3);
-        uint8_t mode = EEPROM.read(si + 4);
-        uint8_t sort = EEPROM.read(si + 5);
-        uint8_t ht = EEPROM.read(si + 6);
+        uint32_t timeB = EEPROM.read(si + ARP_TIMEOUT_B) << 16;
+        uint32_t timeC = EEPROM.read(si + ARP_TIMEOUT_C) << 8;
+        uint32_t timeD = EEPROM.read(si + ARP_TIMEOUT_D);
+        uint8_t mode = EEPROM.read(si + ARP_MODE);
+        uint8_t sort = EEPROM.read(si + ARP_SORT);
+        uint8_t ht = EEPROM.read(si + ARP_HALFTIME);
         arps[i] =
         {
             nullptr, nullptr, nullptr,
@@ -208,30 +209,30 @@ void setArpTimeOut(uint8_t channel, uint32_t time)
     arps[channel].timeOut = time;
     
     eeWrite(si, time >> 24);
-    eeWrite(si + 1, (time >> 16) & 0xFF);
-    eeWrite(si + 2, (time >> 8) & 0xFF);
-    eeWrite(si + 3, time & 0xFF);
+    eeWrite(si + ARP_TIMEOUT_B, (time >> 16) & 0xFF);
+    eeWrite(si + ARP_TIMEOUT_C, (time >> 8) & 0xFF);
+    eeWrite(si + ARP_TIMEOUT_D, time & 0xFF);
     EEPROM.commit();
 }
 void setArpMode(uint8_t channel, uint8_t mode)
 {
     uint8_t si = channel * 7;
     arps[channel].mode = mode;
-    eeWrite(si + 4, mode);
+    eeWrite(si + ARP_MODE, mode);
     EEPROM.commit();
 }
 void setArpSort(uint8_t channel, bool sort)
 {
     uint8_t si = channel * 7;
     arps[channel].sort = sort;
-    eeWrite(si + 5, sort);
+    eeWrite(si + ARP_SORT, sort);
     EEPROM.commit();
 }
 void setArpHT(uint8_t channel, bool halfTime)
 {
     uint8_t si = channel * 7;
     arps[channel].halfTime = halfTime;
-    eeWrite(si + 6, halfTime);
+    eeWrite(si + ARP_HALFTIME, halfTime);
     EEPROM.commit();
 }
 

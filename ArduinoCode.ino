@@ -9,6 +9,7 @@
 #include "src/core/Globals.h"
 #include "src/notes/Channels.h"
 #include "src/core/Midi.h"
+#include "MemLocations.h"
 
 void resetOpsValues();
 void saveOpsState();
@@ -45,7 +46,7 @@ void setup()
     
     MIDI.begin();
     Serial.begin(38400);
-    EEPROM.begin(60);
+    EEPROM.begin(EEPROM_SIZE);
     
     SPI.begin();
     

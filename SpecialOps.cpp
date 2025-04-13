@@ -8,6 +8,7 @@
 #include "src/notes/Notes.h"
 #include "Callbacks.h"
 #include "MenuFeedback.h"
+#include "MemLocations.h"
 
 bool invokeArp = false;
 bool channelArps[5] = { false, false, false, false, false };
@@ -275,43 +276,43 @@ void resetOpsValues()
 
 void saveOpsState()
 {
-    eeWrite(35, retriggerOld);
-    eeWrite(36, retriggerNew);
-    eeWrite(37, alwaysDelay);
-    eeWrite(38, setNote == _setSubNote);
-    eeWrite(39, sortNotes);
+    eeWrite(RETRIG_OLD, retriggerOld);
+    eeWrite(RETRIG_NEW, retriggerNew);
+    eeWrite(ALWAYS_DELAY, alwaysDelay);
+    eeWrite(MICROTONAL, setNote == _setSubNote);
+    eeWrite(SORT_NOTES, sortNotes);
     
-    eeWrite(40, channelArps[0]);
-    eeWrite(41, channelArps[1]);
-    eeWrite(42, channelArps[2]);
-    eeWrite(43, channelArps[3]);
-    eeWrite(44, channelArps[4]);
+    eeWrite(ENABLE_ARP_1, channelArps[0]);
+    eeWrite(ENABLE_ARP_2, channelArps[1]);
+    eeWrite(ENABLE_ARP_3, channelArps[2]);
+    eeWrite(ENABLE_ARP_4, channelArps[3]);
+    eeWrite(ENABLE_ARP_5, channelArps[4]);
     
-    eeWrite(45, filterKeys);
-    eeWrite(46, filter);
-    eeWrite(47, arpClocked);
-    eeWrite(48, forgetNotes);
+    eeWrite(FILTER_KEYS, filterKeys);
+    eeWrite(KEY_FILTER, filter);
+    eeWrite(MIDI_CLOCKED_ARP, arpClocked);
+    eeWrite(FORGET_NOTES, forgetNotes);
     EEPROM.commit();
 }
 void loadOpsState()
 {
-    retriggerOld = EEPROM.read(35);
-    retriggerNew = EEPROM.read(36);
-    alwaysDelay = EEPROM.read(37);
-    bool microtone = EEPROM.read(38);
-    sortNotes = EEPROM.read(39);
+    retriggerOld = EEPROM.read(RETRIG_OLD);
+    retriggerNew = EEPROM.read(RETRIG_NEW);
+    alwaysDelay = EEPROM.read(ALWAYS_DELAY);
+    bool microtone = EEPROM.read(MICROTONAL);
+    sortNotes = EEPROM.read(SORT_NOTES);
     
     setNote = microtone ? _setSubNote : _setNoteNorm;
     
-    channelArps[0] = EEPROM.read(40);
-    channelArps[1] = EEPROM.read(41);
-    channelArps[2] = EEPROM.read(42);
-    channelArps[3] = EEPROM.read(43);
-    channelArps[4] = EEPROM.read(44);
+    channelArps[0] = EEPROM.read(ENABLE_ARP_1);
+    channelArps[1] = EEPROM.read(ENABLE_ARP_2);
+    channelArps[2] = EEPROM.read(ENABLE_ARP_3);
+    channelArps[3] = EEPROM.read(ENABLE_ARP_4);
+    channelArps[4] = EEPROM.read(ENABLE_ARP_5);
     shouldInvokeArp();
     
-    filterKeys = EEPROM.read(45);
-    filter = (Notes)EEPROM.read(46);
-    arpClocked = EEPROM.read(47);
-    forgetNotes = EEPROM.read(48);
+    filterKeys = EEPROM.read(FILTER_KEYS);
+    filter = (Notes)EEPROM.read(KEY_FILTER);
+    arpClocked = EEPROM.read(MIDI_CLOCKED_ARP);
+    forgetNotes = EEPROM.read(FORGET_NOTES);
 }

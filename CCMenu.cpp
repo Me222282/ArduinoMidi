@@ -7,6 +7,7 @@
 #include "SpeicalOps.h"
 #include "src/core/Coms.h"
 #include "src/core/Globals.h"
+#include "MemLocations.h"
 
 bool setCCSource;
 NoteName ccSetPos;
@@ -184,34 +185,34 @@ void resetCCMValues()
 
 void saveCCMState()
 {
-    eeWrite(49, ccListeners[0]);
-    eeWrite(50, ccListeners[1]);
-    eeWrite(51, ccListeners[2]);
-    eeWrite(52, ccListeners[3]);
-    eeWrite(53, ccListeners[4]);
+    eeWrite(CC_OUT_NUMBER_1, ccListeners[0]);
+    eeWrite(CC_OUT_NUMBER_2, ccListeners[1]);
+    eeWrite(CC_OUT_NUMBER_3, ccListeners[2]);
+    eeWrite(CC_OUT_NUMBER_4, ccListeners[3]);
+    eeWrite(CC_OUT_NUMBER_5, ccListeners[4]);
     
-    eeWrite(54, ccOutputs[0]);
-    eeWrite(55, ccOutputs[1]);
-    eeWrite(56, ccOutputs[2]);
-    eeWrite(57, ccOutputs[3]);
-    eeWrite(58, ccOutputs[4]);
+    eeWrite(CC_USE_OUT_1, ccOutputs[0]);
+    eeWrite(CC_USE_OUT_2, ccOutputs[1]);
+    eeWrite(CC_USE_OUT_3, ccOutputs[2]);
+    eeWrite(CC_USE_OUT_4, ccOutputs[3]);
+    eeWrite(CC_USE_OUT_5, ccOutputs[4]);
     
-    eeWrite(59, ccChannelMode);
+    eeWrite(CC_MULTI_CHANNEL, ccChannelMode);
     EEPROM.commit();
 }
 void loadCCMState()
 {
-    ccListeners[0] = EEPROM.read(49);
-    ccListeners[1] = EEPROM.read(50);
-    ccListeners[2] = EEPROM.read(51);
-    ccListeners[3] = EEPROM.read(52);
-    ccListeners[4] = EEPROM.read(53);
+    ccListeners[0] = EEPROM.read(CC_OUT_NUMBER_1);
+    ccListeners[1] = EEPROM.read(CC_OUT_NUMBER_2);
+    ccListeners[2] = EEPROM.read(CC_OUT_NUMBER_3);
+    ccListeners[3] = EEPROM.read(CC_OUT_NUMBER_4);
+    ccListeners[4] = EEPROM.read(CC_OUT_NUMBER_5);
     
-    ccOutputs[0] = EEPROM.read(54);
-    ccOutputs[1] = EEPROM.read(55);
-    ccOutputs[2] = EEPROM.read(56);
-    ccOutputs[3] = EEPROM.read(57);
-    ccOutputs[4] = EEPROM.read(58);
+    ccOutputs[0] = EEPROM.read(CC_USE_OUT_1);
+    ccOutputs[1] = EEPROM.read(CC_USE_OUT_2);
+    ccOutputs[2] = EEPROM.read(CC_USE_OUT_3);
+    ccOutputs[3] = EEPROM.read(CC_USE_OUT_4);
+    ccOutputs[4] = EEPROM.read(CC_USE_OUT_5);
     
-    ccChannelMode = EEPROM.read(59);
+    ccChannelMode = EEPROM.read(CC_MULTI_CHANNEL);
 }
