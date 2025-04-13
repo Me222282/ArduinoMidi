@@ -54,6 +54,7 @@ NoteName rangeTop;
 uint8_t trackSetState = 0;
 
 void triggerTracks();
+// must come after triggerTracks
 void modTracks(uint32_t pt);
 
 void stopSequence()
@@ -233,7 +234,11 @@ void manageSeqNote(NoteName n, uint8_t vel, uint8_t channel)
         case NoteName::C4:
             resetSequence();
             playing = true;
-            if (!seqClocked) { triggerTracks(); }
+            if (!seqClocked)
+            {
+                triggerTracks();
+                modTracks(0);
+            }
             return;
         case NoteName::_D4:
             playing = true;
@@ -325,7 +330,7 @@ void manageSeqNote(NoteName n, uint8_t vel, uint8_t channel)
         case NoteName::Eb3:
             seqClocked = !seqClocked;
             triggerFeedback(seqClocked);
-            playStep &= 0xFFFE;
+            resetSequence();
             return;
         case NoteName::E3:
             // save
@@ -395,7 +400,7 @@ bool seqLoopInvoke()
                 return true;
             }
             case MidiCode::CC:
-                if (playing && !seqClocked &&
+                if (playing &&
                     tracks[channel].playing && tracks[channel].useMod)
                     { return true; }
                 onControlChange(channel, MIDI.getCC(), MIDI.getData2());
@@ -413,13 +418,18 @@ bool seqLoopInvoke()
                     {
                         triggerTracks();
                     }
+                    modTracks(acc);
                 }
                 return true;
             }
             case MidiCode::Start:
                 playing = true;
                 resetSequence();
-                if (!seqClocked) { triggerTracks(); }
+                if (!seqClocked)
+                {
+                    triggerTracks();
+                    modTracks(0);
+                }
                 return true;
             case MidiCode::Continue:
                 playing = true;
@@ -445,13 +455,22 @@ void triggerTracks()
 }
 void modTracks(uint32_t pt)
 {
-    // second half of step
-    if ((bool)(playStep & 1U))
+    CubicInput ci;
+    if (!seqClocked)
     {
-        pt += tempoTime;
+        // second half of step - inverted as it comes after
+        if (!(bool)(playStep & 1U))
+        {
+            pt += tempoTime;
+        }
+        
+        ci = getInput(pt / (float)(tempoTime << 1));
+    }
+    else
+    {
+        ci = getInput((float)(pt % 6) / 6.0f);
     }
     
-    CubicInput ci = getInput(pt / (float)(tempoTime << 1));
     for (uint8_t i = 0; i < 5; i++)
     {
         modTrack(&tracks[i], i, ci);
