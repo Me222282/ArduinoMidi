@@ -16,6 +16,8 @@
 extern "C" {
 #endif
 
+extern bool isMenuFeedback;
+
 void playNote(NoteName n, uint32_t duration);
 void playNoteC(NoteName n, uint8_t channel, uint32_t duration);
 void invokeMF();

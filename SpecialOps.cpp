@@ -173,6 +173,16 @@ void manageSpecie(uint8_t channel, NoteName n)
             allChannelMode = !allChannelMode;
             triggerFeedback(allChannelMode);
             return;
+        case NoteName::_D5:
+            if (isMenuFeedback)
+            {
+                triggerFeedback(false);
+                isMenuFeedback = false;
+                return;
+            }
+            isMenuFeedback = true;
+            triggerFeedback(true);
+            return;
         case NoteName::C3:
         {
             setArpTime = !setArpTime;
@@ -278,6 +288,7 @@ void resetOpsValues()
     arpClocked = false;
     forgetNotes = false;
     allChannelMode = false;
+    isMenuFeedback = true;
 }
 
 void saveOpsState()
@@ -299,6 +310,7 @@ void saveOpsState()
     eeWrite(MIDI_CLOCKED_ARP, arpClocked);
     eeWrite(FORGET_NOTES, forgetNotes);
     eeWrite(ALL_CHANNEL, allChannelMode);
+    eeWrite(FEEDBACK_ENABLED, isMenuFeedback);
     EEPROM.commit();
 }
 void loadOpsState()
@@ -323,4 +335,5 @@ void loadOpsState()
     arpClocked = EEPROM.read(MIDI_CLOCKED_ARP);
     forgetNotes = EEPROM.read(FORGET_NOTES);
     allChannelMode = EEPROM.read(ALL_CHANNEL);
+    isMenuFeedback = EEPROM.read(FEEDBACK_ENABLED);
 }

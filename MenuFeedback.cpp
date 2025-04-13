@@ -8,6 +8,8 @@ uint32_t startTime_MF;
 uint32_t timeOut_MF;
 bool is_MF = false;
 
+bool isMenuFeedback = true;
+
 void velocityMF(uint8_t i)
 {
     if (option)
@@ -24,6 +26,7 @@ void velocityMF(uint8_t i)
 
 void playNote(NoteName n, uint32_t duration)
 {
+    if (!isMenuFeedback) { return; }
     velocityMF(0);
     setNote(0, n);
     velocityMF(1);
@@ -48,6 +51,7 @@ const uint8_t gatePlaces[5] =
 
 void playNoteC(NoteName n, uint8_t channel, uint32_t duration)
 {
+    if (!isMenuFeedback) { return; }
     if (channel >= activeChannels)
     {
         if (!allChannelMode) { return; }
