@@ -22,7 +22,6 @@ uint16_t playStep = 0;
 
 Track tracks[5];
 
-void onParamChange() { playMode = false; }
 void restartTracks()
 {
     tracks[0].position = 0;
@@ -52,6 +51,24 @@ uint32_t elapsedTime = 0;
 NoteName rangeBottom;
 NoteName rangeTop;
 uint8_t trackSetState = 0;
+
+void onParamChange()
+{
+    playMode = false;
+    if (trackSet)
+    {
+        if (trackSetState == 2 && !finaliseTrack(trackSet))
+        {
+            deleteTrack(trackSet);
+        }
+        
+        trackSet->lastNote = { 255, 0 };
+        trackSet = nullptr;
+        trackSetState = 0;
+        triggerFeedback(false);
+        return;
+    }
+}
 
 void triggerTracks();
 // must come after triggerTracks
@@ -534,12 +551,12 @@ void trackManager(NoteName n, uint8_t vel)
     switch (q)
     {
         case Notes::C:
-            if (!finaliseTrack(trackSet))
+            if (trackSetState != 3 && !finaliseTrack(trackSet))
             {
                 playNoteC(NOTEFAIL_S, channel, MF_DURATION);
                 return;
             }
-            trackSet->lastNote = { 0, 0 };
+            trackSet->lastNote = { 255, 0 };
             trackSet = nullptr;
             trackSetState = 0;
             triggerFeedbackC(true, channel);
