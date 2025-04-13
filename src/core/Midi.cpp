@@ -46,7 +46,12 @@ bool Midi::read()
             _channel = 0;
             // 0 byte messages
             if (type != MidiCode::QuarterFrame && type != MidiCode::SongSelect &&
-                type != MidiCode::SongPointer) { return true; }
+                type != MidiCode::SongPointer)
+            {
+                _data1 = 0;
+                _data2 = 0;
+                return true;
+            }
             return false;
         }
         _type = (MidiCode)type;

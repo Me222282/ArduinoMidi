@@ -482,7 +482,7 @@ void trackManager(NoteName n, uint8_t vel)
             if (digit_S >= 3) { return; }
             seqDigits[digit_S] = dv;
             digit_S++;
-            playNote((NoteName)(n + (NoteName::_A3 - NoteName::_A0)), MF_DURATION);
+            playNumber(n);
             return;
         }
         if (q != Notes::A) { return; }
@@ -513,6 +513,7 @@ void trackManager(NoteName n, uint8_t vel)
             trackSet->lastNote = { 0, 0 };
             trackSet = nullptr;
             trackSetState = 0;
+            triggerFeedbackC(true, channel);
             return;
         case Notes::D:
             if (trackSetState == 3) { return; }
