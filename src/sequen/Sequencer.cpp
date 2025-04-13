@@ -356,6 +356,7 @@ bool seqLoopInvoke()
     {
         MidiCode type = MIDI.getType();
         uint8_t channel = MIDI.getChannel();
+        if (channel >= 5) { return false; }
         switch (type)
         {
             case MidiCode::NoteON:

@@ -48,6 +48,11 @@ const uint8_t gatePlaces[5] =
 
 void playNoteC(NoteName n, uint8_t channel, uint32_t duration)
 {
+    if (channel >= activeChannels)
+    {
+        if (!allChannelMode) { return; }
+        channel = 0;
+    }
     Channel* c = &channels[channel];
     uint8_t end = c->position + c->places;
     uint8_t gate = 0;

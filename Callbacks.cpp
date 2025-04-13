@@ -38,10 +38,13 @@ bool filterKeys = false;
 Notes filter = Notes::C;
 void onNoteOn(uint8_t channel, uint8_t note, uint8_t velocity)
 {
-    if (channel >= activeChannels ||
-        // key filter
-        (filterKeys && notInKey((NoteName)note, filter))) { return; }
-    
+    // key filter
+    if (filterKeys && notInKey((NoteName)note, filter)) { return; }
+    if (channel >= activeChannels)
+    {
+        if (!allChannelMode) { return; }
+        channel = 0;
+    }
     Channel* c = &channels[channel];
     Note n = { note, velocity };
     int8_t vi = pushNote(c, channel, n);
@@ -70,7 +73,11 @@ void onNoteOn(uint8_t channel, uint8_t note, uint8_t velocity)
 }
 void onNoteOff(uint8_t channel, uint8_t note)
 {
-    if (channel >= activeChannels) { return; }
+    if (channel >= activeChannels)
+    {
+        if (!allChannelMode) { return; }
+        channel = 0;
+    }
     Channel* c = &channels[channel];
     int8_t vi = removeNote(c, channel, note);
     
@@ -94,7 +101,11 @@ void onNoteOff(uint8_t channel, uint8_t note)
 }
 void onPitchBend(uint8_t channel, uint16_t bend)
 {
-    if (channel >= activeChannels) { return; }
+    if (channel >= activeChannels)
+    {
+        if (!allChannelMode) { return; }
+        channel = 0;
+    }
     Channel* c = &channels[channel];
     
     c->pitchBend = bend;
@@ -161,7 +172,11 @@ void ccUpdate(Channel* c, CCType number, uint8_t value)
 }
 void onControlChange(uint8_t channel, CCType number, uint8_t value)
 {
-    if (channel >= activeChannels) { return; }
+    if (channel >= activeChannels)
+    {
+        if (!allChannelMode) { return; }
+        channel = 0;
+    }
     Channel* c = &channels[channel];
     
     ccUpdate(c, number, value);

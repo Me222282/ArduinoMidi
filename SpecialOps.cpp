@@ -169,6 +169,10 @@ void manageSpecie(uint8_t channel, NoteName n)
             setGate(0);
             playNote(NOTEOPTION_S, MF_DURATION);
             return;
+        case NoteName::C5:
+            allChannelMode = !allChannelMode;
+            triggerFeedback(allChannelMode);
+            return;
         case NoteName::C3:
         {
             setArpTime = !setArpTime;
@@ -235,6 +239,7 @@ void specialOptions()
     {
         MidiCode type = MIDI.getType();
         uint8_t channel = MIDI.getChannel();
+        if (channel >= 5) { return; }
         switch (type)
         {
             case MidiCode::NoteON:
@@ -272,6 +277,7 @@ void resetOpsValues()
     filter = Notes::C;
     arpClocked = false;
     forgetNotes = false;
+    allChannelMode = false;
 }
 
 void saveOpsState()
@@ -292,6 +298,7 @@ void saveOpsState()
     eeWrite(KEY_FILTER, filter);
     eeWrite(MIDI_CLOCKED_ARP, arpClocked);
     eeWrite(FORGET_NOTES, forgetNotes);
+    eeWrite(ALL_CHANNEL, allChannelMode);
     EEPROM.commit();
 }
 void loadOpsState()
@@ -315,4 +322,5 @@ void loadOpsState()
     filter = (Notes)EEPROM.read(KEY_FILTER);
     arpClocked = EEPROM.read(MIDI_CLOCKED_ARP);
     forgetNotes = EEPROM.read(FORGET_NOTES);
+    allChannelMode = EEPROM.read(ALL_CHANNEL);
 }

@@ -36,6 +36,8 @@ typedef struct
 extern Channel channels[5];
 extern uint8_t* slotAllocation;
 
+extern bool allChannelMode;
+
 void setChannels(uint8_t c, uint8_t v);
 
 // void initChannel(Channel* c, uint8_t voices, uint8_t index, uint8_t places);

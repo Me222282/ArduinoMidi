@@ -45,6 +45,8 @@ uint8_t* slotSettings[25] =
 Channel channels[5];
 uint8_t* slotAllocation;
 
+extern bool allChannelMode = false;
+
 void initChannel(Channel* c, uint8_t voices, uint8_t index, uint8_t places);
 
 void setChannels(uint8_t c, uint8_t v)
