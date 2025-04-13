@@ -134,7 +134,7 @@ void modTrack(Track* t, uint8_t channel, CubicInput time)
     if (!(t->useMod && t->playing && t->notes)) { return; }
     float m = getCubicValue(t->cub, time);
     uint16_t act = (uint16_t)m;
-    // set mod;
+    // set mod
     onControlChange(channel, CCType::ModulationWheel_MSB, act >> 7);
     onControlChange(channel, CCType::ModulationWheel_LSB, act & 0x7F);
 }
