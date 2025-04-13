@@ -11,6 +11,11 @@ extern "C" {
 void onParamChange();
 bool seqLoopInvoke();
 
+void resetSeqValues();
+
+void saveSeqState();
+void loadSeqState();
+
 #ifdef __cplusplus
 } // extern "C"
 #endif

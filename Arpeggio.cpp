@@ -238,6 +238,7 @@ void setArpHT(uint8_t channel, bool halfTime)
 
 void arpAddNote(uint8_t channel, Note n)
 {
+    if (channel >= 5) { return; }
     // Add to link list
     NoteList* nl = CREATE(NoteList);
     nl->value = n;
@@ -261,6 +262,7 @@ void arpAddNote(uint8_t channel, Note n)
 
 void arpRemoveNote(uint8_t channel, uint8_t key)
 {
+    if (channel >= 5) { return; }
     Arpeggio* a = &arps[channel];
     
     for (NoteList* nl = a->start; nl; nl = nl->next)

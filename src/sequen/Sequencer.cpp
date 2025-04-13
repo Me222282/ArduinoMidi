@@ -5,6 +5,7 @@
 #include "../../Callbacks.h"
 #include "../../MenuFeedback.h"
 #include "../../SpeicalOps.h"
+#include "../../MemLocations.h"
 #include "../core/Midi.h"
 #include "../core/Globals.h"
 #include "../notes/Channels.h"
@@ -255,6 +256,14 @@ void manageSeqNote(NoteName n, uint8_t vel, uint8_t channel)
             trackSet = &tracks[channel];
             trackSetState = 3;
             playNote(NOTESELECT_S, MF_DURATION);
+            return;
+        case NoteName::B4:
+            saveSeqState();
+            playNote(NOTEOPTION_S, MF_DURATION);
+            return;
+        case NoteName::Bb4:
+            loadSeqState();
+            playNote(NOTEOPTION_S, MF_DURATION);
             return;
         
         case NoteName::C5:
@@ -560,4 +569,26 @@ void trackManager(NoteName n, uint8_t vel)
             }
             return;
     }
+}
+
+void resetSeqValues()
+{
+    tempoTime = 250;
+}
+
+void saveSeqState()
+{
+    eeWrite(SEQ_TIMEOUT_A, tempoTime >> 24);
+    eeWrite(SEQ_TIMEOUT_B, (tempoTime >> 16) & 0xFF);
+    eeWrite(SEQ_TIMEOUT_C, (tempoTime >> 8) & 0xFF);
+    eeWrite(SEQ_TIMEOUT_D, tempoTime & 0xFF);
+    EEPROM.commit();
+}
+void loadSeqState()
+{
+    uint32_t timeA = EEPROM.read(SEQ_TIMEOUT_A) << 24;
+    uint32_t timeB = EEPROM.read(SEQ_TIMEOUT_B) << 16;
+    uint32_t timeC = EEPROM.read(SEQ_TIMEOUT_C) << 8;
+    uint32_t timeD = EEPROM.read(SEQ_TIMEOUT_D);
+    tempoTime = timeA + timeB + timeC + timeD;
 }

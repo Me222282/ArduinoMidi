@@ -57,6 +57,7 @@ void setup()
     loadArps();
     loadOpsState();
     loadCCMState();
+    loadSeqState();
 }
 
 bool specOps = false;
@@ -191,23 +192,24 @@ void loop()
                 return;
             }
             case MidiCode::CC:
-            {
-                CCType number = MIDI.getCC();
-                if (number == CCType::ResetAllControllers)
-                {
-                    resetOpsValues();
-                    resetCCMValues();
-                    return;
-                }
-                
-                onControlChange(channel, number, MIDI.getData2());
+                onControlChange(channel, MIDI.getCC(), MIDI.getData2());
                 return;
-            }
             case MidiCode::PitchWheel:
                 onPitchBend(channel, MIDI.getCombinedData());
                 return;
             case MidiCode::TimingClock:
                 if (invokeArp && arpClocked) { clockedArp(); }
+                return;
+            case MidiCode::Reset:
+                resetOpsValues();
+                resetCCMValues();
+                resetSeqValues();
+                
+                clearArps();
+                setChannels(activeChannels, activeVoices);
+                
+                gate = 0;
+                setGate(gate);
                 return;
         }
     }

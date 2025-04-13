@@ -44,7 +44,12 @@ extern "C" {
 #define CC_USE_OUT_5 58
 #define CC_MULTI_CHANNEL 59
 
-#define EEPROM_SIZE 62
+#define SEQ_TIMEOUT_A 62
+#define SEQ_TIMEOUT_B 63
+#define SEQ_TIMEOUT_C 64
+#define SEQ_TIMEOUT_D 65
+
+#define EEPROM_SIZE 66
 
 #ifdef __cplusplus
 } // extern "C"
