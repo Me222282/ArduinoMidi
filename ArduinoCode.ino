@@ -45,7 +45,7 @@ void setup()
     digitalWrite(GATEIC, HIGH);
     
     MIDI.begin();
-    Serial.begin(38400);
+    // Serial.begin(38400);
     EEPROM.begin(EEPROM_SIZE);
     
     SPI.begin();
@@ -172,7 +172,7 @@ void loop()
                 if (type == MidiCode::NoteOFF || vel == 0)
                 {
                     if (n == lastNote) { lastNote = (NoteName)255U; }
-                    if (channelArps[channel])
+                    if (channel < 5 && channelArps[channel])
                     {
                         arpRemoveNote(channel, n);
                         return;
@@ -182,7 +182,7 @@ void loop()
                 }
                 
                 lastNote = (NoteName)n;
-                if (channelArps[channel])
+                if (channel < 5 && channelArps[channel])
                 {
                     arpAddNote(channel, { n, vel });
                     return;
