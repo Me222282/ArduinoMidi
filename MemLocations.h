@@ -49,7 +49,13 @@ extern "C" {
 #define SEQ_TIMEOUT_C 64
 #define SEQ_TIMEOUT_D 65
 
-#define EEPROM_SIZE 66
+#define TRACKS_SLOT_1 66
+#define TRACK_CLOCKDIV 0
+#define TRACK_USEMOD 1
+#define TRACK_HALFTIME 2
+#define TRACK_SIZE 3
+
+#define EEPROM_SIZE 194
 
 #ifdef __cplusplus
 } // extern "C"

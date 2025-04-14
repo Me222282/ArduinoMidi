@@ -175,8 +175,40 @@ uint8_t getSaveSlot(NoteName n)
             return 14;
         case NoteName::B2:
             return 15;
+        case NoteName::C3:
+            return 16;
+        case NoteName::_D3:
+            return 17;
+        case NoteName::E3:
+            return 18;
+        case NoteName::F3:
+            return 19;
+        case NoteName::G3:
+            return 20;
+        case NoteName::_A3:
+            return 21;
+        case NoteName::B3:
+            return 22;
+        case NoteName::C4:
+            return 23;
+        case NoteName::_D4:
+            return 24;
+        case NoteName::E4:
+            return 25;
+        case NoteName::F4:
+            return 26;
+        case NoteName::G4:
+            return 27;
+        case NoteName::_A4:
+            return 28;
+        case NoteName::B4:
+            return 29;
+        case NoteName::C5:
+            return 30;
+        case NoteName::_D5:
+            return 31;
     }
-    return 16;
+    return 128;
 }
 void manageSeqNote(NoteName n, uint8_t vel, uint8_t channel)
 {
@@ -217,11 +249,12 @@ void manageSeqNote(NoteName n, uint8_t vel, uint8_t channel)
     if (trackSlotSelect)
     {
         uint8_t slot = getSaveSlot(n);
+        uint8_t action = trackSlotSelect;
         trackSlotSelect = 0;
         // valid slot
-        if (slot <= 15)
+        if (slot <= 31)
         {
-            if (trackSlotSelect == 1)
+            if (action == 1)
             {
                 // empty track
                 if (!tracks[channel].notes)
@@ -236,7 +269,7 @@ void manageSeqNote(NoteName n, uint8_t vel, uint8_t channel)
                 deleteTrack(&tracks[channel]);
                 loadTrack(&tracks[channel], slot, channel);
             }
-            playNoteC((NoteName)(n + (NoteName::_A3 - NoteName::_A0)), channel, MF_DURATION);
+            playNumberC(n, channel);
             return;
         }
         playNoteC(NOTEFAIL_S, channel, MF_DURATION);

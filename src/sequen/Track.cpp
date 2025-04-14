@@ -4,13 +4,10 @@
 #include "../notes/Channels.h"
 #include "../notes/Notes.h"
 #include "../../Callbacks.h"
+#include "../../MemLocations.h"
+#include <EEPROM.h>
 
 #define NVMADDRESS 0x290000
-const uint32_t nvmLocations[16]
-{
-    0, 1032, 2064, 3096, 4128, 5160, 6192, 7224,
-    8256, 9288, 10320, 11352, 12384, 13416, 14448, 15480
-};
 
 void createTrack(Track* t, uint8_t channel)
 {
@@ -21,6 +18,7 @@ void createTrack(Track* t, uint8_t channel)
     t->lastNote = { 255, 0 };
     t->channel = channel;
     t->position = 0;
+    t->slot = (int8_t)-1;
     t->useMod = false;
     t->playing = false;
     t->clockDivision = 1;
@@ -31,6 +29,8 @@ void deleteTrack(Track* t)
     if (t->notes) { free(t->notes); }
     if (t->mods) { free(t->mods); }
     t->size = 0;
+    t->notes = nullptr;
+    t->mods = nullptr;
 }
 
 bool addTrackValue(Track* t, Note n, uint16_t m)
@@ -107,6 +107,10 @@ void newCubic(Track* t)
 void triggerTrack(Track* t, uint8_t channel, uint16_t playStep)
 {
     if (!(t->playing && t->notes)) { return; }
+    uint16_t div = (playStep >> 1) % t->clockDivision;
+    if (div) { return; }
+    // div == 0
+    
     uint8_t ht = playStep & 1U;
     if (ht)
     {
@@ -117,10 +121,6 @@ void triggerTrack(Track* t, uint8_t channel, uint16_t playStep)
         }
         return;
     }
-    
-    uint16_t div = (playStep >> 1) % t->clockDivision;
-    if (div) { return; }
-    // div == 0
     
     noteOn(t, channel);
     newCubic(t);
@@ -141,25 +141,24 @@ void modTrack(Track* t, uint8_t channel, CubicInput time)
     onControlChange(channel, CCType::ModulationWheel_LSB, act & 0x7F);
 }
 
-template<typename T>
-void FlashWrite(uint32_t address, T value)
-{
-    // ESP.flashEraseSector(address >> 12);
-    ESP.flashWrite(address, (uint32_t*)&value, sizeof(T));
-}
+// template<typename T>
+// void FlashWrite(uint32_t address, T value)
+// {
+//     // ESP.flashEraseSector(address >> 12);
+//     ESP.flashWrite(address, (uint32_t*)&value, sizeof(T));
+// }
 template<typename T>
 void FlashWrite(uint32_t address, const T* value, uint16_t size)
 {
-    // ESP.flashEraseSector(address >> 12);
-    ESP.flashWrite(address, (uint32_t*)&value, sizeof(T) * size);
+    ESP.flashWrite(address, (uint32_t*)value, sizeof(T) * size);
 }
-template<typename T>
-T FlashRead(uint32_t address)
-{
-    T value;
-    ESP.flashRead(address, (uint32_t*)&value, sizeof(T));
-    return value;
-}
+// template<typename T>
+// T FlashRead(uint32_t address)
+// {
+//     T value;
+//     ESP.flashRead(address, (uint32_t*)&value, sizeof(T));
+//     return value;
+// }
 template<typename T>
 T* FlashRead(uint32_t address, uint16_t size)
 {
@@ -170,37 +169,47 @@ T* FlashRead(uint32_t address, uint16_t size)
 
 void saveTrack(Track* t, uint8_t slot)
 {
-    uint32_t address = NVMADDRESS + nvmLocations[slot];
+    uint32_t address = NVMADDRESS + (4096 * (uint32_t)slot);
+    uint8_t si = TRACKS_SLOT_1 + (4 * slot);
     
     uint16_t size = t->size;
-    FlashWrite<uint8_t>(address, t->clockDivision);
-    FlashWrite<bool>(address + 1, t->useMod);
-    FlashWrite<bool>(address + 2, t->halfTime);
-    FlashWrite<uint16_t>(address + 3, size);
-    FlashWrite<Note>(address + 4, t->notes, size);
+    eeWrite(si, t->clockDivision);
+    eeWrite(si + TRACK_USEMOD, t->useMod);
+    eeWrite(si + TRACK_HALFTIME, t->halfTime);
+    eeWrite(si + TRACK_SIZE, size & 0xFF);
+    EEPROM.commit();
+    
+    // data already written
+    if (t->slot == slot) { return; }
+    t->slot = slot;
+    
+    ESP.flashEraseSector(address >> 12);
+    FlashWrite<Note>(address, t->notes, size);
     if (t->useMod)
     {
-        FlashWrite<uint16_t>(address + 516, t->mods, size);
+        FlashWrite<uint16_t>(address + 512, t->mods, size);
     }
 }
 void loadTrack(Track* t, uint8_t slot, uint8_t channel)
 {
-    uint32_t address = NVMADDRESS + nvmLocations[slot];
+    uint32_t address = NVMADDRESS + (4096 * (uint32_t)slot);
+    uint8_t si = TRACKS_SLOT_1 + (4 * slot);
     
-    uint16_t size = FlashRead<uint16_t>(address + 3);
-    if (size < 4 || size > 256) { return; }
+    uint16_t size = EEPROM.read(si + TRACK_SIZE);
+    if (size == 0) { size = 256; }
+    if (size < 4) { return; } 
+    
+    t->clockDivision = EEPROM.read(si);
+    t->useMod = EEPROM.read(si + TRACK_USEMOD);
+    t->halfTime = EEPROM.read(si + TRACK_HALFTIME);
     
     t->position = 0;
     t->playing = true;
     t->channel = channel;
+    t->slot = slot;
+    t->lastNote = { 255, 0 };
     
-    t->clockDivision = FlashRead<uint8_t>(address);
-    t->useMod = FlashRead<bool>(address + 1);
-    t->halfTime = FlashRead<bool>(address + 2);
     t->size = size;
-    t->notes = FlashRead<Note>(address + 4, size);
-    if (t->useMod)
-    {
-        t->mods = FlashRead<uint16_t>(address + 516, size);
-    }
+    t->notes = FlashRead<Note>(address, size);
+    t->mods = FlashRead<uint16_t>(address + 512, size);
 }

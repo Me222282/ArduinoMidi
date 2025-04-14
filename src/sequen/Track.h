@@ -21,6 +21,7 @@ typedef struct
     Note lastNote;
     uint8_t position;
     uint8_t channel;
+    uint8_t slot;
     uint8_t clockDivision;
     bool playing;
     bool useMod;
