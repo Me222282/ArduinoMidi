@@ -73,7 +73,7 @@ void manageSpecie(uint8_t channel, NoteName n)
         {
             filter = (Notes)fk;
             choseFilter = false;
-            playNote((NoteName)(fk + NoteName::C4), MF_DURATION);
+            playNumber(n);
             return;
         }
         if (n != NoteName::Eb4) { return; }
