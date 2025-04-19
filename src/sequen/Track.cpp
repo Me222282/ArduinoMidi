@@ -61,10 +61,10 @@ void noteOn(Track* t, uint8_t channel)
     Note n = t->notes[pos];
     if (noteEquals(n, NOTEHOLD)) { return; }
     Note last = t->lastNote;
+    t->lastNote = n;
     if (!noteEquals(n, NOTEOFF))
     {
         onNoteOn(channel, n.key, n.vel);
-        t->lastNote = n;
     }
     if (t->halfTime) { return; }
     onNoteOff(channel, last.key);
