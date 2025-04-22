@@ -76,7 +76,11 @@ void manageSpecie(uint8_t channel, NoteName n)
             playNumber(n);
             return;
         }
-        if (n != NoteName::Eb4) { return; }
+        if (n != NoteName::Eb4)
+        {
+            playNote(NOTEFAIL_S, MF_DURATION);
+            return;
+        }
     }
     // enter time - digit must start at 0
     if (setArpTime)
@@ -92,7 +96,11 @@ void manageSpecie(uint8_t channel, NoteName n)
             playNumber(n);
             return;
         }
-        if (n != NoteName::C3) { return; }
+        if (n != NoteName::C3)
+        {
+            playNote(NOTEFAIL_S, MF_DURATION);
+            return;
+        }
     }
     
     switch (n)

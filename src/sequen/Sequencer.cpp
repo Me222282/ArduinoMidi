@@ -244,7 +244,11 @@ void manageSeqNote(NoteName n, uint8_t vel, uint8_t channel)
             playNumber(n);
             return;
         }
-        if (n != NoteName::C3) { return; }
+        if (n != NoteName::C3)
+        {
+            playNote(NOTEFAIL_S, MF_DURATION);
+            return;
+        }
     }
     if (trackSlotSelect)
     {

@@ -43,7 +43,7 @@ void setNumber(NoteName pos)
     ccSetPos = pos;
     setCCSource = !setCCSource;
     playNote(NOTESELECT_S, MF_DURATION);
-    // set arp time value
+    // set value
     if (!setCCSource)
     {
         ccSetPos = (NoteName)0;
@@ -83,7 +83,11 @@ void manageMenuNotes(NoteName n)
             playNumber(n);
             return;
         }
-        if (n != ccSetPos) { return; }
+        if (n != ccSetPos)
+        {
+            playNote(NOTEFAIL_S, MF_DURATION);
+            return;
+        }
     }
 
     switch (n)
