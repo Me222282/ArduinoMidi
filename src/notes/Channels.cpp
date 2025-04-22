@@ -42,16 +42,33 @@ uint8_t* slotSettings[25] =
     _ss14, _ss14, _ss14, _ss14, _ss14
 };
 
+uint8_t _ss15[5] = { 0x00, 0x01, 0x00, 0x01, 0x00 };
+uint8_t _ss16[5] = { 0x00, 0x01, 0x02, 0x00, 0x01 };
+uint8_t _ss17[5] = { 0x00, 0x01, 0x02, 0x03, 0x00 };
+uint8_t _ss18[5] = { 0x00, 0x01, 0x00, 0x10, 0x11 };
+
 Channel channels[5];
 uint8_t* slotAllocation;
 
 bool allChannelMode = false;
+bool altAllocations = false;
 
 void initChannel(Channel* c, uint8_t voices, uint8_t index, uint8_t places);
 
 void setChannels(uint8_t c, uint8_t v)
 {
     slotAllocation = slotSettings[((c - 1) * 5) + v - 1];
+    
+    if (altAllocations)
+    {
+        if (c == 0)
+        {
+            if (v == 1)             { slotAllocation = _ss15; }
+            else if (v == 2)        { slotAllocation = _ss16; }
+            else if (v == 3)        { slotAllocation = _ss17; }
+        }
+        else if (c == 1 && v == 1)  { slotAllocation = _ss18; }
+    }
     
     uint8_t c0 = 0;
     uint8_t v0 = 0;

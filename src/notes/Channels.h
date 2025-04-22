@@ -37,6 +37,7 @@ extern Channel channels[5];
 extern uint8_t* slotAllocation;
 
 extern bool allChannelMode;
+extern bool altAllocations;
 
 void setChannels(uint8_t c, uint8_t v);
 

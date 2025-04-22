@@ -173,6 +173,10 @@ void manageSpecie(uint8_t channel, NoteName n)
             allChannelMode = !allChannelMode;
             triggerFeedback(allChannelMode);
             return;
+        case NoteName::Db5:
+            altAllocations = !altAllocations;
+            triggerFeedback(altAllocations);
+            return;
         case NoteName::_D5:
             if (isMenuFeedback)
             {
@@ -183,6 +187,7 @@ void manageSpecie(uint8_t channel, NoteName n)
             isMenuFeedback = true;
             triggerFeedback(true);
             return;
+        // arps
         case NoteName::C3:
         {
             setArpTime = !setArpTime;
