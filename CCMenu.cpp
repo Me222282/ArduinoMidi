@@ -12,9 +12,7 @@
 bool setCCSource;
 NoteName ccSetPos;
 
-uint8_t digit_cc = 0;
-uint32_t lv_cc = 0;
-uint8_t ccDigits[3] = { 0, 0, 0 };
+uint16_t lv_cc = 0;
 
 uint8_t getSetPosLocation(NoteName pos)
 {
@@ -42,29 +40,18 @@ void setNumber(NoteName pos)
     
     ccSetPos = pos;
     setCCSource = !setCCSource;
-    playNote(NOTESELECT_S, MF_DURATION);
     // set value
     if (!setCCSource)
     {
         ccSetPos = (NoteName)0;
-        // digit is the number of digits entered
-        if (digit_cc == 0)
+        lv_cc = getEnteredValue(lv_cc);
+        if (lv_cc > 127)
         {
-            ccListeners[index] = lv_cc;
-            return;
+            playNote(NOTEFAIL_S, MF_DURATION);
         }
-        uint32_t listener = 0;
-        uint8_t place = 0;
-        // read in reverse order
-        for (int8_t i = digit_cc - 1; i >= 0; i--)
-        {
-            listener += ccDigits[i] * digitPlaces[place];
-            place++;
-        }
-        digit_cc = 0;
-        lv_cc = listener;
-        ccListeners[index] = listener;
+        ccListeners[index] = lv_cc;
     }
+    playNote(NOTESELECT_S, MF_DURATION);
 }
 
 void manageMenuNotes(NoteName n)
@@ -72,17 +59,9 @@ void manageMenuNotes(NoteName n)
     // enter time - digit must start at 0
     if (setCCSource)
     {
-        uint8_t dv = getDigit(n);
         // valid digit
-        if (dv <= 9)
-        {
-            // no more digits
-            if (digit_cc >= 3) { return; }
-            ccDigits[digit_cc] = dv;
-            digit_cc++;
-            playNumber(n);
-            return;
-        }
+        bool v = addDigit(n, 3);
+        if (v) { return; }
         if (n != ccSetPos)
         {
             playNote(NOTEFAIL_S, MF_DURATION);

@@ -48,6 +48,9 @@ extern "C" {
 #define SEQ_TIMEOUT_B 63
 #define SEQ_TIMEOUT_C 64
 #define SEQ_TIMEOUT_D 65
+#define SEQ_CLOCKED 194
+#define SEQ_BAR_TRIGGER 195
+#define SEQ_BAR_SIZE 196
 
 #define TRACKS_SLOT_1 66
 #define TRACK_CLOCKDIV 0
@@ -55,10 +58,25 @@ extern "C" {
 #define TRACK_HALFTIME 2
 #define TRACK_SIZE 3
 
-#define EEPROM_SIZE 194
+#define SEQS_SLOT_1 197
+
+#define EEPROM_SIZE 213
 
 #ifdef __cplusplus
 } // extern "C"
 #endif
+
+template<typename T>
+inline void FlashWrite(uint32_t address, const T* value, uint16_t size)
+{
+    ESP.flashWrite(address, (uint32_t*)value, sizeof(T) * size);
+}
+template<typename T>
+inline T* FlashRead(uint32_t address, uint16_t size)
+{
+    T* values = CREATE_ARRAY(T, size);
+    ESP.flashRead(address, (uint32_t*)values, sizeof(T) * size);
+    return values;
+}
 
 #endif

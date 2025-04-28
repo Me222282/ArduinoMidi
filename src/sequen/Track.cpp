@@ -9,162 +9,84 @@
 
 #define NVMADDRESS 0x290000
 
-void createTrack(Track* t, uint8_t channel)
+void createTrack(Track* t)
 {
     t->notes = CREATE_ARRAY(Note, 256);
     t->mods = CREATE_ARRAY(uint16_t, 256);
-    t->cub = { 0, 0, 0, 0 };
     t->size = 256;
-    t->lastNote = { 255, 0 };
-    t->channel = channel;
-    t->position = 0;
-    t->slot = (int8_t)-1;
+    t->saveSlot = 255;
     t->useMod = false;
-    t->playing = false;
+    t->playing = true;
     t->clockDivision = 1;
     t->halfTime = false;
 }
+
 void deleteTrack(Track* t)
 {
-    if (t->notes) { free(t->notes); }
-    if (t->mods) { free(t->mods); }
-    t->size = 0;
-    t->notes = nullptr;
-    t->mods = nullptr;
-}
-
-bool addTrackValue(Track* t, Note n, uint16_t m)
-{
-    uint8_t i = t->position;
-    t->notes[i] = n;
-    t->mods[i] = m;
-    t->position = i + 1;
-    return i == 255;
-}
-bool finaliseTrack(Track* t)
-{
-    uint8_t size = t->position;
-    if (size == 0) { t->playing = true; return true; }
-    if (size < 4) { return false; }
-    
-    t->notes = (Note*)realloc(t->notes, size * sizeof(Note));
-    t->mods = (uint16_t*)realloc(t->mods, size * sizeof(uint16_t));
-    t->position = 0;
-    t->size = size;
-    t->playing = true;
-    return true;
-}
-
-void noteOn(Track* t, uint8_t channel)
-{
-    uint8_t pos = t->position;
-    Note n = t->notes[pos];
-    if (noteEquals(n, NOTEHOLD)) { return; }
-    Note last = t->lastNote;
-    t->lastNote = n;
-    if (!noteEquals(n, NOTEOFF))
+    if (!t) { return; }
+    if (t->notes) { free(t->notes); t->notes = nullptr; }
+    if (t->mods) { free(t->mods); t->mods = nullptr; }
+    if (!t->memBank)
     {
-        onNoteOn(channel, n.key, n.vel);
-    }
-    if (t->halfTime) { return; }
-    onNoteOff(channel, last.key);
-}
-
-uint16_t wrapMods(Track* t, uint8_t pos, uint16_t size)
-{
-    if (pos >= size)
-    {
-        return t->mods[pos - size];
-    }
-    
-    return t->mods[pos];
-}
-Note wrapNote(Track* t, uint8_t pos)
-{
-    uint8_t size = t->size;
-    if (pos >= size)
-    {
-        return t->notes[pos - size];
-    }
-    
-    return t->notes[pos];
-}
-// track size must be >= 4
-void newCubic(Track* t)
-{
-    uint8_t pos = t->position;
-    uint16_t size = t->size;
-    
-    Cubic c = generateCubic(
-        wrapMods(t, pos, size),
-        wrapMods(t, pos + 1, size),
-        wrapMods(t, pos + 2, size),
-        wrapMods(t, pos + 3, size));
-    
-    t->cub = c;
-}
-
-void triggerTrack(Track* t, uint8_t channel, uint16_t playStep)
-{
-    if (!(t->playing && t->notes)) { return; }
-    uint16_t div = (playStep >> 1) % t->clockDivision;
-    if (div) { return; }
-    // div == 0
-    
-    uint8_t ht = playStep & 1U;
-    if (ht)
-    {
-        uint8_t cPos = t->position;
-        if (t->halfTime && !noteEquals(t->notes[cPos], NOTEHOLD))
-        {
-            onNoteOff(channel, t->lastNote.key);
-        }
+        free(t);
         return;
     }
+    t->size = 0;
+    t->saveSlot = 255;
+}
+
+Track memoryBank[32] = {
+    { nullptr, nullptr, 0, 0xFF, 1, true, false, false, true },
+    { nullptr, nullptr, 0, 0xFF, 1, true, false, false, true },
+    { nullptr, nullptr, 0, 0xFF, 1, true, false, false, true },
+    { nullptr, nullptr, 0, 0xFF, 1, true, false, false, true },
+    { nullptr, nullptr, 0, 0xFF, 1, true, false, false, true },
+    { nullptr, nullptr, 0, 0xFF, 1, true, false, false, true },
+    { nullptr, nullptr, 0, 0xFF, 1, true, false, false, true },
+    { nullptr, nullptr, 0, 0xFF, 1, true, false, false, true },
+    { nullptr, nullptr, 0, 0xFF, 1, true, false, false, true },
+    { nullptr, nullptr, 0, 0xFF, 1, true, false, false, true },
+    { nullptr, nullptr, 0, 0xFF, 1, true, false, false, true },
+    { nullptr, nullptr, 0, 0xFF, 1, true, false, false, true },
+    { nullptr, nullptr, 0, 0xFF, 1, true, false, false, true },
+    { nullptr, nullptr, 0, 0xFF, 1, true, false, false, true },
+    { nullptr, nullptr, 0, 0xFF, 1, true, false, false, true },
+    { nullptr, nullptr, 0, 0xFF, 1, true, false, false, true },
+    { nullptr, nullptr, 0, 0xFF, 1, true, false, false, true },
+    { nullptr, nullptr, 0, 0xFF, 1, true, false, false, true },
+    { nullptr, nullptr, 0, 0xFF, 1, true, false, false, true },
+    { nullptr, nullptr, 0, 0xFF, 1, true, false, false, true },
+    { nullptr, nullptr, 0, 0xFF, 1, true, false, false, true },
+    { nullptr, nullptr, 0, 0xFF, 1, true, false, false, true },
+    { nullptr, nullptr, 0, 0xFF, 1, true, false, false, true },
+    { nullptr, nullptr, 0, 0xFF, 1, true, false, false, true },
+    { nullptr, nullptr, 0, 0xFF, 1, true, false, false, true },
+    { nullptr, nullptr, 0, 0xFF, 1, true, false, false, true },
+    { nullptr, nullptr, 0, 0xFF, 1, true, false, false, true },
+    { nullptr, nullptr, 0, 0xFF, 1, true, false, false, true },
+    { nullptr, nullptr, 0, 0xFF, 1, true, false, false, true },
+    { nullptr, nullptr, 0, 0xFF, 1, true, false, false, true },
+    { nullptr, nullptr, 0, 0xFF, 1, true, false, false, true },
+    { nullptr, nullptr, 0, 0xFF, 1, true, false, false, true }
+};
+
+Track* loadMemBank(uint8_t slot)
+{
+    return &memoryBank[slot];
+}
+
+void removeOldSlot(uint8_t slot)
+{
+    for (uint8_t i = 0; i < 32; i++)
+    {
+        if (memoryBank[i].saveSlot == slot)
+        {
+            memoryBank[i].saveSlot = 255;
+            return;
+        }
+    }
     
-    noteOn(t, channel);
-    newCubic(t);
-    uint8_t pos = t->position + 1;
-    if (pos >= t->size) { pos = 0; }
-    t->position = pos;
-}
-
-void modTrack(Track* t, uint8_t channel, CubicInput time)
-{
-    if (!(t->useMod && t->playing && t->notes)) { return; }
-    float m = getCubicValue(t->cub, time);
-    if (m < 0) { m = 0.0f; }
-    else if (m > 0x3FFF) { m = 0x3FFF; }
-    uint16_t act = (uint16_t)m;
-    // set mod
-    onControlChange(channel, CCType::ModulationWheel_MSB, act >> 7);
-    onControlChange(channel, CCType::ModulationWheel_LSB, act & 0x7F);
-}
-
-// template<typename T>
-// void FlashWrite(uint32_t address, T value)
-// {
-//     // ESP.flashEraseSector(address >> 12);
-//     ESP.flashWrite(address, (uint32_t*)&value, sizeof(T));
-// }
-template<typename T>
-void FlashWrite(uint32_t address, const T* value, uint16_t size)
-{
-    ESP.flashWrite(address, (uint32_t*)value, sizeof(T) * size);
-}
-// template<typename T>
-// T FlashRead(uint32_t address)
-// {
-//     T value;
-//     ESP.flashRead(address, (uint32_t*)&value, sizeof(T));
-//     return value;
-// }
-template<typename T>
-T* FlashRead(uint32_t address, uint16_t size)
-{
-    T* values = CREATE_ARRAY(T, size);
-    ESP.flashRead(address, (uint32_t*)values, sizeof(T) * size);
-    return values;
+    pergeSlot(slot);
 }
 
 void saveTrack(Track* t, uint8_t slot)
@@ -180,8 +102,10 @@ void saveTrack(Track* t, uint8_t slot)
     EEPROM.commit();
     
     // data already written
-    if (t->slot == slot) { return; }
-    t->slot = slot;
+    if (t->saveSlot == slot) { return; }
+    // find track that was saved here
+    removeOldSlot(slot);
+    t->saveSlot = slot;
     
     ESP.flashEraseSector(address >> 12);
     FlashWrite<Note>(address, t->notes, size);
@@ -190,26 +114,174 @@ void saveTrack(Track* t, uint8_t slot)
         FlashWrite<uint16_t>(address + 512, t->mods, size);
     }
 }
-void loadTrack(Track* t, uint8_t slot, uint8_t channel)
+void deleteSave(uint8_t slot)
 {
+    uint8_t si = TRACKS_SLOT_1 + (4 * slot);
+    
+    eeWrite(si, 1);
+    eeWrite(si + TRACK_USEMOD, 0);
+    eeWrite(si + TRACK_HALFTIME, 0);
+    // size of 1 is invalid
+    eeWrite(si + TRACK_SIZE, 1);
+    EEPROM.commit();
+}
+Track* loadTrack(uint8_t slot)
+{   
     uint32_t address = NVMADDRESS + (4096 * (uint32_t)slot);
     uint8_t si = TRACKS_SLOT_1 + (4 * slot);
     
     uint16_t size = EEPROM.read(si + TRACK_SIZE);
     if (size == 0) { size = 256; }
-    if (size < 4) { return; } 
+    if (size < 4) { return nullptr; } 
+    
+    Track* t = CREATE(Track);
+    t->memBank = false;
     
     t->clockDivision = EEPROM.read(si);
     t->useMod = EEPROM.read(si + TRACK_USEMOD);
     t->halfTime = EEPROM.read(si + TRACK_HALFTIME);
-    
-    t->position = 0;
     t->playing = true;
-    t->channel = channel;
-    t->slot = slot;
-    t->lastNote = { 255, 0 };
+    t->saveSlot = slot;
     
     t->size = size;
     t->notes = FlashRead<Note>(address, size);
     t->mods = FlashRead<uint16_t>(address + 512, size);
+    
+    return t;
+}
+
+void pushTrackToSlot(uint8_t slot, Track* src)
+{
+    Track* dest = loadMemBank(slot);
+    deleteTrack(dest);
+    dest->clockDivision = src->clockDivision;
+    dest->halfTime = src->halfTime;
+    dest->mods = src->mods;
+    dest->notes = src->notes;
+    dest->playing = src->playing;
+    dest->saveSlot = src->saveSlot;
+    dest->size = src->size;
+    dest->useMod = src->useMod;
+    free(src);
+}
+void copyTrack(Track* src, Track* dest)
+{
+    dest->clockDivision = src->clockDivision;
+    dest->halfTime = src->halfTime;
+    dest->playing = src->playing;
+    dest->saveSlot = src->saveSlot;
+    dest->size = src->size;
+    dest->useMod = src->useMod;
+    
+    Note* notes = CREATE_ARRAY(Note, src->size);
+    uint16_t* mods = CREATE_ARRAY(uint16_t, src->size);
+    
+    dest->notes = notes;
+    dest->mods = mods;
+    
+    for (uint16_t i = 0; i < src->size; i++)
+    {
+        notes[i] = src->notes[i];
+        mods[i] = src->mods[i];
+    }
+}
+
+// t must be valid
+void transposeTrack(Track* t, int8_t semiTones)
+{
+    for (uint8_t i = 0; i < t->size; i++)
+    {
+        t->notes[i].key += semiTones;
+    }
+}
+typedef struct
+{
+    uint8_t note;
+    bool offset;
+} KeyNote;
+KeyNote noteToKey(uint8_t n)
+{
+    switch (n)
+    {
+        case 0:
+            return { 0, false };
+        case 1:
+            return { 0, true };
+        case 2:
+            return { 1, false };
+        case 3:
+            return { 1, true };
+        case 4:
+            return { 2, false };
+        case 5:
+            return { 3, false };
+        case 6:
+            return { 3, true };
+        case 7:
+            return { 4, false };
+        case 8:
+            return { 4, true };
+        case 9:
+            return { 5, false };
+        case 10:
+            return { 5, true };
+        case 11:
+            return { 6, false };
+    }
+    
+    return { 255, true };
+}
+uint8_t keyToNote(KeyNote kn)
+{
+    uint8_t v = 0;
+    
+    switch (kn.note)
+    {
+        // case 0:
+        //     break;
+        case 1:
+            v = 2;
+            break;
+        case 2:
+            v = 4;
+            break;
+        case 3:
+            v = 5;
+            break;
+        case 4:
+            v = 7;
+            break;
+        case 5:
+            v = 9;
+            break;
+        case 6:
+            v = 11;
+            break;
+    }
+    
+    if (kn.offset) { return v + 1; }
+    return v;
+}
+
+// t must be valid
+void transposeTrackKey(Track* t, int8_t offset, Notes key)
+{
+    uint16_t size = t->size;
+    KeyNote* notes = CREATE_ARRAY(KeyNote, size);
+    
+    for (uint16_t i = 0; i < size; i++)
+    {
+        uint8_t n = t->notes[i].key + 12;
+        n -= key;
+        // to key
+        uint8_t octave = n / 12;
+        KeyNote kn = noteToKey(n % 12);
+        kn.note += (octave * 7) + offset;
+        // back to note
+        octave = kn.note / 7;
+        kn.note %= 7;
+        
+        n = keyToNote(kn) + (octave * 12);
+        t->notes[i].key = n + key - 12;
+    }
 }

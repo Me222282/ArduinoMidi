@@ -5,6 +5,7 @@
 // {
 //     return (n1 % 12) == n2;
 // }
+
 bool notInKey(NoteName note, Notes key)
 {
     uint8_t v = (note + 12 - key) % 12;

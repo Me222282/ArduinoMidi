@@ -42,9 +42,6 @@ typedef struct
 // divisions to make pb smaller
 extern const float pbDiv[6];
 
-// consts
-extern const uint16_t digitPlaces[4];
-
 extern uint8_t activeChannels;
 extern uint8_t activeVoices;
 extern float pitchBendSelect;

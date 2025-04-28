@@ -26,36 +26,7 @@ bool tapTempo = false;
 uint32_t tapTempoTime = 0;
 bool choseFilter = false;
 bool setArpTime = false;
-uint8_t digit = 0;
-uint32_t lv = 0;
-uint8_t arpDigits[4] = { 0, 0, 0, 0 };
-uint8_t getDigit(NoteName n)
-{
-    switch (n)
-    {
-        case NoteName::_A0:
-            return 1;
-        case NoteName::_B0:
-            return 2;
-        case NoteName::C1:
-            return 3;
-        case NoteName::_D1:
-            return 4;
-        case NoteName::E1:
-            return 5;
-        case NoteName::F1:
-            return 6;
-        case NoteName::G1:
-            return 7;
-        case NoteName::_A1:
-            return 8;
-        case NoteName::_B1:
-            return 9;
-        case NoteName::C2:
-            return 0;
-    }
-    return 11;
-}
+uint32_t lv = 120;
 void manageSpecie(uint8_t channel, NoteName n)
 {
     if (tapTempo)
@@ -85,17 +56,9 @@ void manageSpecie(uint8_t channel, NoteName n)
     // enter time - digit must start at 0
     if (setArpTime)
     {
-        uint8_t dv = getDigit(n);
         // valid digit
-        if (dv <= 9)
-        {
-            // no more digits
-            if (digit >= 4) { return; }
-            arpDigits[digit] = dv;
-            digit++;
-            playNumber(n);
-            return;
-        }
+        bool v = addDigit(n, 4);
+        if (v) { return; }
         if (n != NoteName::C3)
         {
             playNote(NOTEFAIL_S, MF_DURATION);
@@ -203,23 +166,7 @@ void manageSpecie(uint8_t channel, NoteName n)
             // set arp time value
             if (!setArpTime)
             {
-                // digit is the number of digits entered
-                if (digit == 0)
-                {
-                    // setArpTimeOut(channel, 60000 / lv);
-                    arps[channel].timeOut = 60000 / lv;
-                    return;
-                }
-                uint32_t bpm = 0;
-                uint8_t place = 0;
-                // read in reverse order
-                for (int8_t i = digit - 1; i >= 0; i--)
-                {
-                    bpm += arpDigits[i] * digitPlaces[place];
-                    place++;
-                }
-                digit = 0;
-                lv = bpm;
+                lv = getEnteredValue(lv);
                 // setArpTimeOut(channel, 60000 / bpm);
                 arps[channel].timeOut = 60000 / lv;
             }

@@ -18,8 +18,6 @@ void resetOpsValues();
 void saveOpsState();
 void loadOpsState();
 
-uint8_t getDigit(NoteName n);
-
 #ifdef __cplusplus
 } // extern "C"
 #endif
