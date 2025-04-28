@@ -187,9 +187,9 @@ void copyTrack(Track* src, Track* dest)
 }
 
 // t must be valid
-void transposeTrack(Track* t, int8_t semiTones)
+void transposeTrack(Track* t, int8_t semiTones, uint16_t range)
 {
-    for (uint8_t i = 0; i < t->size; i++)
+    for (uint8_t i = 0; i < range; i++)
     {
         t->notes[i].key += semiTones;
     }
@@ -264,12 +264,9 @@ uint8_t keyToNote(KeyNote kn)
 }
 
 // t must be valid
-void transposeTrackKey(Track* t, int8_t offset, Notes key)
+void transposeTrackKey(Track* t, int8_t offset, Notes key, uint16_t range)
 {
-    uint16_t size = t->size;
-    KeyNote* notes = CREATE_ARRAY(KeyNote, size);
-    
-    for (uint16_t i = 0; i < size; i++)
+    for (uint16_t i = 0; i < range; i++)
     {
         uint8_t n = t->notes[i].key + 12;
         n -= key;

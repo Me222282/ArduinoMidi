@@ -44,19 +44,20 @@ void setNumber(NoteName pos)
     if (!setCCSource)
     {
         ccSetPos = (NoteName)0;
-        lv_cc = getEnteredValue(lv_cc);
-        if (lv_cc > 127)
+        uint16_t v = getEnteredValue(lv_cc);
+        if (v > 127)
         {
             playNote(NOTEFAIL_S, MF_DURATION);
+            return;
         }
-        ccListeners[index] = lv_cc;
+        lv_cc = v;
+        ccListeners[index] = v;
     }
     playNote(NOTESELECT_S, MF_DURATION);
 }
 
 void manageMenuNotes(NoteName n)
 {
-    // enter time - digit must start at 0
     if (setCCSource)
     {
         // valid digit

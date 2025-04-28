@@ -567,7 +567,7 @@ void manageSeqNote(NoteName n, uint8_t vel, uint8_t channel)
         case NoteName::G4:
             resetSequence();
             createSequence(&trackSet, nullptr, 0, channel);
-            trackSetState = TrackState::SelectEditSlot;
+            trackSetState = TrackState::SelectSlot;
             playNoteC(NOTESELECT_S, channel, MF_DURATION);
             return;
         case NoteName::Ab4:
@@ -586,7 +586,7 @@ void manageSeqNote(NoteName n, uint8_t vel, uint8_t channel)
         case NoteName::_A4:
             resetSequence();
             createSequence(&trackSet, nullptr, 0, channel);
-            trackSetState = TrackState::SelectSlot;
+            trackSetState = TrackState::SelectEditSlot;
             playNoteC(NOTESELECT_S, channel, MF_DURATION);
             return;
         case NoteName::B4:
@@ -916,6 +916,11 @@ void modTracks(uint32_t pt)
 
 bool clockDivSet = false;
 uint16_t lastClockDiv = 1;
+bool tkInc = false;
+bool offsetNoteSet = false;
+bool selectTKOKey = false;
+uint8_t lastNoteOffset = 1;
+Notes nOKey = Notes::C;
 void trackManager(NoteName n, uint8_t vel)
 {
     uint8_t channel = trackSet.channel;
@@ -968,11 +973,50 @@ void trackManager(NoteName n, uint8_t vel)
     
     Notes q = (Notes)(n % 12);
     
+    if (offsetNoteSet)
+    {
+        // valid digit
+        if (addDigit(n, 3)) { return; }
+        offsetNoteSet = false;
+        uint16_t v = getEnteredValue(lastNoteOffset);
+        if (v > 127)
+        {
+            playNoteC(NOTEFAIL_S, channel, MF_DURATION);
+            return;
+        }
+        lastNoteOffset = v;
+        int8_t offset = tkInc ? v : -v;
+        uint16_t range = trackSetState == TrackState::AddNotes ? trackSet.position : trackSet.current->size;
+        if (selectTKOKey)
+        {
+            transposeTrackKey(trackSet.current, offset, nOKey, range);
+        }
+        else
+        {
+            transposeTrack(trackSet.current, offset, range);
+        }
+        playNoteC(NOTESELECT_S, channel, MF_DURATION);
+        return;
+    }
+    // but not offsetNoteSet
+    if (selectTKOKey)
+    {
+        uint8_t fk = n - NoteName::C1;
+        if (fk < 12)
+        {
+            nOKey = (Notes)fk;
+            playNumberC(n, channel);
+            offsetNoteSet = true;
+            return;
+        }
+        playNoteC(NOTEFAIL_S, channel, MF_DURATION);
+        return;
+    }
+    
     if (clockDivSet)
     {
         // valid digit
-        bool v = addDigit(n, 3);
-        if (v) { return; }
+        if (addDigit(n, 3)) { return; }
         if (q != Notes::A)
         {
             playNote(NOTEFAIL_S, MF_DURATION);
@@ -1000,9 +1044,19 @@ void trackManager(NoteName n, uint8_t vel)
         case Notes::C:
             exitTrackEdit();
             return;
+        case Notes::Db:
+            selectTKOKey = true;
+            tkInc = false;
+            playNoteC(NOTESELECT_S, channel, MF_DURATION);
+            return;
         case Notes::D:
             if (trackSetState == TrackState::Edit) { return; }
             addTrackValue(&trackSet, NOTEOFF, mod);
+            return;
+        case Notes::Eb:
+            selectTKOKey = true;
+            tkInc = true;
+            playNoteC(NOTESELECT_S, channel, MF_DURATION);
             return;
         case Notes::E:
         {
@@ -1019,19 +1073,37 @@ void trackManager(NoteName n, uint8_t vel)
             tk->useMod = !tk->useMod;
             triggerFeedbackC(tk->useMod, channel);
             return;
+        case Notes::Gb:
+            selectTKOKey = false;
+            offsetNoteSet = true;
+            tkInc = false;
+            playNoteC(NOTESELECT_S, channel, MF_DURATION);
+            return;
         case Notes::G:
             tk->halfTime = !tk->halfTime;
             triggerFeedbackC(tk->halfTime, channel);
             return;
+        case Notes::Ab:
+            selectTKOKey = false;
+            offsetNoteSet = true;
+            tkInc = true;
+            playNoteC(NOTESELECT_S, channel, MF_DURATION);
+            return;
         case Notes::A:
             clockDivSet = !clockDivSet;
-            playNoteC(NOTESELECT_S, channel, MF_DURATION);
             // set arp time value
             if (!clockDivSet)
             {
-                lastClockDiv = getEnteredValue(lastClockDiv);
-                tk->clockDivision = lastClockDiv;
+                uint16_t v = getEnteredValue(lastClockDiv);
+                if (v > 255)
+                {
+                    playNoteC(NOTEFAIL_S, channel, MF_DURATION);
+                    return;
+                }
+                lastClockDiv = v;
+                tk->clockDivision = v;
             }
+            playNoteC(NOTESELECT_S, channel, MF_DURATION);
             return;
         case Notes::B:
             tk->playing = !tk->playing;

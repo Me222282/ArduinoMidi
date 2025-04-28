@@ -49,7 +49,7 @@ bool addDigit(NoteName n, uint8_t max)
     if (dv <= 9)
     {
         // no more digits
-        if (digit >= 4) { return false; }
+        if (digit >= max) { return false; }
         digits[digit] = dv;
         digit++;
         playNumber(n);

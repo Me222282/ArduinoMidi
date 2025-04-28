@@ -36,7 +36,7 @@ void deleteSave(uint8_t slot);
 Track* loadTrack(uint8_t slot);
 Track* loadMemBank(uint8_t slot);
 
-void transposeTrack(Track* t, int8_t semiTones);
+void transposeTrack(Track* t, int8_t semiTones, uint16_t range);
 
 void pergeSlot(uint8_t slot);
 
@@ -44,6 +44,6 @@ void pergeSlot(uint8_t slot);
 } // extern "C"
 #endif
 
-void transposeTrackKey(Track* t, int8_t offset, Notes key);
+void transposeTrackKey(Track* t, int8_t offset, Notes key, uint16_t range);
 
 #endif
