@@ -13,7 +13,7 @@
 #include "TrackSeq.h"
 #include "../core/Coms.h"
 
-bool _playMode = false;
+bool _playMode[5] = { false, false, false, false, false };
 // half the tempo time
 uint32_t _tempoTime = 250;
 bool _seqClocked = false;
@@ -123,7 +123,11 @@ bool exitTrackEdit();
 
 void onParamChange()
 {
-    _playMode = false;
+    _playMode[0] = false;
+    _playMode[1] = false;
+    _playMode[2] = false;
+    _playMode[3] = false;
+    _playMode[4] = false;
     Track* c = _trackSet.current;
     // trackset is creating or editing a track
     if (c && !exitTrackEdit())
@@ -278,8 +282,15 @@ void playingFunc(NoteName n, uint8_t channel)
             else                { _sequences[4].playing = true; }
             return;
         
+        case NoteName::G2:
+            _playMode[0] = false;
+            _playMode[1] = false;
+            _playMode[2] = false;
+            _playMode[3] = false;
+            _playMode[4] = false;
+            return;
         case NoteName::_D3:
-            _playMode = true;
+            _playMode[channel] = true;
             return;
     }
     return;
@@ -684,6 +695,13 @@ void manageSeqNote(NoteName n, uint8_t vel, uint8_t channel)
             triggerFeedbackC(true, 4);
             return;
         
+        case NoteName::G2:
+            _playMode[0] = false;
+            _playMode[1] = false;
+            _playMode[2] = false;
+            _playMode[3] = false;
+            _playMode[4] = false;
+            return;
         case NoteName::_A2:
         {
             _triggerOnBars = !_triggerOnBars;
@@ -725,7 +743,7 @@ void manageSeqNote(NoteName n, uint8_t vel, uint8_t channel)
             playNote(NOTEOPTION_S, MF_DURATION_SHORT);
             return;
         case NoteName::_D3:
-            _playMode = true;
+            _playMode[channel] = true;
             return;
         case NoteName::Eb3:
             _seqClocked = !_seqClocked;
@@ -802,7 +820,7 @@ bool seqLoopInvoke()
             {
                 uint8_t vel = MIDI.getData2();
                 
-                if (!_playMode)
+                if (!_playMode[channel])
                 {
                     if (vel != 0 && type == MidiCode::NoteON)
                     {
