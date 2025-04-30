@@ -18,8 +18,8 @@ extern "C" {
 
 extern bool isMenuFeedback;
 
-extern uint8_t digit;
-extern uint8_t digits[4];
+// extern uint8_t digit;
+// extern uint8_t digits[4];
 
 bool addDigit(NoteName n, uint8_t max);
 uint16_t getEnteredValue(uint16_t last);

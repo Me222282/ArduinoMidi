@@ -4,16 +4,16 @@
 #include "src/core/Globals.h"
 #include "src/notes/Channels.h"
 
-uint32_t startTime_MF;
-uint32_t timeOut_MF;
-bool is_MF = false;
+uint32_t _startTime_MF;
+uint32_t _timeOut_MF;
+bool _is_MF = false;
 
 bool isMenuFeedback = true;
 
 // consts
-const uint16_t digitPlaces[4] = { 1, 10, 100, 1000 };
-uint8_t digit = 0;
-uint8_t digits[4] = { 0, 0, 0, 0 };
+const uint16_t _digitPlaces[4] = { 1, 10, 100, 1000 };
+uint8_t _digit = 0;
+uint8_t _digits[4] = { 0, 0, 0, 0 };
 
 uint8_t getDigit(NoteName n)
 {
@@ -49,9 +49,9 @@ bool addDigit(NoteName n, uint8_t max)
     if (dv <= 9)
     {
         // no more digits
-        if (digit >= max) { return false; }
-        digits[digit] = dv;
-        digit++;
+        if (_digit >= max) { return false; }
+        _digits[_digit] = dv;
+        _digit++;
         playNumber(n);
         return true;
     }
@@ -60,16 +60,16 @@ bool addDigit(NoteName n, uint8_t max)
 uint16_t getEnteredValue(uint16_t last)
 {
     // digit is the number of digits entered
-    if (digit == 0) { return last; }
+    if (_digit == 0) { return last; }
     uint16_t value = 0;
     uint8_t place = 0;
     // read in reverse order
-    for (int8_t i = digit - 1; i >= 0; i--)
+    for (int8_t i = _digit - 1; i >= 0; i--)
     {
-        value += digits[i] * digitPlaces[place];
+        value += _digits[i] * _digitPlaces[place];
         place++;
     }
-    digit = 0;
+    _digit = 0;
     return value;
 }
 
@@ -102,9 +102,9 @@ void playNote(NoteName n, uint32_t duration)
     setNote(4, n);
     setGate(0b11111);
     
-    is_MF = true;
-    startTime_MF = millis();
-    timeOut_MF = duration;
+    _is_MF = true;
+    _startTime_MF = millis();
+    _timeOut_MF = duration;
 }
 
 const uint8_t gatePlaces[5] =
@@ -131,17 +131,17 @@ void playNoteC(NoteName n, uint8_t channel, uint32_t duration)
     }
     setGate(gateCurrent | gate);
     
-    is_MF = true;
-    startTime_MF = millis();
-    timeOut_MF = duration;
+    _is_MF = true;
+    _startTime_MF = millis();
+    _timeOut_MF = duration;
 }
 void invokeMF()
 {
-    if (is_MF && (millis() - startTime_MF) > timeOut_MF)
+    if (_is_MF && (millis() - _startTime_MF) > _timeOut_MF)
     {
         setGate(0);
-        timeOut_MF = 0;
-        startTime_MF = 0;
-        is_MF = false;
+        _timeOut_MF = 0;
+        _startTime_MF = 0;
+        _is_MF = false;
     }
 }

@@ -16,7 +16,7 @@ uint8_t _ss11[5] = { 0x00, 0x01, 0x02, 0x10, 0x20 };
 uint8_t _ss12[5] = { 0x00, 0x00, 0x10, 0x20, 0x30 };
 uint8_t _ss13[5] = { 0x00, 0x01, 0x10, 0x20, 0x30 };
 uint8_t _ss14[5] = { 0x00, 0x10, 0x20, 0x30, 0x40 };
-uint8_t* slotSettings[25] =
+uint8_t* _slotSettings[25] =
 {
     // voice priority
     // // 1 Channel
@@ -57,7 +57,7 @@ void initChannel(Channel* c, uint8_t voices, uint8_t index, uint8_t places);
 
 void setChannels(uint8_t c, uint8_t v)
 {
-    slotAllocation = slotSettings[((c - 1) * 5) + v - 1];
+    slotAllocation = _slotSettings[((c - 1) * 5) + v - 1];
     
     if (altAllocations)
     {

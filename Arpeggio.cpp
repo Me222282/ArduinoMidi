@@ -7,7 +7,7 @@
 #include "MemLocations.h"
 
 Arpeggio arps[5];
-uint32_t tElapsed;
+uint32_t _tElapsed;
 bool arpClocked = false;
 
 void swap(uint8_t channel, NoteList* out, NoteList* in)
@@ -111,9 +111,9 @@ void invokeArps()
     if (arpClocked) { return; }
     
     // change in time
-    uint32_t dt = tElapsed;
-    tElapsed = millis();
-    dt = tElapsed - dt;
+    uint32_t dt = _tElapsed;
+    _tElapsed = millis();
+    dt = _tElapsed - dt;
     
     for (uint8_t i = 0; i < 5; i++)
     {

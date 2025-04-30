@@ -9,10 +9,10 @@
 #include "src/core/Globals.h"
 #include "MemLocations.h"
 
-bool setCCSource;
-NoteName ccSetPos;
+bool _setCCSource;
+NoteName _ccSetPos;
 
-uint16_t lv_cc = 0;
+uint16_t _lv_cc = 0;
 
 uint8_t getSetPosLocation(NoteName pos)
 {
@@ -34,23 +34,23 @@ uint8_t getSetPosLocation(NoteName pos)
 }
 void setNumber(NoteName pos)
 {
-    if (ccSetPos != 0 && ccSetPos != pos) { return; }
+    if (_ccSetPos != 0 && _ccSetPos != pos) { return; }
     
     uint8_t index = getSetPosLocation(pos);
     
-    ccSetPos = pos;
-    setCCSource = !setCCSource;
+    _ccSetPos = pos;
+    _setCCSource = !_setCCSource;
     // set value
-    if (!setCCSource)
+    if (!_setCCSource)
     {
-        ccSetPos = (NoteName)0;
-        uint16_t v = getEnteredValue(lv_cc);
+        _ccSetPos = (NoteName)0;
+        uint16_t v = getEnteredValue(_lv_cc);
         if (v > 127)
         {
             playNote(NOTEFAIL_S, MF_DURATION);
             return;
         }
-        lv_cc = v;
+        _lv_cc = v;
         ccListeners[index] = v;
     }
     playNote(NOTESELECT_S, MF_DURATION);
@@ -58,12 +58,12 @@ void setNumber(NoteName pos)
 
 void manageMenuNotes(NoteName n)
 {
-    if (setCCSource)
+    if (_setCCSource)
     {
         // valid digit
         bool v = addDigit(n, 3);
         if (v) { return; }
-        if (n != ccSetPos)
+        if (n != _ccSetPos)
         {
             playNote(NOTEFAIL_S, MF_DURATION);
             return;

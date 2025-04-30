@@ -195,17 +195,17 @@ void loop()
             case MidiCode::TimingClock:
                 if (invokeArp && arpClocked) { clockedArp(); }
                 return;
-            case MidiCode::Reset:
-                resetOpsValues();
-                resetCCMValues();
-                resetSeqValues();
+            // case MidiCode::Reset:
+            //     resetOpsValues();
+            //     resetCCMValues();
+            //     resetSeqValues();
                 
-                clearArps();
-                setChannels(activeChannels, activeVoices);
+            //     clearArps();
+            //     setChannels(activeChannels, activeVoices);
                 
-                gate = 0;
-                setGate(gate);
-                return;
+            //     gate = 0;
+            //     setGate(gate);
+            //     return;
         }
     }
 }

@@ -13,29 +13,29 @@
 #include "TrackSeq.h"
 #include "../core/Coms.h"
 
-bool playMode = false;
+bool _playMode = false;
 // half the tempo time
-uint32_t tempoTime = 250;
-bool seqClocked = false;
-uint32_t seqClockCount = 0;
-bool playing = false;
-uint16_t playStep = 0;
+uint32_t _tempoTime = 250;
+bool _seqClocked = false;
+uint32_t _seqClockCount = 0;
+bool _playing = false;
+uint16_t _playStep = 0;
 
 // in half semiquavers
-uint8_t barSize = 32;
-bool triggerOnBars = true;
+uint8_t _barSize = 32;
+bool _triggerOnBars = true;
 
-TrackSequence sequences[5];
+TrackSequence _sequences[5];
 
 // track function
 void pergeSlot(uint8_t slot)
 {
     for (uint8_t i = 0; i < 5; i++)
     {
-        if (!sequences[i].current) { continue; }
+        if (!_sequences[i].current) { continue; }
         
-        uint16_t size = sequences[i].size;
-        TrackPart* tp = sequences[i].tracks;
+        uint16_t size = _sequences[i].size;
+        TrackPart* tp = _sequences[i].tracks;
         for (uint16_t j = 0; j < size; j++)
         {
             if (tp[i].track->saveSlot == slot)
@@ -60,21 +60,21 @@ void resetTrack(TrackSequence* seq)
 }
 void restartTracks()
 {
-    resetTrack(&sequences[0]);
-    resetTrack(&sequences[1]);
-    resetTrack(&sequences[2]);
-    resetTrack(&sequences[3]);
-    resetTrack(&sequences[4]);
+    resetTrack(&_sequences[0]);
+    resetTrack(&_sequences[1]);
+    resetTrack(&_sequences[2]);
+    resetTrack(&_sequences[3]);
+    resetTrack(&_sequences[4]);
 }
 
-bool exitSeq = false;
+bool _exitSeq = false;
 
-bool tapTempo_S = false;
-uint32_t tapTempoTime_S = 0;
+bool _tapTempo_S = false;
+uint32_t _tapTempoTime_S = 0;
 
-bool setSeqTime = false;
-bool setBarSize = false;
-uint16_t lv_S = 120;
+bool _setSeqTime = false;
+bool _setBarSize = false;
+uint16_t _lv_S = 120;
 
 enum SlotState: uint8_t
 {
@@ -90,11 +90,11 @@ enum SlotState: uint8_t
     LoadSeq
 };
 
-uint8_t trackCopySrc = 0;
-SlotState trackSlotSelect = SlotState::None;
+uint8_t _trackCopySrc = 0;
+SlotState _trackSlotSelect = SlotState::None;
 
-uint32_t playingTime = 0;
-uint32_t elapsedTime = 0;
+uint32_t _playingTime = 0;
+uint32_t _elapsedTime = 0;
 
 enum TrackState: uint8_t
 {
@@ -108,34 +108,34 @@ enum TrackState: uint8_t
 };
 
 // create seqeunces
-TrackPart* seqNewTracks;
-uint8_t seqCreateChannel;
+TrackPart* _seqNewTracks;
+uint8_t _seqCreateChannel;
 void sequenceManager(NoteName n);
 bool exitSeqCreator();
 
 // edit tracks
-NoteName rangeBottom;
-NoteName rangeTop;
-TrackState trackSetState = TrackState::SelectSlot;
-TrackSequence trackSet;
-uint8_t trackSetSaveSlot = 255;
+NoteName _rangeBottom;
+NoteName _rangeTop;
+TrackState _trackSetState = TrackState::SelectSlot;
+TrackSequence _trackSet;
+uint8_t _trackSetSaveSlot = 255;
 bool exitTrackEdit();
 
 void onParamChange()
 {
-    playMode = false;
-    Track* c = trackSet.current;
+    _playMode = false;
+    Track* c = _trackSet.current;
     // trackset is creating or editing a track
     if (c && !exitTrackEdit())
     {
         deleteTrack(c);
-        trackSetState = TrackState::SelectSlot;
-        trackSetSaveSlot = 255;
+        _trackSetState = TrackState::SelectSlot;
+        _trackSetSaveSlot = 255;
     }
-    else if (seqNewTracks && !exitSeqCreator())
+    else if (_seqNewTracks && !exitSeqCreator())
     {
-        free(seqNewTracks);
-        seqNewTracks = nullptr;
+        free(_seqNewTracks);
+        _seqNewTracks = nullptr;
     }
 }
 
@@ -155,14 +155,14 @@ void pauseSequence()
 }
 void pauseSomeSequence(uint8_t channel)
 {
-    onNoteOff(channel, sequences[channel].lastNote.key);
-    sequences[channel].oneShot = false;
+    onNoteOff(channel, _sequences[channel].lastNote.key);
+    _sequences[channel].oneShot = false;
 }
 void resetSequence()
 {
-    playStep = 0;
-    seqClockCount = 0;
-    playingTime = 0;
+    _playStep = 0;
+    _seqClockCount = 0;
+    _playingTime = 0;
     restartTracks();
 }
 
@@ -178,108 +178,108 @@ void playingFunc(NoteName n, uint8_t channel)
         //     playing = true;
         //     return;
         case NoteName::E4:
-            playing = false;
+            _playing = false;
             pauseSequence();
             return;
             
         case NoteName::C5:
         {
-            bool v = sequences[0].playing;
-            if (triggerOnBars) { sequences[0].nextBar = !sequences[0].nextBar; }
+            bool v = _sequences[0].playing;
+            if (_triggerOnBars) { _sequences[0].nextBar = !_sequences[0].nextBar; }
             else
             {
-                sequences[0].playing = !v;
+                _sequences[0].playing = !v;
                 if (v) { pauseSomeSequence(0); }
             }
             return;
         }
         case NoteName::Db5:
-            sequences[0].skip++;
+            _sequences[0].skip++;
             return;
         case NoteName::_D5:
         {
-            bool v = sequences[1].playing;
-            if (triggerOnBars) { sequences[1].nextBar = !sequences[1].nextBar; }
+            bool v = _sequences[1].playing;
+            if (_triggerOnBars) { _sequences[1].nextBar = !_sequences[1].nextBar; }
             else
             {
-                sequences[1].playing = !v;
+                _sequences[1].playing = !v;
                 if (v) { pauseSomeSequence(1); }
             }
             return;
         }
         case NoteName::Eb5:
-            sequences[1].skip++;
+            _sequences[1].skip++;
             return;
         case NoteName::E5:
         {
-            bool v = sequences[2].playing;
-            if (triggerOnBars) { sequences[2].nextBar = !sequences[2].nextBar; }
+            bool v = _sequences[2].playing;
+            if (_triggerOnBars) { _sequences[2].nextBar = !_sequences[2].nextBar; }
             else
             {
-                sequences[2].playing = !v;
+                _sequences[2].playing = !v;
                 if (v) { pauseSomeSequence(2); }
             }
             return;
         }
         case NoteName::F5:
         {
-            bool v = sequences[3].playing;
-            if (triggerOnBars) { sequences[3].nextBar = !sequences[3].nextBar; }
+            bool v = _sequences[3].playing;
+            if (_triggerOnBars) { _sequences[3].nextBar = !_sequences[3].nextBar; }
             else
             {
-                sequences[3].playing = !v;
+                _sequences[3].playing = !v;
                 if (v) { pauseSomeSequence(3); }
             }
             return;
         }
         case NoteName::Gb5:
-            sequences[2].skip++;
+            _sequences[2].skip++;
             return;
         case NoteName::G5:
         {
-            bool v = sequences[4].playing;
-            if (triggerOnBars) { sequences[4].nextBar = !sequences[4].nextBar; }
+            bool v = _sequences[4].playing;
+            if (_triggerOnBars) { _sequences[4].nextBar = !_sequences[4].nextBar; }
             else
             {
-                sequences[4].playing = !v;
+                _sequences[4].playing = !v;
                 if (v) { pauseSomeSequence(4); }
             }
             return;
         }
         case NoteName::Ab5:
-            sequences[3].skip++;
+            _sequences[3].skip++;
             return;
         case NoteName::Bb5:
-            sequences[4].skip++;
+            _sequences[4].skip++;
             return;
         case NoteName::C6:
-            sequences[0].oneShot = true;
-            if (triggerOnBars)  { sequences[0].nextBar = true; }
-            else                { sequences[0].playing = true; }
+            _sequences[0].oneShot = true;
+            if (_triggerOnBars)  { _sequences[0].nextBar = true; }
+            else                { _sequences[0].playing = true; }
             return;
         case NoteName::_D6:
-            sequences[1].oneShot = true;
-            if (triggerOnBars)  { sequences[1].nextBar = true; }
-            else                { sequences[1].playing = true; }
+            _sequences[1].oneShot = true;
+            if (_triggerOnBars)  { _sequences[1].nextBar = true; }
+            else                { _sequences[1].playing = true; }
             return;
         case NoteName::E6:
-            sequences[2].oneShot = true;
-            if (triggerOnBars)  { sequences[2].nextBar = true; }
-            else                { sequences[2].playing = true; }
+            _sequences[2].oneShot = true;
+            if (_triggerOnBars)  { _sequences[2].nextBar = true; }
+            else                { _sequences[2].playing = true; }
             return;
         case NoteName::F6:
-            sequences[3].oneShot = true;
-            if (triggerOnBars)  { sequences[3].nextBar = true; }
-            else                { sequences[3].playing = true; }
+            _sequences[3].oneShot = true;
+            if (_triggerOnBars)  { _sequences[3].nextBar = true; }
+            else                { _sequences[3].playing = true; }
             return;
         case NoteName::G6:
-            sequences[4].oneShot = true;
-            if (triggerOnBars)  { sequences[4].nextBar = true; }
-            else                { sequences[4].playing = true; }
+            _sequences[4].oneShot = true;
+            if (_triggerOnBars)  { _sequences[4].nextBar = true; }
+            else                { _sequences[4].playing = true; }
             return;
         
         case NoteName::_D3:
-            playMode = true;
+            _playMode = true;
             return;
     }
     return;
@@ -358,8 +358,8 @@ uint8_t getSaveSlot(NoteName n)
 void manageSlotSelection(NoteName n, uint8_t channel)
 {
     uint8_t slot = getSaveSlot(n);
-    SlotState action = trackSlotSelect;
-    trackSlotSelect = SlotState::None;
+    SlotState action = _trackSlotSelect;
+    _trackSlotSelect = SlotState::None;
     // invalid slot
     if (slot >= 32)
     {
@@ -395,24 +395,24 @@ void manageSlotSelection(NoteName n, uint8_t channel)
         }
         case SlotState::Delete:
             deleteSave(slot);
-            trackSlotSelect = SlotState::Delete;
+            _trackSlotSelect = SlotState::Delete;
             break;
         case SlotState::Copy:
             if (!loadMemBank(slot))
             {
                 playNote(NOTEFAIL_S, MF_DURATION);
             }
-            trackCopySrc = slot;
-            trackSlotSelect = SlotState::Paste;
+            _trackCopySrc = slot;
+            _trackSlotSelect = SlotState::Paste;
             break;
         case SlotState::Paste:
             deleteTrack(loadMemBank(slot));
-            copyTrack(loadMemBank(trackCopySrc), loadMemBank(slot));
+            copyTrack(loadMemBank(_trackCopySrc), loadMemBank(slot));
             break;
         case SlotState::BankCurrent:
         {
             // current exits at this point
-            TrackSequence* ts = &sequences[channel];
+            TrackSequence* ts = &_sequences[channel];
             pushTrackToSlot(slot, ts->current);
             ts->current = loadMemBank(slot);
             ts->tracks[ts->position].track = loadMemBank(slot);
@@ -422,14 +422,14 @@ void manageSlotSelection(NoteName n, uint8_t channel)
         case SlotState::SaveCurrent:
         {
             // current exits at this point
-            TrackSequence* ts = &sequences[channel];
+            TrackSequence* ts = &_sequences[channel];
             saveTrack(ts->current, slot);
             playNumberC(n, channel);
             return;
         }
         case SlotState::SaveSeq:
             // only 16 seq slots
-            if (slot < 16 && saveSequence(&sequences[channel], slot))
+            if (slot < 16 && saveSequence(&_sequences[channel], slot))
             {
                 playNumberC(n, channel);
                 return;
@@ -438,7 +438,7 @@ void manageSlotSelection(NoteName n, uint8_t channel)
             return;
         case SlotState::LoadSeq:
             // only 16 seq slots
-            if (slot < 16 && loadSequence(&sequences[channel], slot, channel))
+            if (slot < 16 && loadSequence(&_sequences[channel], slot, channel))
             {
                 playNumberC(n, channel);
                 return;
@@ -451,31 +451,31 @@ void manageSlotSelection(NoteName n, uint8_t channel)
 
 void manageSeqNote(NoteName n, uint8_t vel, uint8_t channel)
 {
-    if (tapTempo_S)
+    if (_tapTempo_S)
     {
-        tempoTime = (millis() - tapTempoTime_S) >> 1;
-        tapTempo_S = false;
+        _tempoTime = (millis() - _tapTempoTime_S) >> 1;
+        _tapTempo_S = false;
         playNote(NOTEOPTION_S, MF_DURATION_SHORT);
         return;
     }
-    if (playing)
+    if (_playing)
     {
         playingFunc(n, channel);
         return;
     }
-    if (trackSet.current)
+    if (_trackSet.current)
     {
         trackManager(n, vel);
         return;
     }
-    if (seqNewTracks)
+    if (_seqNewTracks)
     {
         sequenceManager(n);
         return;
     }
     
     // enter time - digit must start at 0
-    if (setSeqTime)
+    if (_setSeqTime)
     {
         // valid digit
         bool v = addDigit(n, 4);
@@ -486,7 +486,7 @@ void manageSeqNote(NoteName n, uint8_t vel, uint8_t channel)
             return;
         }
     }
-    if (setBarSize)
+    if (_setBarSize)
     {
         // valid digit
         bool v = addDigit(n, 3);
@@ -497,7 +497,7 @@ void manageSeqNote(NoteName n, uint8_t vel, uint8_t channel)
             return;
         }
     }
-    if (trackSlotSelect)
+    if (_trackSlotSelect)
     {
         manageSlotSelection(n, channel);
         return;
@@ -510,12 +510,12 @@ void manageSeqNote(NoteName n, uint8_t vel, uint8_t channel)
             resetSequence();
             return;
         case NoteName::B3:
-            exitSeq = true;
+            _exitSeq = true;
             return;
         case NoteName::C4:
             resetSequence();
-            playing = true;
-            if (!seqClocked)
+            _playing = true;
+            if (!_seqClocked)
             {
                 triggerTracks();
                 modTracks(0);
@@ -523,23 +523,23 @@ void manageSeqNote(NoteName n, uint8_t vel, uint8_t channel)
             return;
         case NoteName::Db4:
             // save current track to memory bank
-            if (!sequences[channel].current || sequences[channel].current->memBank)
+            if (!_sequences[channel].current || _sequences[channel].current->memBank)
             {
                 playNoteC(NOTEFAIL_S, channel, MF_DURATION);
             }
-            trackSlotSelect = SlotState::BankCurrent;
+            _trackSlotSelect = SlotState::BankCurrent;
             playNoteC(NOTESELECT_S, channel, MF_DURATION);
             return;
         case NoteName::_D4:
-            playing = true;
+            _playing = true;
             return;
         case NoteName::Eb4:
             // save current track
-            if (!sequences[channel].current)
+            if (!_sequences[channel].current)
             {
                 playNoteC(NOTEFAIL_S, channel, MF_DURATION);
             }
-            trackSlotSelect = SlotState::SaveCurrent;
+            _trackSlotSelect = SlotState::SaveCurrent;
             playNoteC(NOTESELECT_S, channel, MF_DURATION);
             return;
         // case NoteName::E4:
@@ -548,45 +548,45 @@ void manageSeqNote(NoteName n, uint8_t vel, uint8_t channel)
         case NoteName::F4:
         {
             resetSequence();
-            seqNewTracks = CREATE_ARRAY(TrackPart, 256);
-            seqCreateChannel = channel;
+            _seqNewTracks = CREATE_ARRAY(TrackPart, 256);
+            _seqCreateChannel = channel;
             playNoteC(NOTESELECT_S, channel, MF_DURATION);
             return;
         }
         case NoteName::Gb4:
         {
             resetSequence();
-            createSequence(&trackSet, nullptr, 0, channel);
+            createSequence(&_trackSet, nullptr, 0, channel);
             Track* tac = CREATE(Track);
             createTrack(tac);
-            trackSet.current = tac;
-            trackSetState = TrackState::RangeBottom;
+            _trackSet.current = tac;
+            _trackSetState = TrackState::RangeBottom;
             playNoteC(NOTESELECT_S, channel, MF_DURATION);
             return;
         }
         case NoteName::G4:
             resetSequence();
-            createSequence(&trackSet, nullptr, 0, channel);
-            trackSetState = TrackState::SelectSlot;
+            createSequence(&_trackSet, nullptr, 0, channel);
+            _trackSetState = TrackState::SelectSlot;
             playNoteC(NOTESELECT_S, channel, MF_DURATION);
             return;
         case NoteName::Ab4:
             // no current track
-            if (!sequences[channel].current)
+            if (!_sequences[channel].current)
             {
                 playNoteC(NOTEFAIL_S, channel, MF_DURATION);
                 return;
             }
             resetSequence();
-            createSequence(&trackSet, nullptr, 0, channel);
-            trackSet.current = sequences[channel].current;
-            trackSetState = TrackState::Edit;
+            createSequence(&_trackSet, nullptr, 0, channel);
+            _trackSet.current = _sequences[channel].current;
+            _trackSetState = TrackState::Edit;
             playNoteC(NOTESELECT_S, channel, MF_DURATION);
             return;
         case NoteName::_A4:
             resetSequence();
-            createSequence(&trackSet, nullptr, 0, channel);
-            trackSetState = TrackState::SelectEditSlot;
+            createSequence(&_trackSet, nullptr, 0, channel);
+            _trackSetState = TrackState::SelectEditSlot;
             playNoteC(NOTESELECT_S, channel, MF_DURATION);
             return;
         case NoteName::B4:
@@ -600,156 +600,156 @@ void manageSeqNote(NoteName n, uint8_t vel, uint8_t channel)
         
         case NoteName::C5:
         {
-            bool v = sequences[0].playing;
-            if (triggerOnBars)  { sequences[0].nextBar = !sequences[0].nextBar; }
-            else                { sequences[0].playing = !v; }
+            bool v = _sequences[0].playing;
+            if (_triggerOnBars)  { _sequences[0].nextBar = !_sequences[0].nextBar; }
+            else                { _sequences[0].playing = !v; }
             triggerFeedbackC(!v, 0);
             return;
         }
         case NoteName::Db5:
-            nextTrack(&sequences[0]);
+            nextTrack(&_sequences[0]);
             return;
         case NoteName::_D5:
         {
-            bool v = sequences[1].playing;
-            if (triggerOnBars)  { sequences[1].nextBar = !sequences[1].nextBar; }
-            else                { sequences[1].playing = !v; }
+            bool v = _sequences[1].playing;
+            if (_triggerOnBars)  { _sequences[1].nextBar = !_sequences[1].nextBar; }
+            else                { _sequences[1].playing = !v; }
             triggerFeedbackC(!v, 1);
             return;
         }
         case NoteName::Eb5:
-            nextTrack(&sequences[1]);
+            nextTrack(&_sequences[1]);
             return;
         case NoteName::E5:
         {
-            bool v = sequences[2].playing;
-            if (triggerOnBars)  { sequences[2].nextBar = !sequences[2].nextBar; }
-            else                { sequences[2].playing = !v; }
+            bool v = _sequences[2].playing;
+            if (_triggerOnBars)  { _sequences[2].nextBar = !_sequences[2].nextBar; }
+            else                { _sequences[2].playing = !v; }
             triggerFeedbackC(!v, 2);
             return;
         }
         case NoteName::F5:
         {
-            bool v = sequences[3].playing;
-            if (triggerOnBars)  { sequences[3].nextBar = !sequences[3].nextBar; }
-            else                { sequences[3].playing = !v; }
+            bool v = _sequences[3].playing;
+            if (_triggerOnBars)  { _sequences[3].nextBar = !_sequences[3].nextBar; }
+            else                { _sequences[3].playing = !v; }
             triggerFeedbackC(!v, 3);
             return;
         }
         case NoteName::Gb5:
-            nextTrack(&sequences[2]);
+            nextTrack(&_sequences[2]);
             return;
         case NoteName::G5:
         {
-            bool v = sequences[4].playing;
-            if (triggerOnBars)  { sequences[4].nextBar = !sequences[4].nextBar; }
-            else                { sequences[4].playing = !v; }
+            bool v = _sequences[4].playing;
+            if (_triggerOnBars)  { _sequences[4].nextBar = !_sequences[4].nextBar; }
+            else                { _sequences[4].playing = !v; }
             triggerFeedbackC(!v, 4);
             return;
         }
         case NoteName::Ab5:
-            nextTrack(&sequences[3]);
+            nextTrack(&_sequences[3]);
             return;
         case NoteName::Bb5:
-            nextTrack(&sequences[4]);
+            nextTrack(&_sequences[4]);
             return;
         case NoteName::C6:
-            sequences[0].oneShot = true;
-            if (triggerOnBars)  { sequences[0].nextBar = true; }
-            else                { sequences[0].playing = true; }
+            _sequences[0].oneShot = true;
+            if (_triggerOnBars)  { _sequences[0].nextBar = true; }
+            else                { _sequences[0].playing = true; }
             triggerFeedbackC(true, 0);
             return;
         case NoteName::_D6:
-            sequences[1].oneShot = true;
-            if (triggerOnBars)  { sequences[1].nextBar = true; }
-            else                { sequences[1].playing = true; }
+            _sequences[1].oneShot = true;
+            if (_triggerOnBars)  { _sequences[1].nextBar = true; }
+            else                { _sequences[1].playing = true; }
             triggerFeedbackC(true, 1);
             return;
         case NoteName::E6:
-            sequences[2].oneShot = true;
-            if (triggerOnBars)  { sequences[2].nextBar = true; }
-            else                { sequences[2].playing = true; }
+            _sequences[2].oneShot = true;
+            if (_triggerOnBars)  { _sequences[2].nextBar = true; }
+            else                { _sequences[2].playing = true; }
             triggerFeedbackC(true, 2);
             return;
         case NoteName::F6:
-            sequences[3].oneShot = true;
-            if (triggerOnBars)  { sequences[3].nextBar = true; }
-            else                { sequences[3].playing = true; }
+            _sequences[3].oneShot = true;
+            if (_triggerOnBars)  { _sequences[3].nextBar = true; }
+            else                { _sequences[3].playing = true; }
             triggerFeedbackC(true, 3);
             return;
         case NoteName::G6:
-            sequences[4].oneShot = true;
-            if (triggerOnBars)  { sequences[4].nextBar = true; }
-            else                { sequences[4].playing = true; }
+            _sequences[4].oneShot = true;
+            if (_triggerOnBars)  { _sequences[4].nextBar = true; }
+            else                { _sequences[4].playing = true; }
             triggerFeedbackC(true, 4);
             return;
         
         case NoteName::_A2:
         {
-            triggerOnBars = !triggerOnBars;
-            triggerFeedback(triggerOnBars);
+            _triggerOnBars = !_triggerOnBars;
+            triggerFeedback(_triggerOnBars);
             return;
         }
         case NoteName::Bb2:
             // copy track
-            trackSlotSelect = SlotState::Copy;
+            _trackSlotSelect = SlotState::Copy;
             playNote(NOTESELECT_S, MF_DURATION);
             return;
         case NoteName::B2:
         {
-            setBarSize = !setBarSize;
+            _setBarSize = !_setBarSize;
             playNote(NOTESELECT_S, MF_DURATION);
             // set arp time value
-            if (!setBarSize)
+            if (!_setBarSize)
             {
                 // x2 for half time
-                barSize = getEnteredValue(barSize >> 1) << 1;
+                _barSize = getEnteredValue(_barSize >> 1) << 1;
             }
             return;
         }
         case NoteName::C3:
         {
-            setSeqTime = !setSeqTime;
+            _setSeqTime = !_setSeqTime;
             playNote(NOTESELECT_S, MF_DURATION);
             // set arp time value
-            if (!setSeqTime)
+            if (!_setSeqTime)
             {
-                lv_S = getEnteredValue(lv_S);
-                tempoTime = 30000 / lv_S;
+                _lv_S = getEnteredValue(_lv_S);
+                _tempoTime = 30000 / _lv_S;
             }
             return;
         }
         case NoteName::Db3:
-            tapTempo_S = true;
-            tapTempoTime_S = millis();
+            _tapTempo_S = true;
+            _tapTempoTime_S = millis();
             playNote(NOTEOPTION_S, MF_DURATION_SHORT);
             return;
         case NoteName::_D3:
-            playMode = true;
+            _playMode = true;
             return;
         case NoteName::Eb3:
-            seqClocked = !seqClocked;
-            triggerFeedback(seqClocked);
+            _seqClocked = !_seqClocked;
+            triggerFeedback(_seqClocked);
             resetSequence();
             return;
         case NoteName::E3:
             // save
-            trackSlotSelect = SlotState::SaveSeq;
+            _trackSlotSelect = SlotState::SaveSeq;
             playNoteC(NOTESELECT_S, channel, MF_DURATION);
             return;
         case NoteName::F3:
             // load
-            trackSlotSelect = SlotState::LoadSeq;
+            _trackSlotSelect = SlotState::LoadSeq;
             playNoteC(NOTESELECT_S, channel, MF_DURATION);
             return;
         case NoteName::Gb3:
             // pull track
-            trackSlotSelect = SlotState::Pull;
+            _trackSlotSelect = SlotState::Pull;
             playNote(NOTESELECT_S, MF_DURATION);
             return;
         case NoteName::G3:
             // try flatten sequence
-            if (flattenSequence(&sequences[channel]))
+            if (flattenSequence(&_sequences[channel]))
             {
                 triggerFeedbackC(true, channel);
                 return;
@@ -758,12 +758,12 @@ void manageSeqNote(NoteName n, uint8_t vel, uint8_t channel)
             return;
         case NoteName::Ab3:
             // flatten track
-            trackSlotSelect = SlotState::Flatten;
+            _trackSlotSelect = SlotState::Flatten;
             playNote(NOTESELECT_S, MF_DURATION);
             return;
         case NoteName::_A3:
             // delete saved track
-            trackSlotSelect = SlotState::Delete;
+            _trackSlotSelect = SlotState::Delete;
             playNote(NOTESELECT_S, MF_DURATION);
             return;
     }
@@ -772,23 +772,23 @@ void manageSeqNote(NoteName n, uint8_t vel, uint8_t channel)
 bool seqLoopInvoke()
 {
     uint32_t time = millis();
-    uint32_t dt = time - elapsedTime;
-    elapsedTime = time;
+    uint32_t dt = time - _elapsedTime;
+    _elapsedTime = time;
     
-    if (playing && !seqClocked)
+    if (_playing && !_seqClocked)
     {
-        playingTime += dt;
+        _playingTime += dt;
         
-        if (playingTime >= tempoTime)
+        if (_playingTime >= _tempoTime)
         {
-            playingTime -= tempoTime;
+            _playingTime -= _tempoTime;
             triggerTracks();
         }
         
-        modTracks(playingTime);
+        modTracks(_playingTime);
     }
     
-    if (!playing) { invokeMF(); }
+    if (!_playing) { invokeMF(); }
     
     if (MIDI.read())
     {
@@ -802,14 +802,14 @@ bool seqLoopInvoke()
             {
                 uint8_t vel = MIDI.getData2();
                 
-                if (!playMode)
+                if (!_playMode)
                 {
                     if (vel != 0 && type == MidiCode::NoteON)
                     {
                         manageSeqNote(MIDI.getNote(), vel, channel);
                     }
-                    bool con = !exitSeq;
-                    exitSeq = false;
+                    bool con = !_exitSeq;
+                    _exitSeq = false;
                     return con;
                 }
                 
@@ -824,9 +824,9 @@ bool seqLoopInvoke()
                 return true;
             }
             case MidiCode::CC:
-                if (playing && sequences[channel].playing &&
-                    sequences[channel].current->useMod &&
-                    sequences[channel].current->playing)
+                if (_playing && _sequences[channel].playing &&
+                    _sequences[channel].current->useMod &&
+                    _sequences[channel].current->playing)
                     { return true; }
                 onControlChange(channel, MIDI.getCC(), MIDI.getData2());
                 return true;
@@ -835,10 +835,10 @@ bool seqLoopInvoke()
                 return true;
             case MidiCode::TimingClock:
             {
-                if (playing && seqClocked)
+                if (_playing && _seqClocked)
                 {
-                    uint32_t acc = seqClockCount;
-                    seqClockCount++;
+                    uint32_t acc = _seqClockCount;
+                    _seqClockCount++;
                     if (acc % 3 == 0)
                     {
                         triggerTracks();
@@ -848,19 +848,19 @@ bool seqLoopInvoke()
                 return true;
             }
             case MidiCode::Start:
-                playing = true;
+                _playing = true;
                 resetSequence();
-                if (!seqClocked)
+                if (!_seqClocked)
                 {
                     triggerTracks();
                     modTracks(0);
                 }
                 return true;
             case MidiCode::Continue:
-                playing = true;
+                _playing = true;
                 return true;
             case MidiCode::Stop:
-                playing = false;
+                _playing = false;
                 pauseSequence();
                 return true;
         }
@@ -873,8 +873,8 @@ void triggerTracks()
 {
     for (uint8_t i = 0; i < 5; i++)
     {
-        TrackSequence* seq = &sequences[i];
-        if (seq->nextBar && (playStep % barSize == 0))
+        TrackSequence* seq = &_sequences[i];
+        if (seq->nextBar && (_playStep % _barSize == 0))
         {
             seq->playing = !seq->playing;
             if (!seq->playing)
@@ -885,23 +885,23 @@ void triggerTracks()
             }
         }
         
-        triggerTrackSeq(seq, playStep);
+        triggerTrackSeq(seq, _playStep);
     }
     
-    playStep++;
+    _playStep++;
 }
 void modTracks(uint32_t pt)
 {
     CubicInput ci;
-    if (!seqClocked)
+    if (!_seqClocked)
     {
         // second half of step - inverted as it comes after
-        if (!(bool)(playStep & 1U))
+        if (!(bool)(_playStep & 1U))
         {
-            pt += tempoTime;
+            pt += _tempoTime;
         }
         
-        ci = getInput(pt / (float)(tempoTime << 1));
+        ci = getInput(pt / (float)(_tempoTime << 1));
     }
     else
     {
@@ -910,22 +910,22 @@ void modTracks(uint32_t pt)
     
     for (uint8_t i = 0; i < 5; i++)
     {
-        modTrackSeq(&sequences[i], ci);
+        modTrackSeq(&_sequences[i], ci);
     }
 }
 
-bool clockDivSet = false;
-uint16_t lastClockDiv = 1;
-bool tkInc = false;
-bool offsetNoteSet = false;
-bool selectTKOKey = false;
-uint8_t lastNoteOffset = 1;
-Notes nOKey = Notes::C;
+bool _clockDivSet = false;
+uint16_t _lastClockDiv = 1;
+bool _tkInc = false;
+bool _offsetNoteSet = false;
+bool _selectTKOKey = false;
+uint8_t _lastNoteOffset = 1;
+Notes _nOKey = Notes::C;
 void trackManager(NoteName n, uint8_t vel)
 {
-    uint8_t channel = trackSet.channel;
+    uint8_t channel = _trackSet.channel;
     
-    switch (trackSetState)
+    switch (_trackSetState)
     {
         case TrackState::SelectEditSlot:
         case TrackState::SelectSlot:
@@ -936,84 +936,84 @@ void trackManager(NoteName n, uint8_t vel)
                 playNoteC(NOTEFAIL_S, channel, MF_DURATION);
                 return;
             }
-            trackSetSaveSlot = slot;
-            trackSet.current = loadMemBank(slot);
-            if (trackSetState == TrackState::SelectSlot)
+            _trackSetSaveSlot = slot;
+            _trackSet.current = loadMemBank(slot);
+            if (_trackSetState == TrackState::SelectSlot)
             {
                 // override whats there
-                deleteTrack(trackSet.current);
-                createTrack(trackSet.current);
+                deleteTrack(_trackSet.current);
+                createTrack(_trackSet.current);
             }
             // next mode must be next in list
-            trackSetState = (TrackState)(trackSetState + 1);
+            _trackSetState = (TrackState)(_trackSetState + 1);
             playNoteC(NOTEOPTION_S, channel, MF_DURATION);
             return;
         }
         case TrackState::RangeBottom:
         {
-            rangeBottom = n;
-            trackSetState = TrackState::RangeBottom;
+            _rangeBottom = n;
+            _trackSetState = TrackState::RangeBottom;
             playNoteC(NOTEOPTION_S, channel, MF_DURATION);
             return;
         }
         case TrackState::RangeTop:
         {
-            trackSetState = TrackState::AddNotes;
+            _trackSetState = TrackState::AddNotes;
             playNoteC(NOTEOPTION_S, channel, MF_DURATION);
-            if (n < rangeBottom)
+            if (n < _rangeBottom)
             {
-                rangeTop = rangeBottom;
-                rangeBottom = n;
+                _rangeTop = _rangeBottom;
+                _rangeBottom = n;
                 return;
             }
-            rangeTop = n;
+            _rangeTop = n;
             return;
         }
     }
     
     Notes q = (Notes)(n % 12);
     
-    if (offsetNoteSet)
+    if (_offsetNoteSet)
     {
         // valid digit
         if (addDigit(n, 3)) { return; }
-        offsetNoteSet = false;
-        uint16_t v = getEnteredValue(lastNoteOffset);
+        _offsetNoteSet = false;
+        uint16_t v = getEnteredValue(_lastNoteOffset);
         if (v > 127)
         {
             playNoteC(NOTEFAIL_S, channel, MF_DURATION);
             return;
         }
-        lastNoteOffset = v;
-        int8_t offset = tkInc ? v : -v;
-        uint16_t range = trackSetState == TrackState::AddNotes ? trackSet.position : trackSet.current->size;
-        if (selectTKOKey)
+        _lastNoteOffset = v;
+        int8_t offset = _tkInc ? v : -v;
+        uint16_t range = _trackSetState == TrackState::AddNotes ? _trackSet.position : _trackSet.current->size;
+        if (_selectTKOKey)
         {
-            transposeTrackKey(trackSet.current, offset, nOKey, range);
+            transposeTrackKey(_trackSet.current, offset, _nOKey, range);
         }
         else
         {
-            transposeTrack(trackSet.current, offset, range);
+            transposeTrack(_trackSet.current, offset, range);
         }
         playNoteC(NOTESELECT_S, channel, MF_DURATION);
         return;
     }
     // but not offsetNoteSet
-    if (selectTKOKey)
+    if (_selectTKOKey)
     {
         uint8_t fk = n - NoteName::C1;
         if (fk < 12)
         {
-            nOKey = (Notes)fk;
+            _nOKey = (Notes)fk;
             playNumberC(n, channel);
-            offsetNoteSet = true;
+            _offsetNoteSet = true;
             return;
         }
         playNoteC(NOTEFAIL_S, channel, MF_DURATION);
         return;
     }
     
-    if (clockDivSet)
+    if (_clockDivSet)
     {
         // valid digit
         if (addDigit(n, 3)) { return; }
@@ -1026,18 +1026,18 @@ void trackManager(NoteName n, uint8_t vel)
     
     uint16_t mod = channels[channel].modulation;
     // in range
-    if (trackSetState == TrackState::AddNotes && rangeBottom <= n && rangeTop >= n)
+    if (_trackSetState == TrackState::AddNotes && _rangeBottom <= n && _rangeTop >= n)
     {
         // filter keys
         if (filterKeys && notInKey(n, filter)) { return; }
         
-        addTrackValue(&trackSet, { n, vel }, mod);
-        trackSet.lastNote = { n, vel };
+        addTrackValue(&_trackSet, { n, vel }, mod);
+        _trackSet.lastNote = { n, vel };
         playNoteC(n, channel, MF_DURATION);
         return;
     }
     
-    Track* tk = trackSet.current;
+    Track* tk = _trackSet.current;
     
     switch (q)
     {
@@ -1045,27 +1045,27 @@ void trackManager(NoteName n, uint8_t vel)
             exitTrackEdit();
             return;
         case Notes::Db:
-            selectTKOKey = true;
-            tkInc = false;
+            _selectTKOKey = true;
+            _tkInc = false;
             playNoteC(NOTESELECT_S, channel, MF_DURATION);
             return;
         case Notes::D:
-            if (trackSetState == TrackState::Edit) { return; }
-            addTrackValue(&trackSet, NOTEOFF, mod);
+            if (_trackSetState == TrackState::Edit) { return; }
+            addTrackValue(&_trackSet, NOTEOFF, mod);
             return;
         case Notes::Eb:
-            selectTKOKey = true;
-            tkInc = true;
+            _selectTKOKey = true;
+            _tkInc = true;
             playNoteC(NOTESELECT_S, channel, MF_DURATION);
             return;
         case Notes::E:
         {
-            if (trackSetState == TrackState::Edit) { return; }
-            uint8_t pos = trackSet.position;
-            addTrackValue(&trackSet, NOTEHOLD, mod);
+            if (_trackSetState == TrackState::Edit) { return; }
+            uint8_t pos = _trackSet.position;
+            addTrackValue(&_trackSet, NOTEHOLD, mod);
             if (pos != 0)
             {
-                playNoteC((NoteName)trackSet.lastNote.key, channel, MF_DURATION);
+                playNoteC((NoteName)_trackSet.lastNote.key, channel, MF_DURATION);
             }
             return;
         }
@@ -1074,9 +1074,9 @@ void trackManager(NoteName n, uint8_t vel)
             triggerFeedbackC(tk->useMod, channel);
             return;
         case Notes::Gb:
-            selectTKOKey = false;
-            offsetNoteSet = true;
-            tkInc = false;
+            _selectTKOKey = false;
+            _offsetNoteSet = true;
+            _tkInc = false;
             playNoteC(NOTESELECT_S, channel, MF_DURATION);
             return;
         case Notes::G:
@@ -1084,23 +1084,23 @@ void trackManager(NoteName n, uint8_t vel)
             triggerFeedbackC(tk->halfTime, channel);
             return;
         case Notes::Ab:
-            selectTKOKey = false;
-            offsetNoteSet = true;
-            tkInc = true;
+            _selectTKOKey = false;
+            _offsetNoteSet = true;
+            _tkInc = true;
             playNoteC(NOTESELECT_S, channel, MF_DURATION);
             return;
         case Notes::A:
-            clockDivSet = !clockDivSet;
+            _clockDivSet = !_clockDivSet;
             // set arp time value
-            if (!clockDivSet)
+            if (!_clockDivSet)
             {
-                uint16_t v = getEnteredValue(lastClockDiv);
+                uint16_t v = getEnteredValue(_lastClockDiv);
                 if (v > 255)
                 {
                     playNoteC(NOTEFAIL_S, channel, MF_DURATION);
                     return;
                 }
-                lastClockDiv = v;
+                _lastClockDiv = v;
                 tk->clockDivision = v;
             }
             playNoteC(NOTESELECT_S, channel, MF_DURATION);
@@ -1113,45 +1113,45 @@ void trackManager(NoteName n, uint8_t vel)
 }
 bool exitTrackEdit()
 {
-    uint8_t channel = trackSet.channel;
+    uint8_t channel = _trackSet.channel;
     
-    bool create = trackSetState == TrackState::AddNotes;
-    if (create && !finaliseTrack(&trackSet))
+    bool create = _trackSetState == TrackState::AddNotes;
+    if (create && !finaliseTrack(&_trackSet))
     {
         playNoteC(NOTEFAIL_S, channel, MF_DURATION);
         return false;
     }
-    trackSet.lastNote = NOTEOFF;
-    trackSetState = TrackState::SelectSlot;
-    uint8_t slot = trackSetSaveSlot;
-    trackSetSaveSlot = 255;
+    _trackSet.lastNote = NOTEOFF;
+    _trackSetState = TrackState::SelectSlot;
+    uint8_t slot = _trackSetSaveSlot;
+    _trackSetSaveSlot = 255;
     triggerFeedbackC(true, channel);
     
     // not saving to slot or editing
     if (create && slot >= 32)
     {
-        deleteSequence(&sequences[channel]);
+        deleteSequence(&_sequences[channel]);
         TrackPart* tks = CREATE_ARRAY(TrackPart, 1);
-        createSequence(&sequences[channel], tks, 1, channel);
-        tks[0] = { trackSet.current, 1 };
-        sequences[channel].current = trackSet.current;
+        createSequence(&_sequences[channel], tks, 1, channel);
+        tks[0] = { _trackSet.current, 1 };
+        _sequences[channel].current = _trackSet.current;
     }
     
-    deleteSequence(&trackSet);
+    deleteSequence(&_trackSet);
     return true;
 }
 
-uint16_t seqCreatePtr = 0;
-uint8_t seqCLastSlot = 255;
-bool forceLoadNVM = false;
+uint16_t _seqCreatePtr = 0;
+uint8_t _seqCLastSlot = 255;
+bool _forceLoadNVM = false;
 void sequenceManager(NoteName n)
 {
-    uint8_t channel = seqCreateChannel;
+    uint8_t channel = _seqCreateChannel;
     
     if (n == NoteName::G5)
     {
-        forceLoadNVM = !forceLoadNVM;
-        triggerFeedbackC(forceLoadNVM, channel);
+        _forceLoadNVM = !_forceLoadNVM;
+        triggerFeedbackC(_forceLoadNVM, channel);
         return;
     }
     if (n == NoteName::B5)
@@ -1165,26 +1165,26 @@ void sequenceManager(NoteName n)
     if (slot > 32) { return; }
     
     // too many
-    if (seqCreatePtr >= 256)
+    if (_seqCreatePtr >= 256)
     {
         playNoteC(NOTEFAIL_S, channel, MF_DURATION);
         return;
     }
     
-    if (slot == seqCLastSlot)
+    if (slot == _seqCLastSlot)
     {
-        seqNewTracks[seqCreatePtr - 1].count++;
+        _seqNewTracks[_seqCreatePtr - 1].count++;
         playNumberC(n, channel);
         return;
     }
     Track* tk;
-    if (!forceLoadNVM)
+    if (!_forceLoadNVM)
     {
         tk = loadMemBank(slot);
         if (tk->notes)
         {
-            seqNewTracks[seqCreatePtr] = { tk, 1 };
-            seqCreatePtr++;
+            _seqNewTracks[_seqCreatePtr] = { tk, 1 };
+            _seqCreatePtr++;
             playNumberC(n, channel);
             return;
         }
@@ -1199,47 +1199,47 @@ void sequenceManager(NoteName n)
         return;
     }
     
-    seqNewTracks[seqCreatePtr] = { tk, 1 };
-    seqCreatePtr++;
+    _seqNewTracks[_seqCreatePtr] = { tk, 1 };
+    _seqCreatePtr++;
     playNumberC(n, channel);
 }
 bool exitSeqCreator()
 {
-    uint8_t channel = seqCreateChannel;
-    forceLoadNVM = false;
+    uint8_t channel = _seqCreateChannel;
+    _forceLoadNVM = false;
     
-    if (seqCreatePtr == 0)
+    if (_seqCreatePtr == 0)
     {
         playNoteC(NOTEFAIL_S, channel, MF_DURATION);
         return false;
     }
     
-    TrackPart* tracks = (TrackPart*)realloc(seqNewTracks, seqCreatePtr);
-    deleteSequence(&sequences[channel]);
-    createSequence(&sequences[channel], tracks, seqCreatePtr, channel);
-    seqCreatePtr = 0;
-    seqCLastSlot = 255;
-    seqNewTracks = nullptr;
+    TrackPart* tracks = (TrackPart*)realloc(_seqNewTracks, _seqCreatePtr);
+    deleteSequence(&_sequences[channel]);
+    createSequence(&_sequences[channel], tracks, _seqCreatePtr, channel);
+    _seqCreatePtr = 0;
+    _seqCLastSlot = 255;
+    _seqNewTracks = nullptr;
     triggerFeedbackC(true, channel);
     return true;
 }
 
 void resetSeqValues()
 {
-    tempoTime = 250;
-    triggerOnBars = true;
-    barSize = 32;
+    _tempoTime = 250;
+    _triggerOnBars = true;
+    _barSize = 32;
 }
 
 void saveSeqState()
 {
-    eeWrite(SEQ_TIMEOUT_A, tempoTime >> 24);
-    eeWrite(SEQ_TIMEOUT_B, (tempoTime >> 16) & 0xFF);
-    eeWrite(SEQ_TIMEOUT_C, (tempoTime >> 8) & 0xFF);
-    eeWrite(SEQ_TIMEOUT_D, tempoTime & 0xFF);
-    eeWrite(SEQ_CLOCKED, seqClocked);
-    eeWrite(SEQ_BAR_TRIGGER, triggerOnBars);
-    eeWrite(SEQ_BAR_SIZE, barSize);
+    eeWrite(SEQ_TIMEOUT_A, _tempoTime >> 24);
+    eeWrite(SEQ_TIMEOUT_B, (_tempoTime >> 16) & 0xFF);
+    eeWrite(SEQ_TIMEOUT_C, (_tempoTime >> 8) & 0xFF);
+    eeWrite(SEQ_TIMEOUT_D, _tempoTime & 0xFF);
+    eeWrite(SEQ_CLOCKED, _seqClocked);
+    eeWrite(SEQ_BAR_TRIGGER, _triggerOnBars);
+    eeWrite(SEQ_BAR_SIZE, _barSize);
     EEPROM.commit();
 }
 void loadSeqState()
@@ -1248,9 +1248,9 @@ void loadSeqState()
     uint32_t timeB = EEPROM.read(SEQ_TIMEOUT_B) << 16;
     uint32_t timeC = EEPROM.read(SEQ_TIMEOUT_C) << 8;
     uint32_t timeD = EEPROM.read(SEQ_TIMEOUT_D);
-    tempoTime = timeA + timeB + timeC + timeD;
+    _tempoTime = timeA + timeB + timeC + timeD;
     
-    seqClocked = EEPROM.read(SEQ_CLOCKED);
-    triggerOnBars = EEPROM.read(SEQ_BAR_TRIGGER);
-    barSize = EEPROM.read(SEQ_BAR_SIZE);
+    _seqClocked = EEPROM.read(SEQ_CLOCKED);
+    _triggerOnBars = EEPROM.read(SEQ_BAR_TRIGGER);
+    _barSize = EEPROM.read(SEQ_BAR_SIZE);
 }

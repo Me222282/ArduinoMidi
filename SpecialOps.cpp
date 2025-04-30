@@ -22,28 +22,28 @@ void shouldInvokeArp()
     }
     invokeArp = v;
 }
-bool tapTempo = false;
-uint32_t tapTempoTime = 0;
-bool choseFilter = false;
-bool setArpTime = false;
-uint32_t lv = 120;
+bool _tapTempo = false;
+uint32_t _tapTempoTime = 0;
+bool _choseFilter = false;
+bool _setArpTime = false;
+uint32_t _lv = 120;
 void manageSpecie(uint8_t channel, NoteName n)
 {
-    if (tapTempo)
+    if (_tapTempo)
     {
         // setArpTimeOut(channel, millis() - tapTempoTime);
-        arps[channel].timeOut = millis() - tapTempoTime;
-        tapTempo = false;
+        arps[channel].timeOut = millis() - _tapTempoTime;
+        _tapTempo = false;
         playNote(NOTEOPTION_S, MF_DURATION_SHORT);
         return;
     }
-    if (choseFilter)
+    if (_choseFilter)
     {
         uint8_t fk = n - NoteName::C1;
         if (fk < 12)
         {
             filter = (Notes)fk;
-            choseFilter = false;
+            _choseFilter = false;
             playNumber(n);
             return;
         }
@@ -54,7 +54,7 @@ void manageSpecie(uint8_t channel, NoteName n)
         }
     }
     // enter time - digit must start at 0
-    if (setArpTime)
+    if (_setArpTime)
     {
         // valid digit
         bool v = addDigit(n, 4);
@@ -86,7 +86,7 @@ void manageSpecie(uint8_t channel, NoteName n)
             triggerFeedback(retriggerNew);
             return;
         case NoteName::Eb4:
-            choseFilter = !choseFilter;
+            _choseFilter = !_choseFilter;
             playNote(NOTESELECT_S, MF_DURATION);
             return;
         case NoteName::E4:
@@ -161,20 +161,20 @@ void manageSpecie(uint8_t channel, NoteName n)
         // arps
         case NoteName::C3:
         {
-            setArpTime = !setArpTime;
+            _setArpTime = !_setArpTime;
             playNote(NOTESELECT_S, MF_DURATION);
             // set arp time value
-            if (!setArpTime)
+            if (!_setArpTime)
             {
-                lv = getEnteredValue(lv);
+                _lv = getEnteredValue(_lv);
                 // setArpTimeOut(channel, 60000 / bpm);
-                arps[channel].timeOut = 60000 / lv;
+                arps[channel].timeOut = 60000 / _lv;
             }
             return;
         }
         case NoteName::Db3:
-            tapTempo = true;
-            tapTempoTime = millis();
+            _tapTempo = true;
+            _tapTempoTime = millis();
             playNote(NOTEOPTION_S, MF_DURATION_SHORT);
             return;
         case NoteName::_D3:
@@ -239,9 +239,8 @@ void resetOpsValues()
     retriggerOld = false;
     alwaysDelay = false;
     setNote = _setNoteNorm;
-    setArpTime = false;
+    _setArpTime = false;
     sortNotes = false;
-    digit = 0;
     resetArps();
     channelArps[0] = false;
     channelArps[1] = false;
