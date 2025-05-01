@@ -82,6 +82,7 @@ Note noteOn(Track* t, uint8_t pos, uint8_t channel, Note last)
     // always in case of track change
     // if (t->halfTime) { return n; }
     onNoteOff(channel, last.key);
+    return n;
 }
 
 uint16_t wrapMods(TrackSequence* t, uint8_t pos, uint16_t size)
@@ -222,6 +223,9 @@ void modTrackSeq(TrackSequence* t, CubicInput time)
 
 bool saveSequence(TrackSequence* seq, uint8_t slot)
 {
+    // data already written
+    if (seq->saveSlot == slot) { return true; }
+    
     uint16_t size = seq->size;
     
     // reformat / is sequence flattened
@@ -246,8 +250,6 @@ bool saveSequence(TrackSequence* seq, uint8_t slot)
     eeWrite(si, size - 1);
     EEPROM.commit();
     
-    // data already written
-    if (seq->saveSlot == slot) { return; }
     seq->saveSlot = slot;
     
     ESP.flashEraseSector(address >> 12);

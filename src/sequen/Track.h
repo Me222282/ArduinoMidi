@@ -2,6 +2,7 @@
 #define __tracking
 
 #include "../core/Globals.h"
+#include "../core/Midi.h"
 
 #define NOTEHOLD (Note){ 0xFF, 0xFF }
 #define NOTEOFF (Note){ 0xFF, 0x00 }
@@ -37,13 +38,12 @@ Track* loadTrack(uint8_t slot);
 Track* loadMemBank(uint8_t slot);
 
 void transposeTrack(Track* t, int8_t semiTones, uint16_t range);
+void transposeTrackKey(Track* t, int8_t offset, Notes key, uint16_t range);
 
 void pergeSlot(uint8_t slot);
 
 #ifdef __cplusplus
 } // extern "C"
 #endif
-
-void transposeTrackKey(Track* t, int8_t offset, Notes key, uint16_t range);
 
 #endif
