@@ -261,6 +261,7 @@ void manageMenuNotes(NoteName n, uint8_t channel)
             triggerFeedback(true);
             return;
         case NoteName::C4:
+        {
             bool v = !_tremolos[channel].enabled;
             _tremolos[channel].enabled = v;
             triggerFeedbackC(v, channel);
@@ -270,6 +271,7 @@ void manageMenuNotes(NoteName n, uint8_t channel)
                 setCP(&channels[channel], 0);
             }
             return;
+        }
         case NoteName::_D4:
             _tremolos[channel].function = sinf;
             triggerFeedbackC(true, channel);
@@ -318,8 +320,8 @@ void manageMenuNotes(NoteName n, uint8_t channel)
         }
         case NoteName::_A4:
         {
-            _setRatemHz = !_setRatemHz;
-            if (!_setRatemHz)
+            _setScale = !_setScale;
+            if (!_setScale)
             {
                 uint16_t v = getEnteredValue(_lv_scale);
                 // max scale

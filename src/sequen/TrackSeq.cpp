@@ -31,10 +31,8 @@ void deleteSequence(TrackSequence* seq)
     {
         for (uint16_t i = 0; i < seq->size; i++)
         {
-            Track* t = seq->tracks[i].track;
-            if (t) { deleteTrack(t); }
+            deleteTrack(seq->tracks[i].track);
         }
-        free(seq->tracks);
         seq->tracks = nullptr;
     }
     seq->size = 0;

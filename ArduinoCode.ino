@@ -57,11 +57,11 @@ void setup()
     loadTTMState();
 }
 
-bool specOps = false;
-bool sequencer = false;
-bool ccMenu = false;
-bool tMenu = false;
-NoteName lastNote;
+bool _specOps = false;
+bool _sequencer = false;
+bool _ccMenu = false;
+bool _tMenu = false;
+NoteName _lastNote;
 void readControls()
 {
     int8_t oldOO = octaveOffset;
@@ -91,6 +91,7 @@ void readControls()
         if (newChannels)
         {
             setChannels(activeChannels, activeVoices);
+            Serial.println(_lastNote);
         }
         else
         {
@@ -102,12 +103,12 @@ void readControls()
         }
         
         gate = 0;
-        setGate(gate);
+        setGate(0);
         updateAllPBs();
-        specOps = lastNote == NoteName::_A0;
-        sequencer = lastNote == NoteName::_B0;
-        ccMenu = lastNote == NoteName::C1;
-        tMenu = lastNote == NoteName::_D1;
+        _specOps = _lastNote == NoteName::_A0;
+        _sequencer = _lastNote == NoteName::_B0;
+        _ccMenu = _lastNote == NoteName::C1;
+        _tMenu = _lastNote == NoteName::_D1;
         onParamChange();
     }
     else
@@ -132,31 +133,31 @@ void loop()
     readControls();
     invokeTremelo();
     
-    if (sequencer)
+    if (_sequencer)
     {
-        sequencer = seqLoopInvoke();
-        if (!sequencer) { lastNote = (NoteName)255U; }
+        _sequencer = seqLoopInvoke();
+        if (!_sequencer) { _lastNote = (NoteName)255U; }
         return;
     }
     
-    if (specOps)
+    if (_specOps)
     {
         specialOptions();
-        lastNote = (NoteName)255U;
+        _lastNote = (NoteName)255U;
         return;
     }
     
-    if (ccMenu)
+    if (_ccMenu)
     {
         ccMenuFunction();
-        lastNote = (NoteName)255U;
+        _lastNote = (NoteName)255U;
         return;
     }
     
-    if (tMenu)
+    if (_tMenu)
     {
         ttMenuFunction();
-        lastNote = (NoteName)255U;
+        _lastNote = (NoteName)255U;
         return;
     }
     
@@ -175,7 +176,7 @@ void loop()
                 uint8_t vel = MIDI.getData2();
                 if (type == MidiCode::NoteOFF || vel == 0)
                 {
-                    if (n == lastNote) { lastNote = (NoteName)255U; }
+                    if (n == _lastNote) { _lastNote = (NoteName)255U; }
                     if (channel < 5 && channelArps[channel])
                     {
                         arpRemoveNote(channel, n);
@@ -185,7 +186,7 @@ void loop()
                     return;
                 }
                 
-                lastNote = (NoteName)n;
+                _lastNote = (NoteName)n;
                 if (channel < 5 && channelArps[channel])
                 {
                     arpAddNote(channel, { n, vel });

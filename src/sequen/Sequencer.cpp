@@ -722,7 +722,7 @@ void manageSeqNote(NoteName n, uint8_t vel, uint8_t channel)
             if (!_setBarSize)
             {
                 // x2 for half time
-                _barSize = getEnteredValue(_barSize >> 1) << 1;
+                _barSize = max(getEnteredValue(_barSize >> 1) << 1, 2);
             }
             return;
         }
@@ -988,7 +988,7 @@ void trackManager(NoteName n, uint8_t vel)
         case TrackState::RangeBottom:
         {
             _rangeBottom = n;
-            _trackSetState = TrackState::RangeBottom;
+            _trackSetState = TrackState::RangeTop;
             playNoteC(NOTEOPTION_S, channel, MF_DURATION);
             return;
         }
@@ -1209,7 +1209,10 @@ void sequenceManager(NoteName n)
     
     if (slot == _seqCLastSlot)
     {
-        _seqNewTracks[_seqCreatePtr - 1].count++;
+        TrackPart* tppp = &_seqNewTracks[_seqCreatePtr - 1];
+        tppp->count++;
+        // max number of repeats in data format
+        if (tppp->count >= 255) { _seqCLastSlot = 255; }
         playNumberC(n, channel);
         return;
     }
@@ -1253,6 +1256,7 @@ bool exitSeqCreator()
     TrackPart* tracks = (TrackPart*)realloc(_seqNewTracks, _seqCreatePtr);
     deleteSequence(&_sequences[channel]);
     createSequence(&_sequences[channel], tracks, _seqCreatePtr, channel);
+    _sequences[channel].current = tracks[0].track;
     _seqCreatePtr = 0;
     _seqCLastSlot = 255;
     _seqNewTracks = nullptr;
