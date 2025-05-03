@@ -161,14 +161,21 @@ void manageSpecie(uint8_t channel, NoteName n)
         case NoteName::C3:
         {
             _setArpTime = !_setArpTime;
-            playNote(NOTESELECT_S, MF_DURATION);
             // set arp time value
             if (!_setArpTime)
             {
-                _lv = getEnteredValue(_lv);
+                uint16_t v = getEnteredValue(_lv);
+                // min tempo
+                if (v < 10)
+                {
+                    playNote(NOTEFAIL_S, MF_DURATION);
+                    return;
+                }
+                _lv = v;
                 // setArpTimeOut(channel, 60000 / bpm);
-                arps[channel].timeOut = 60000 / _lv;
+                arps[channel].timeOut = 60000 / v;
             }
+            playNote(NOTESELECT_S, MF_DURATION);
             return;
         }
         case NoteName::Db3:

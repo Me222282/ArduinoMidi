@@ -5,6 +5,7 @@
 #include "Arpeggio.h"
 #include "src/menus/SpeicalOps.h"
 #include "src/menus/CCMenu.h"
+#include "src/menus/TMenu.h"
 #include "src/sequen/Sequencer.h"
 #include "src/core/Globals.h"
 #include "src/notes/Channels.h"
@@ -53,11 +54,13 @@ void setup()
     loadOpsState();
     loadCCMState();
     loadSeqState();
+    loadTTMState();
 }
 
 bool specOps = false;
 bool sequencer = false;
 bool ccMenu = false;
+bool tMenu = false;
 NoteName lastNote;
 void readControls()
 {
@@ -81,26 +84,22 @@ void readControls()
     bool oldOp = option;
     option = digitalRead(OPTIONMODE);
     
-    if (oldM2 != mode2)
+    bool newChannels = activeChannels != oldC || activeVoices != oldV || oldM1 != mode1;
+    if (oldM2 != mode2 || newChannels)
     {
         clearArps();
-        clearNotes(&channels[0]);
-        clearNotes(&channels[1]);
-        clearNotes(&channels[2]);
-        clearNotes(&channels[3]);
-        clearNotes(&channels[4]);
-        
-        gate = 0;
-        setGate(0);
-        specOps = lastNote == NoteName::_A0;
-        sequencer = lastNote == NoteName::_B0;
-        ccMenu = lastNote == NoteName::C1;
-        onParamChange();
-    }
-    if (activeChannels != oldC || activeVoices != oldV || oldM1 != mode1)
-    {
-        clearArps();
-        setChannels(activeChannels, activeVoices);
+        if (newChannels)
+        {
+            setChannels(activeChannels, activeVoices);
+        }
+        else
+        {
+            clearNotes(&channels[0]);
+            clearNotes(&channels[1]);
+            clearNotes(&channels[2]);
+            clearNotes(&channels[3]);
+            clearNotes(&channels[4]);
+        }
         
         gate = 0;
         setGate(gate);
@@ -108,6 +107,7 @@ void readControls()
         specOps = lastNote == NoteName::_A0;
         sequencer = lastNote == NoteName::_B0;
         ccMenu = lastNote == NoteName::C1;
+        tMenu = lastNote == NoteName::_D1;
         onParamChange();
     }
     else
@@ -130,6 +130,7 @@ void readControls()
 void loop()
 {
     readControls();
+    invokeTremelo();
     
     if (sequencer)
     {
@@ -148,6 +149,13 @@ void loop()
     if (ccMenu)
     {
         ccMenuFunction();
+        lastNote = (NoteName)255U;
+        return;
+    }
+    
+    if (tMenu)
+    {
+        ttMenuFunction();
         lastNote = (NoteName)255U;
         return;
     }

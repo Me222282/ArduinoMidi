@@ -102,10 +102,12 @@ void setPitchBend(uint8_t n, uint16_t value)
     float v = ((int16_t)value - 2048);
     v *= pitchBendSelect;
     int16_t con = (int16_t)v + 2048;
+    oldPBs[n] = (uint16_t)con;
+    con += pbOffsets[n];
+    if (con < 0) { con = 0; }
+    else if (con > 4095)  { con = 4095; }
     
     uint16_t act = (uint16_t)con;
-    oldPBs[n] = act;
-    act += pbOffsets[n];
     if (oldPBs_off[n] == act) { return; }
     oldPBs_off[n] = act;
     _setPitchBend_ext(n, act);
@@ -119,7 +121,11 @@ void setMod(uint16_t value)
 
 void updatePitchBend(uint8_t n)
 {
-    uint16_t act = oldPBs[n] + pbOffsets[n];
+    int16_t con = oldPBs[n] + pbOffsets[n];
+    if (con < 0) { con = 0; }
+    else if (con > 4095)  { con = 4095; }
+    
+    uint16_t act = (uint16_t)con;
     if (oldPBs_off[n] == act) { return; }
     oldPBs_off[n] = act;
     _setPitchBend_ext(n, act);

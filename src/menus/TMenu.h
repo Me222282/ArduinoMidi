@@ -10,6 +10,8 @@ extern "C" {
 
 void ttMenuFunction();
 
+void invokeTremelo();
+
 void resetTTMValues();
 
 void saveTTMState();

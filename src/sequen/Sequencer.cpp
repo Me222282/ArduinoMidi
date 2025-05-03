@@ -733,8 +733,15 @@ void manageSeqNote(NoteName n, uint8_t vel, uint8_t channel)
             // set arp time value
             if (!_setSeqTime)
             {
-                _lv_S = getEnteredValue(_lv_S);
-                _tempoTime = 30000 / _lv_S;
+                uint16_t v = getEnteredValue(_lv_S);
+                // min tempo
+                if (v < 10)
+                {
+                    playNote(NOTEFAIL_S, MF_DURATION);
+                    return;
+                }
+                _lv_S = v;
+                _tempoTime = 30000 / v;
             }
             return;
         }

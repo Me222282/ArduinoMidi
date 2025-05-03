@@ -32,8 +32,12 @@ bool ccChannelMode = false;
 bool alwaysDelay = false;
 bool filterKeys = false;
 Notes filter = Notes::C;
+
+int8_t noteOffsets[5];
 void onNoteOn(uint8_t channel, uint8_t note, uint8_t velocity)
 {
+    if (channel < 5) { note += noteOffsets[channel]; }
+    
     // key filter
     if (filterKeys && notInKey((NoteName)note, filter)) { return; }
     if (allChannelMode)
@@ -69,6 +73,8 @@ void onNoteOn(uint8_t channel, uint8_t note, uint8_t velocity)
 }
 void onNoteOff(uint8_t channel, uint8_t note)
 {
+    if (channel < 5) { note += noteOffsets[channel]; }
+    
     if (allChannelMode)
     {
         channel %= activeChannels;

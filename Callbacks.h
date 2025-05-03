@@ -14,6 +14,8 @@ extern Notes filter;
 extern uint8_t ccListeners[5];
 extern bool ccChannelMode;
 
+extern int8_t noteOffsets[5];
+
 void onNoteOn(uint8_t channel, uint8_t note, uint8_t velocity);
 void onNoteOff(uint8_t channel, uint8_t note);
 void onPitchBend(uint8_t channel, uint16_t bend);

@@ -60,7 +60,23 @@ extern "C" {
 
 #define SEQS_SLOT_1 197
 
-#define EEPROM_SIZE 213
+#define TREMOLO_1 213
+#define T_RATE_A 0
+#define T_RATE_B 1
+#define T_RATE_C 2
+#define T_RATE_D 3
+#define T_SCALE_A 4
+#define T_SCALE_B 5
+#define T_SCALE_C 6
+#define T_SCALE_D 7
+#define T_MODE 8
+#define T_ENABLED 9
+
+#define OFFSETS_1 263
+#define OFF_OCT 0
+#define OFF_ST 1
+
+#define EEPROM_SIZE 273
 
 #ifdef __cplusplus
 } // extern "C"
