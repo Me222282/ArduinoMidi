@@ -53,10 +53,6 @@ extern bool mode1;
 extern int8_t octaveOffset;
 extern bool option;
 
-extern Note oldValues[5];
-extern uint16_t oldPBs[5];
-extern uint16_t oldMod;
-
 extern uint8_t gate;
 extern uint8_t reTrig;
 

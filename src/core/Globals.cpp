@@ -18,10 +18,6 @@ int8_t octaveOffset = 0;
 // false for normal
 bool option = false;
 
-Note oldValues[5];
-uint16_t oldPBs[5];
-uint16_t oldMod = 0;
-
 uint8_t gate = 0;
 uint8_t reTrig = 0;
 

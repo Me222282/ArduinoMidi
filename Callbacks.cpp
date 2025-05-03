@@ -23,11 +23,7 @@ void _updateSlot(uint8_t com, Note n)
     {
         // 8bit to 12bit
         uint16_t vel = n.vel << 4;
-        if (oldMod != vel)
-        {
-            oldMod = vel;
-            setMod(vel);
-        }
+        setMod(vel);
     }
 }
 uint8_t ccListeners[5];
@@ -137,8 +133,6 @@ void _updateMod(Channel* c, uint16_t mod)
     if (c->position != 0) { return; }
     // goes to mod
     mod >>= 2;
-    if (oldMod == mod) { return; }
-    oldMod = mod;
     setMod(mod);
 }
 void _gateOff(Channel* c)
@@ -246,11 +240,7 @@ void updateOtherPorts()
         
         // 7bit to 12bit
         uint16_t vel = nl->value.vel << 4;
-        if (oldMod != vel)
-        {
-            oldMod = vel;
-            setMod(vel);
-        }
+        setMod(vel);
         return;
     }
     

@@ -4,6 +4,12 @@
 #include "Globals.h"
 
 bool ccOutputs[5];
+int16_t pbOffsets[5];
+
+Note oldValues[5];
+uint16_t oldPBs[5];
+uint16_t oldPBs_off[5];
+uint16_t oldMod = 0;
 
 void configureGate()
 {
@@ -98,13 +104,25 @@ void setPitchBend(uint8_t n, uint16_t value)
     int16_t con = (int16_t)v + 2048;
     
     uint16_t act = (uint16_t)con;
-    if (oldPBs[n] == act) { return; }
     oldPBs[n] = act;
+    act += pbOffsets[n];
+    if (oldPBs_off[n] == act) { return; }
+    oldPBs_off[n] = act;
     _setPitchBend_ext(n, act);
 }
 void setMod(uint16_t value)
 {
+    if (oldMod == value) { return; }
+    oldMod = value;
     _ic(PITCHDAC3, value, 0xF000);
+}
+
+void updatePitchBend(uint8_t n)
+{
+    uint16_t act = oldPBs[n] + pbOffsets[n];
+    if (oldPBs_off[n] == act) { return; }
+    oldPBs_off[n] = act;
+    _setPitchBend_ext(n, act);
 }
 
 // void configurePot(uint8_t pin)

@@ -11,6 +11,7 @@ extern "C" {
 #endif
 
 extern bool ccOutputs[5];
+extern int16_t pbOffsets[5];
 
 extern uint8_t gateCurrent;
 void setGate(uint8_t value);
@@ -24,6 +25,8 @@ extern void (*setNote)(uint8_t, uint8_t);
 
 void setPitchBend(uint8_t n, uint16_t value);
 void setMod(uint16_t value);
+
+void updatePitchBend(uint8_t n);
 
 void configureGate();
 
