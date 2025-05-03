@@ -1,8 +1,8 @@
 #ifndef __cccccccc
 #define __cccccccc
 
-#include "src/core/Midi.h"
-#include "MenuFeedback.h"
+#include "../core/Midi.h"
+#include "../../MenuFeedback.h"
 
 #ifdef __cplusplus
 extern "C" {

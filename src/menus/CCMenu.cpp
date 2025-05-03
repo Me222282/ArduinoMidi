@@ -2,12 +2,11 @@
 #include <EEPROM.h>
 #include "CCMenu.h"
 
-#include "Callbacks.h"
-#include "MenuFeedback.h"
+#include "../../Callbacks.h"
 #include "SpeicalOps.h"
-#include "src/core/Coms.h"
-#include "src/core/Globals.h"
-#include "MemLocations.h"
+#include "../core/Coms.h"
+#include "../core/Globals.h"
+#include "../../MemLocations.h"
 
 bool _setCCSource;
 NoteName _ccSetPos;

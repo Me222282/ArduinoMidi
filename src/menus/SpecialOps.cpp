@@ -2,13 +2,12 @@
 #include <EEPROM.h>
 #include "SpeicalOps.h"
 
-#include "Arpeggio.h"
-#include "src/core/Globals.h"
-#include "src/core/Coms.h"
-#include "src/notes/Notes.h"
-#include "Callbacks.h"
-#include "MenuFeedback.h"
-#include "MemLocations.h"
+#include "../../Arpeggio.h"
+#include "../core/Globals.h"
+#include "../core/Coms.h"
+#include "../notes/Notes.h"
+#include "../../Callbacks.h"
+#include "../../MemLocations.h"
 
 bool invokeArp = false;
 bool channelArps[5] = { false, false, false, false, false };

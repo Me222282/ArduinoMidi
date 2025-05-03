@@ -4,7 +4,7 @@
 
 #include "../../Callbacks.h"
 #include "../../MenuFeedback.h"
-#include "../../SpeicalOps.h"
+#include "../menus/SpeicalOps.h"
 #include "../../MemLocations.h"
 #include "../core/Midi.h"
 #include "../core/Globals.h"
@@ -12,6 +12,7 @@
 #include "Track.h"
 #include "TrackSeq.h"
 #include "../core/Coms.h"
+#include "../../Arpeggio.h"
 
 bool _playMode[5] = { false, false, false, false, false };
 // half the tempo time
@@ -834,10 +835,20 @@ bool seqLoopInvoke()
                 uint8_t n = MIDI.getData1();
                 if (type == MidiCode::NoteOFF || vel == 0)
                 {
+                    if (channel < 5 && channelArps[channel])
+                    {
+                        arpRemoveNote(channel, n);
+                        return true;
+                    }
                     onNoteOff(channel, n);
                     return true;
                 }
                 
+                if (channel < 5 && channelArps[channel])
+                {
+                    arpAddNote(channel, { n, vel });
+                    return true;
+                }
                 onNoteOn(channel, n, vel);
                 return true;
             }
