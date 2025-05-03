@@ -140,6 +140,9 @@ void clearChannel(Channel* c)
         free(c->locations);
         c->locations = nullptr;
     }
+    c->position = 0;
+    c->places = 0;
+    c->voices = 0;
 }
 
 void gateChannelNote(uint8_t ci, uint8_t vi, bool v)

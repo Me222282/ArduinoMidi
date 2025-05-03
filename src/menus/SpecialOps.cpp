@@ -60,7 +60,7 @@ void manageSpecie(uint8_t channel, NoteName n)
         if (v) { return; }
         if (n != NoteName::C3)
         {
-            playNote(NOTEFAIL_S, MF_DURATION);
+            playNoteC(NOTEFAIL_S, channel, MF_DURATION);
             return;
         }
     }
@@ -168,14 +168,14 @@ void manageSpecie(uint8_t channel, NoteName n)
                 // min tempo
                 if (v < 10)
                 {
-                    playNote(NOTEFAIL_S, MF_DURATION);
+                    playNoteC(NOTEFAIL_S, channel, MF_DURATION);
                     return;
                 }
                 _lv = v;
                 // setArpTimeOut(channel, 60000 / bpm);
                 arps[channel].timeOut = 60000 / v;
             }
-            playNote(NOTESELECT_S, MF_DURATION);
+            playNoteC(NOTESELECT_S, channel, MF_DURATION);
             return;
         }
         case NoteName::Db3:

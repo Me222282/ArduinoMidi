@@ -85,21 +85,14 @@ const float initScale = 43.0f * setScale;
 void resetTTMValues()
 {
     _runTrem = false;
-    _tremolos[0] = { sinf, initW, initScale, false };
-    _tremolos[1] = { sinf, initW, initScale, false };
-    _tremolos[2] = { sinf, initW, initScale, false };
-    _tremolos[3] = { sinf, initW, initScale, false };
-    _tremolos[4] = { sinf, initW, initScale, false };
-    _noteOffsets[0] = { 0, 0 };
-    _noteOffsets[1] = { 0, 0 };
-    _noteOffsets[2] = { 0, 0 };
-    _noteOffsets[3] = { 0, 0 };
-    _noteOffsets[4] = { 0, 0 };
-    noteOffsets[0] = 0;
-    noteOffsets[1] = 0;
-    noteOffsets[2] = 0;
-    noteOffsets[3] = 0;
-    noteOffsets[4] = 0;
+    _globalRate = false;
+    for (uint8_t i = 0; i < 5; i++)
+    {
+        _tremolos[i] = { sinf, initW, initScale, false };
+        _noteOffsets[i] = { 0, 0 };
+        noteOffsets[i] = 0;
+        setCP(&channels[i], 0);
+    }
 }
 
 uint32_t f_to_i(float v)
@@ -110,6 +103,16 @@ uint32_t f_to_i(float v)
 float i_to_f(uint32_t v)
 {
     float* ptr = (float*)&v;
+    return *ptr;
+}
+int8_t u_to_i(uint8_t v)
+{
+    int8_t* ptr = (int8_t*)&v;
+    return *ptr;
+}
+uint8_t i_to_u(int8_t v)
+{
+    uint8_t* ptr = (uint8_t*)&v;
     return *ptr;
 }
 void calcOffset(uint8_t channel)
@@ -148,9 +151,11 @@ void saveTTMState()
     {
         uint8_t si = i * 2;
         Offset o = _noteOffsets[i];
-        eeWrite(si + OFF_OCT, o.oct);
-        eeWrite(si + OFF_ST, o.st);
+        eeWrite(si + OFF_OCT, i_to_u(o.oct));
+        eeWrite(si + OFF_ST, i_to_u(o.st));
     }
+    
+    eeWrite(TREM_GLOB, _globalRate);
 }
 void loadTTMState()
 {
@@ -180,12 +185,14 @@ void loadTTMState()
     {
         uint8_t si = i * 2;
         Offset o = {
-            EEPROM.read(si + OFF_OCT),
-            EEPROM.read(si + OFF_ST)
+            u_to_i(EEPROM.read(si + OFF_OCT)),
+            u_to_i(EEPROM.read(si + OFF_ST))
         };
         _noteOffsets[i] = o;
         calcOffset(i);
     }
+    
+    _globalRate = EEPROM.read(TREM_GLOB);
 }
 
 uint16_t _lv_hz = 4;
@@ -208,7 +215,7 @@ void manageMenuNotes(NoteName n, uint8_t channel)
         if (v) { return; }
         if (n != NoteName::F4)
         {
-            playNote(NOTEFAIL_S, MF_DURATION);
+            playNoteC(NOTEFAIL_S, channel, MF_DURATION);
             return;
         }
     }
@@ -219,7 +226,7 @@ void manageMenuNotes(NoteName n, uint8_t channel)
         if (v) { return; }
         if (n != NoteName::G4)
         {
-            playNote(NOTEFAIL_S, MF_DURATION);
+            playNoteC(NOTEFAIL_S, channel, MF_DURATION);
             return;
         }
     }
@@ -230,7 +237,7 @@ void manageMenuNotes(NoteName n, uint8_t channel)
         if (v) { return; }
         if (n != NoteName::_A4)
         {
-            playNote(NOTEFAIL_S, MF_DURATION);
+            playNoteC(NOTEFAIL_S, channel, MF_DURATION);
             return;
         }
     }
@@ -241,7 +248,7 @@ void manageMenuNotes(NoteName n, uint8_t channel)
         if (v) { return; }
         if (n != NoteName::G5 && n != NoteName::_A5)
         {
-            playNote(NOTEFAIL_S, MF_DURATION);
+            playNoteC(NOTEFAIL_S, channel, MF_DURATION);
             return;
         }
     }
@@ -254,17 +261,22 @@ void manageMenuNotes(NoteName n, uint8_t channel)
             triggerFeedback(true);
             return;
         case NoteName::C4:
-            _tremolos[channel].enabled = !_tremolos[channel].enabled;
-            triggerFeedback(_tremolos[channel].enabled);
+            bool v = !_tremolos[channel].enabled;
+            _tremolos[channel].enabled = v;
+            triggerFeedbackC(v, channel);
             calcRunTrem();
+            if (!v)
+            {
+                setCP(&channels[channel], 0);
+            }
             return;
         case NoteName::_D4:
             _tremolos[channel].function = sinf;
-            triggerFeedback(true);
+            triggerFeedbackC(true, channel);
             return;
         case NoteName::E4:
             _tremolos[channel].function = tri;
-            triggerFeedback(false);
+            triggerFeedbackC(false, channel);
             return;
         case NoteName::F4:
         {
@@ -275,13 +287,14 @@ void manageMenuNotes(NoteName n, uint8_t channel)
                 // min hz
                 if (v == 0)
                 {
-                    playNote(NOTEFAIL_S, MF_DURATION);
+                    playNoteC(NOTEFAIL_S, channel, MF_DURATION);
                     return;
                 }
                 _lv_hz = v;
-                _tremolos[channel].w = setW * v;
+                uint8_t i = _globalRate ? 0 : channel;
+                _tremolos[i].w = setW * v;
             }
-            playNote(NOTESELECT_S, MF_DURATION);
+            playNoteC(NOTESELECT_S, channel, MF_DURATION);
             return;
         }
         case NoteName::G4:
@@ -293,13 +306,14 @@ void manageMenuNotes(NoteName n, uint8_t channel)
                 // min hz
                 if (v == 0)
                 {
-                    playNote(NOTEFAIL_S, MF_DURATION);
+                    playNoteC(NOTEFAIL_S, channel, MF_DURATION);
                     return;
                 }
                 _lv_mhz = v;
-                _tremolos[channel].w = setmW * v;
+                uint8_t i = _globalRate ? 0 : channel;
+                _tremolos[i].w = setmW * v;
             }
-            playNote(NOTESELECT_S, MF_DURATION);
+            playNoteC(NOTESELECT_S, channel, MF_DURATION);
             return;
         }
         case NoteName::_A4:
@@ -311,13 +325,13 @@ void manageMenuNotes(NoteName n, uint8_t channel)
                 // max scale
                 if (v > 2048)
                 {
-                    playNote(NOTEFAIL_S, MF_DURATION);
+                    playNoteC(NOTEFAIL_S, channel, MF_DURATION);
                     return;
                 }
                 _lv_scale = v;
                 _tremolos[channel].scale = setScale * v;
             }
-            playNote(NOTESELECT_S, MF_DURATION);
+            playNoteC(NOTESELECT_S, channel, MF_DURATION);
             return;
         }
         
@@ -329,6 +343,10 @@ void manageMenuNotes(NoteName n, uint8_t channel)
             loadTTMState();
             playNote(NOTEOPTION_S, MF_DURATION);
             return;
+        case NoteName::C5:
+            _globalRate = !_globalRate;
+            triggerFeedback(_globalRate);
+            return;
             
         case NoteName::G5:
         {
@@ -339,14 +357,14 @@ void manageMenuNotes(NoteName n, uint8_t channel)
                 // max offset
                 if (v > 24)
                 {
-                    playNote(NOTEFAIL_S, MF_DURATION);
+                    playNoteC(NOTEFAIL_S, channel, MF_DURATION);
                     return;
                 }
                 _lv_st = v;
                 _noteOffsets[channel].st = -v;
                 calcOffset(channel);
             }
-            playNote(NOTESELECT_S, MF_DURATION);
+            playNoteC(NOTESELECT_S, channel, MF_DURATION);
             return;
         }
         case NoteName::_A5:
@@ -371,37 +389,37 @@ void manageMenuNotes(NoteName n, uint8_t channel)
         case NoteName::B5:
             _noteOffsets[channel].oct = -3;
             calcOffset(channel);
-            playNote(NOTEOPTION_S, MF_DURATION);
+            playNoteC(NOTEOPTION_S, channel, MF_DURATION);
             return;
         case NoteName::C6:
             _noteOffsets[channel].oct = -2;
             calcOffset(channel);
-            playNote(NOTEOPTION_S, MF_DURATION);
+            playNoteC(NOTEOPTION_S, channel, MF_DURATION);
             return;
         case NoteName::Db6:
             _noteOffsets[channel].oct = -1;
             calcOffset(channel);
-            playNote(NOTEOPTION_S, MF_DURATION);
+            playNoteC(NOTEOPTION_S, channel, MF_DURATION);
             return;
         case NoteName::_D6:
             _noteOffsets[channel].oct = 0;
             calcOffset(channel);
-            playNote(NOTEOPTION_S, MF_DURATION);
+            playNoteC(NOTEOPTION_S, channel, MF_DURATION);
             return;
         case NoteName::Eb6:
             _noteOffsets[channel].oct = 1;
             calcOffset(channel);
-            playNote(NOTEOPTION_S, MF_DURATION);
+            playNoteC(NOTEOPTION_S, channel, MF_DURATION);
             return;
         case NoteName::E6:
             _noteOffsets[channel].oct = 2;
             calcOffset(channel);
-            playNote(NOTEOPTION_S, MF_DURATION);
+            playNoteC(NOTEOPTION_S, channel, MF_DURATION);
             return;
         case NoteName::F6:
             _noteOffsets[channel].oct = 3;
             calcOffset(channel);
-            playNote(NOTEOPTION_S, MF_DURATION);
+            playNoteC(NOTEOPTION_S, channel, MF_DURATION);
             return;
     }
 }

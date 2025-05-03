@@ -76,7 +76,9 @@ extern "C" {
 #define OFF_OCT 0
 #define OFF_ST 1
 
-#define EEPROM_SIZE 273
+#define TREM_GLOB 273
+
+#define EEPROM_SIZE 274
 
 #ifdef __cplusplus
 } // extern "C"
