@@ -31,7 +31,7 @@ void deleteSequence(TrackSequence* seq)
     {
         for (uint16_t i = 0; i < seq->size; i++)
         {
-            deleteTrack(seq->tracks[i].track);
+            freeTrack(seq->tracks[i].track);
         }
         seq->tracks = nullptr;
     }
@@ -135,11 +135,14 @@ FindNextTrack:
         // stop
         if (t->oneShot)
         {
+            // reset
             t->playing = false;
             t->position = 0;
             t->tPosition = 0;
             t->skip = 0;
             t->stepOffset = 0;
+            t->currentCount = 0;
+            t->current = t->tracks[0].track;
             // t->oneShot = false;
             return;
         }
@@ -169,7 +172,7 @@ void triggerTrackSeq(TrackSequence* t, uint16_t playStep)
     if (!tk) { return; }
     if (!t->playing)
     {
-        if (!t->oneShot) { return; }
+        if (!t->oneShot || t->nextBar) { return; }
         // end one shot
         onNoteOff(t->channel, t->lastNote.key);
         t->oneShot = false;
@@ -186,6 +189,9 @@ void triggerTrackSeq(TrackSequence* t, uint16_t playStep)
     uint8_t ht = playStep & 1U;
     if (ht)
     {
+        bool next = pos >= tk->size;
+        if (next) { pos = 0; }
+        
         if (tk->halfTime && !noteEquals(tk->notes[pos], NOTEHOLD) &&
         // if not playing but still triggering
             !noteEquals(t->lastNote, NOTEOFF))
@@ -194,7 +200,7 @@ void triggerTrackSeq(TrackSequence* t, uint16_t playStep)
         }
         
         // still on current track
-        if (pos < tk->size) { return; }
+        if (!next) { return; }
         
         // next track on ht before the new tracks first note
         // - allows for clock div and ht of previous track
@@ -205,8 +211,7 @@ void triggerTrackSeq(TrackSequence* t, uint16_t playStep)
     
     t->lastNote = noteOn(tk, pos, t->channel, t->lastNote);
     newCubic(t, pos);
-    pos++;
-    if (pos < tk->size) { t->tPosition = pos; }
+    t->tPosition = pos + 1;
 }
 
 void modTrackSeq(TrackSequence* t, CubicInput time)

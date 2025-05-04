@@ -34,6 +34,13 @@ void deleteTrack(Track* t)
     t->size = 0;
     t->saveSlot = 255;
 }
+void freeTrack(Track* t)
+{
+    if (!t || t->memBank) { return; }
+    if (t->notes) { free(t->notes); t->notes = nullptr; }
+    if (t->mods) { free(t->mods); t->mods = nullptr; }
+    free(t);
+}
 
 Track memoryBank[32] = {
     { nullptr, nullptr, 0, 0xFF, 1, true, false, false, true },
@@ -191,6 +198,8 @@ void transposeTrack(Track* t, int8_t semiTones, uint16_t range)
 {
     for (uint8_t i = 0; i < range; i++)
     {
+        Note n = t->notes[i];
+        if (noteEquals(n, NOTEOFF) || noteEquals(n, NOTEHOLD)) { continue; }
         t->notes[i].key += semiTones;
     }
 }
@@ -268,7 +277,9 @@ void transposeTrackKey(Track* t, int8_t offset, Notes key, uint16_t range)
 {
     for (uint16_t i = 0; i < range; i++)
     {
-        uint8_t n = t->notes[i].key + 12;
+        Note nv = t->notes[i];
+        if (noteEquals(nv, NOTEOFF) || noteEquals(nv, NOTEHOLD)) { continue; }
+        uint8_t n = nv.key + 12;
         n -= key;
         // to key
         uint8_t octave = n / 12;

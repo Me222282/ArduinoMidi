@@ -50,6 +50,7 @@ void setup()
     // Setup GATEIC
     configureGate();
     
+    // load data
     setChannels(1, 1);
     loadOpsState();
     loadCCMState();
@@ -91,7 +92,6 @@ void readControls()
         if (newChannels)
         {
             setChannels(activeChannels, activeVoices);
-            Serial.println(_lastNote);
         }
         else
         {
@@ -133,6 +133,8 @@ void loop()
     readControls();
     invokeTremelo();
     
+    if (invokeArp) { invokeArps(); }
+    
     if (_sequencer)
     {
         _sequencer = seqLoopInvoke();
@@ -160,8 +162,6 @@ void loop()
         _lastNote = (NoteName)255U;
         return;
     }
-    
-    if (invokeArp) { invokeArps(); }
     
     if (MIDI.read())
     {

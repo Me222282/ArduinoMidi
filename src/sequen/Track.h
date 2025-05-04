@@ -28,6 +28,7 @@ typedef struct
 
 void createTrack(Track* t);
 void deleteTrack(Track* t);
+void freeTrack(Track* t);
 
 void pushTrackToSlot(uint8_t slot, Track* src);
 void copyTrack(Track* src, Track* dest);
