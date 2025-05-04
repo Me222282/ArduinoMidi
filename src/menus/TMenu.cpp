@@ -156,6 +156,7 @@ void saveTTMState()
     }
     
     eeWrite(TREM_GLOB, _globalRate);
+    EEPROM.commit();
 }
 void loadTTMState()
 {

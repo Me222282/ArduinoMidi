@@ -45,18 +45,18 @@ bool addTrackValue(TrackSequence* t, Note n, uint16_t m)
     uint8_t i = t->tPosition;
     t->current->notes[i] = n;
     t->current->mods[i] = m;
-    t->position = i + 1;
+    t->tPosition = i + 1;
     return i == 255;
 }
 bool finaliseTrack(TrackSequence* t)
 {
-    uint8_t size = t->position;
+    uint8_t size = t->tPosition;
     if (size == 0) { return true; }
     if (size < 4) { return false; }
     
-    t->current->notes = (Note*)realloc(t->current->notes, size * sizeof(Note));
-    t->current->mods = (uint16_t*)realloc(t->current->mods, size * sizeof(uint16_t));
-    t->position = 0;
+    t->current->notes = RESIZE_ARRAY(Note, t->current->notes, size)
+    t->current->mods = RESIZE_ARRAY(uint16_t, t->current->mods, size);
+    t->tPosition = 0;
     t->current->size = size;
     return true;
 }
@@ -130,7 +130,7 @@ void nextTrack(TrackSequence* t)
     t->currentCount = 0;
     uint8_t ncp = t->position + 1;
 FindNextTrack:
-    if (ncp > t->size)
+    if (ncp >= t->size)
     {
         // stop
         if (t->oneShot)
@@ -165,7 +165,8 @@ FindNextTrack:
 
 void triggerTrackSeq(TrackSequence* t, uint16_t playStep)
 {
-    if (!t->current) { return; }
+    Track* tk = t->current;
+    if (!tk) { return; }
     if (!t->playing)
     {
         if (!t->oneShot) { return; }
@@ -176,7 +177,6 @@ void triggerTrackSeq(TrackSequence* t, uint16_t playStep)
         return;
     }
     
-    Track* tk = t->current;
     // plus 1 allows ht to occur the step before the next clockdiv note trigger
     uint16_t div = ((playStep - t->stepOffset + 1) >> 1) % tk->clockDivision;
     if (div) { return; }
@@ -192,6 +192,9 @@ void triggerTrackSeq(TrackSequence* t, uint16_t playStep)
         {
             onNoteOff(t->channel, t->lastNote.key);
         }
+        
+        // still on current track
+        if (pos < tk->size) { return; }
         
         // next track on ht before the new tracks first note
         // - allows for clock div and ht of previous track

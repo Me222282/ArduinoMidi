@@ -100,6 +100,7 @@ uint32_t _elapsedTime = 0;
 enum TrackState: uint8_t
 {
     // KEEP ORDER
+    Not = 0U,
     SelectSlot,
     RangeBottom,
     RangeTop,
@@ -117,7 +118,7 @@ bool exitSeqCreator();
 // edit tracks
 NoteName _rangeBottom;
 NoteName _rangeTop;
-TrackState _trackSetState = TrackState::SelectSlot;
+TrackState _trackSetState = TrackState::Not;
 TrackSequence _trackSet;
 uint8_t _trackSetSaveSlot = 255;
 bool exitTrackEdit();
@@ -134,7 +135,7 @@ void onParamChange()
     if (c && !exitTrackEdit())
     {
         deleteTrack(c);
-        _trackSetState = TrackState::SelectSlot;
+        _trackSetState = TrackState::Not;
         _trackSetSaveSlot = 255;
     }
     else if (_seqNewTracks && !exitSeqCreator())
@@ -475,7 +476,7 @@ void manageSeqNote(NoteName n, uint8_t vel, uint8_t channel)
         playingFunc(n, channel);
         return;
     }
-    if (_trackSet.current)
+    if (_trackSetState)
     {
         trackManager(n, vel);
         return;
@@ -982,7 +983,8 @@ void trackManager(NoteName n, uint8_t vel)
             }
             // next mode must be next in list
             _trackSetState = (TrackState)(_trackSetState + 1);
-            playNoteC(NOTEOPTION_S, channel, MF_DURATION);
+            playNumberC(n, channel);
+            // playNoteC(NOTEOPTION_S, channel, MF_DURATION);
             return;
         }
         case TrackState::RangeBottom:
@@ -1022,7 +1024,7 @@ void trackManager(NoteName n, uint8_t vel)
         }
         _lastNoteOffset = v;
         int8_t offset = _tkInc ? v : -v;
-        uint16_t range = _trackSetState == TrackState::AddNotes ? _trackSet.position : _trackSet.current->size;
+        uint16_t range = _trackSetState == TrackState::AddNotes ? _trackSet.tPosition : _trackSet.current->size;
         if (_selectTKOKey)
         {
             transposeTrackKey(_trackSet.current, offset, _nOKey, range);
@@ -1097,7 +1099,7 @@ void trackManager(NoteName n, uint8_t vel)
         case Notes::E:
         {
             if (_trackSetState == TrackState::Edit) { return; }
-            uint8_t pos = _trackSet.position;
+            uint8_t pos = _trackSet.tPosition;
             addTrackValue(&_trackSet, NOTEHOLD, mod);
             if (pos != 0)
             {
@@ -1158,7 +1160,7 @@ bool exitTrackEdit()
         return false;
     }
     _trackSet.lastNote = NOTEOFF;
-    _trackSetState = TrackState::SelectSlot;
+    _trackSetState = TrackState::Not;
     uint8_t slot = _trackSetSaveSlot;
     _trackSetSaveSlot = 255;
     triggerFeedbackC(true, channel);
@@ -1253,7 +1255,7 @@ bool exitSeqCreator()
         return false;
     }
     
-    TrackPart* tracks = (TrackPart*)realloc(_seqNewTracks, _seqCreatePtr);
+    TrackPart* tracks = RESIZE_ARRAY(TrackPart, _seqNewTracks, _seqCreatePtr);
     deleteSequence(&_sequences[channel]);
     createSequence(&_sequences[channel], tracks, _seqCreatePtr, channel);
     _sequences[channel].current = tracks[0].track;

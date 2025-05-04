@@ -3,6 +3,7 @@
 
 #define CREATE(type) (type*)calloc(1, sizeof(type));
 #define CREATE_ARRAY(type, size) (type*)calloc(size, sizeof(type));
+#define RESIZE_ARRAY(type, array, size) (type*)realloc(array, size * sizeof(type));
 
 // Pins
 // Analoge
