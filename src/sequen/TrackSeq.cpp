@@ -4,7 +4,7 @@
 #include "../notes/Notes.h"
 #include "../../Callbacks.h"
 #include "../../MemLocations.h"
-#include <EEPROM.h>
+#include "../core/NVData.h"
 
 #define NVMADDRESS 0x2B0000
 
@@ -253,8 +253,10 @@ bool saveSequence(TrackSequence* seq, uint8_t slot)
     uint32_t address = NVMADDRESS + (4096 * (uint32_t)slot);
     uint8_t si = SEQS_SLOT_1 + slot;
     
-    eeWrite(si, size - 1);
-    EEPROM.commit();
+    openDataSpace(DataSpace::Sequens, true);
+    setSpaceByte(si, size - 1);
+    commitSpace();
+    closeDataSpace();
     
     seq->saveSlot = slot;
     
@@ -279,7 +281,11 @@ bool loadSequence(TrackSequence* seq, uint8_t slot, uint8_t channel)
     uint32_t address = NVMADDRESS + (4096 * (uint32_t)slot);
     uint8_t si = SEQS_SLOT_1 + slot;
     
-    uint16_t size = EEPROM.read(si) + 1;
+    openDataSpace(DataSpace::Sequens, false);
+    uint16_t size = getSpaceByte(si) + 1;
+    closeDataSpace();
+    if (size < 1) { free(loadedTracks); return false; }
+    
     Note* array = FlashRead<Note>(address, size);
     
     TrackPart* tracks = CREATE_ARRAY(TrackPart, size);
@@ -319,17 +325,19 @@ uint8_t* getOpenSaves(uint8_t* size)
     uint8_t aPtr = 0;
     
     uint8_t si = TRACKS_SLOT_1;
+    openDataSpace(DataSpace::Tracks, false);
     for (uint8_t i = 0; i < 32; i++)
     {
         si += (4 * i);
-        uint8_t s = EEPROM.read(si + TRACK_SIZE);
+        TrackSave ts = getSpaceData<TrackSave>(si);
         // invalid
-        if (s > 0 && s < 4)
+        if (ts.size > 0 && ts.size < 4)
         {
             array[aPtr] = i;
             aPtr++;
         }
     }
+    closeDataSpace();
     
     *size = aPtr;
     return array;

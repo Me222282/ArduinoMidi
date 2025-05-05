@@ -1,6 +1,6 @@
 #include <Arduino.h>
-#include <EEPROM.h>
 #include "Arpeggio.h"
+#include "src/core/NVData.h"
 // #include "src/notes/Channels.h"
 #include "src/notes/Notes.h"
 #include "Callbacks.h"
@@ -9,6 +9,14 @@
 Arpeggio arps[5];
 uint32_t _tElapsed;
 bool arpClocked = false;
+
+typedef struct
+{
+    uint32_t timeOut;
+    uint8_t mode;
+    bool sort;
+    bool halfTime;
+} ArpSave;
 
 void swap(uint8_t channel, NoteList* out, NoteList* in)
 {
@@ -174,81 +182,82 @@ void resetArps()
     // for (uint8_t i = 0; i < 5; i++)
     // {
     //     uint8_t si = i * 7;
-    //     eeWrite(si, 0);
-    //     eeWrite(si + ARP_TIMEOUT_B, 0);
-    //     eeWrite(si + ARP_TIMEOUT_C, 0);
-    //     eeWrite(si + ARP_TIMEOUT_D, 250);
-    //     eeWrite(si + ARP_MODE, 0);
-    //     eeWrite(si + ARP_SORT, true);
-    //     eeWrite(si + ARP_HALFTIME, false);
+    //     setSpaceValue(si, 0);
+    //     setSpaceValue(si + ARP_TIMEOUT_B, 0);
+    //     setSpaceValue(si + ARP_TIMEOUT_C, 0);
+    //     setSpaceValue(si + ARP_TIMEOUT_D, 250);
+    //     setSpaceValue(si + ARP_MODE, 0);
+    //     setSpaceValue(si + ARP_SORT, true);
+    //     setSpaceValue(si + ARP_HALFTIME, false);
     // }
 }
 void loadArps()
 {
+    openDataSpace(DataSpace::Arps, false);
+    
     for (uint8_t i = 0; i < 5; i++)
     {
         uint8_t si = i * 7;
-        uint32_t timeA = EEPROM.read(si) << 24;
-        uint32_t timeB = EEPROM.read(si + ARP_TIMEOUT_B) << 16;
-        uint32_t timeC = EEPROM.read(si + ARP_TIMEOUT_C) << 8;
-        uint32_t timeD = EEPROM.read(si + ARP_TIMEOUT_D);
-        uint8_t mode = EEPROM.read(si + ARP_MODE);
-        uint8_t sort = EEPROM.read(si + ARP_SORT);
-        uint8_t ht = EEPROM.read(si + ARP_HALFTIME);
+        ArpSave dat = getSpaceData<ArpSave>(si);
         arps[i] =
         {
             nullptr, nullptr, nullptr,
-            timeA + timeB + timeC + timeD,
-            0, mode, 0, false, (bool)sort, (bool)ht
+            dat.timeOut,
+            0, dat.mode, 0, false, dat.sort, dat.halfTime
         };
     }
+    
+    closeDataSpace();
 }
 void saveArps()
 {
+    openDataSpace(DataSpace::Arps, true);
+    
     for (uint8_t i = 0; i < 5; i++)
     {
         Arpeggio* a = &arps[i];
         uint8_t si = i * 7;
-        uint32_t time = a->timeOut;
-        eeWrite(si, time >> 24);
-        eeWrite(si + ARP_TIMEOUT_B, (time >> 16) & 0xFF);
-        eeWrite(si + ARP_TIMEOUT_C, (time >> 8) & 0xFF);
-        eeWrite(si + ARP_TIMEOUT_D, time & 0xFF);
-        eeWrite(si + ARP_MODE, a->mode);
-        eeWrite(si + ARP_SORT, a->sort);
-        eeWrite(si + ARP_HALFTIME, a->halfTime);
+        setSpaceData<ArpSave>(si, {
+            a->timeOut,
+            a->mode,
+            a->sort,
+            a->halfTime
+        });
     }
+    
+    commitSpace();
+    closeDataSpace();
 }
 // void setArpTimeOut(uint8_t channel, uint32_t time)
 // {
 //     uint8_t si = channel * 7;
 //     arps[channel].timeOut = time;
     
-//     eeWrite(si, time >> 24);
-//     eeWrite(si + ARP_TIMEOUT_B, (time >> 16) & 0xFF);
-//     eeWrite(si + ARP_TIMEOUT_C, (time >> 8) & 0xFF);
-//     eeWrite(si + ARP_TIMEOUT_D, time & 0xFF);
+//     setSpaceValue(si, time >> 24);
+//     setSpaceValue(si + ARP_TIMEOUT_B, (time >> 16) & 0xFF);
+//     setSpaceValue(si + ARP_TIMEOUT_C, (time >> 8) & 0xFF);
+//     setSpaceValue(si + ARP_TIMEOUT_D, time & 0xFF);
 //     EEPROM.commit();
 // }
 // void setArpMode(uint8_t channel, uint8_t mode)
 // {
 //     uint8_t si = channel * 7;
 //     arps[channel].mode = mode;
-//     eeWrite(si + ARP_MODE, mode);
+//     setSpaceValue(si + ARP_MODE, mode);
 //     EEPROM.commit();
 // }
 // void setArpSort(uint8_t channel, bool sort)
 // {
 //     uint8_t si = channel * 7;
 //     arps[channel].sort = sort;
-//     eeWrite(si + ARP_SORT, sort);
+//     setSpaceValue(si + ARP_SORT, sort);
 //     EEPROM.commit();
 // }
 // void setArpHT(uint8_t channel, bool halfTime)
 // {
 //     uint8_t si = channel * 7;
 //     arps[channel].halfTime = halfTime;
-//     eeWrite(si + ARP_HALFTIME, halfTime);
+//     setSpaceValue(si + ARP_HALFTIME, halfTime);
 //     EEPROM.commit();
 // }
 

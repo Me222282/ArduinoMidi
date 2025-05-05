@@ -26,6 +26,14 @@ typedef struct
     bool memBank;
 } Track;
 
+typedef struct
+{
+    uint8_t size;
+    uint8_t clockDiv;
+    uint8_t useMod;
+    uint8_t ht;
+} TrackSave;
+
 void createTrack(Track* t);
 void deleteTrack(Track* t);
 void freeTrack(Track* t);

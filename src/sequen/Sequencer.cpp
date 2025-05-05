@@ -1,5 +1,4 @@
 #include <Arduino.h>
-#include <EEPROM.h>
 #include "Sequencer.h"
 
 #include "../../Callbacks.h"
@@ -9,6 +8,7 @@
 #include "../core/Midi.h"
 #include "../core/Globals.h"
 #include "../notes/Channels.h"
+#include "../core/NVData.h"
 #include "Track.h"
 #include "TrackSeq.h"
 #include "../core/Coms.h"
@@ -1335,24 +1335,25 @@ void resetSeqValues()
 
 void saveSeqState()
 {
-    eeWrite(SEQ_TIMEOUT_A, _tempoTime >> 24);
-    eeWrite(SEQ_TIMEOUT_B, (_tempoTime >> 16) & 0xFF);
-    eeWrite(SEQ_TIMEOUT_C, (_tempoTime >> 8) & 0xFF);
-    eeWrite(SEQ_TIMEOUT_D, _tempoTime & 0xFF);
-    eeWrite(SEQ_CLOCKED, _seqClocked);
-    eeWrite(SEQ_BAR_TRIGGER, _triggerOnBars);
-    eeWrite(SEQ_BAR_SIZE, _barSize);
-    EEPROM.commit();
+    openDataSpace(DataSpace::SeqGlobals, true);
+    
+    setSpaceInt(SEQ_TIMEOUT_A, _tempoTime);
+    setSpaceByte(SEQ_CLOCKED, _seqClocked);
+    setSpaceByte(SEQ_BAR_TRIGGER, _triggerOnBars);
+    setSpaceByte(SEQ_BAR_SIZE, _barSize);
+    
+    commitSpace();
+    closeDataSpace();
 }
 void loadSeqState()
 {
-    uint32_t timeA = EEPROM.read(SEQ_TIMEOUT_A) << 24;
-    uint32_t timeB = EEPROM.read(SEQ_TIMEOUT_B) << 16;
-    uint32_t timeC = EEPROM.read(SEQ_TIMEOUT_C) << 8;
-    uint32_t timeD = EEPROM.read(SEQ_TIMEOUT_D);
-    _tempoTime = timeA + timeB + timeC + timeD;
+    openDataSpace(DataSpace::SeqGlobals, false);
     
-    _seqClocked = EEPROM.read(SEQ_CLOCKED);
-    _triggerOnBars = EEPROM.read(SEQ_BAR_TRIGGER);
-    _barSize = EEPROM.read(SEQ_BAR_SIZE);
+    _tempoTime = getSpaceInt(SEQ_TIMEOUT_A);
+    
+    _seqClocked = getSpaceByte(SEQ_CLOCKED);
+    _triggerOnBars = getSpaceByte(SEQ_BAR_TRIGGER);
+    _barSize = getSpaceByte(SEQ_BAR_SIZE);
+    
+    closeDataSpace();
 }

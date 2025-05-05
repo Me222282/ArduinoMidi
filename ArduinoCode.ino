@@ -1,5 +1,4 @@
 #include <SPI.h>
-#include <EEPROM.h>
 #include "Controls.h"
 #include "src/core/Coms.h"
 #include "Arpeggio.h"
@@ -43,7 +42,7 @@ void setup()
     
     MIDI.begin();
     // Serial.begin(38400);
-    EEPROM.begin(EEPROM_SIZE);
+    // EEPROM.begin(EEPROM_SIZE);
     
     SPI.begin();
     

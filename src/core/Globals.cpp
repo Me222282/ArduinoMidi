@@ -1,7 +1,5 @@
 #include <Arduino.h>
 #include "Globals.h"
-#include <EEPROM.h>
-#include <Arduino.h>
 
 // divisions to make pb smaller
 const float pbDiv[6] = { 1.0f / 24.0f, 1.0f / 12.0f, 1.0f / 6.0f, 5.0f / 12.0f, 7.0f / 12.0f, 1.0f };
@@ -36,10 +34,4 @@ void reTrigNote(uint8_t n)
 {
     uint8_t g = 1 << n;
     reTrig |= g;
-}
-
-void eeWrite(int address, uint8_t v)
-{
-    if (EEPROM.read(address) == v) { return; }
-    EEPROM.write(address, v);
 }

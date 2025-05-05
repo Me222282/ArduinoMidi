@@ -5,7 +5,7 @@
 #include "../notes/Notes.h"
 #include "../../Callbacks.h"
 #include "../../MemLocations.h"
-#include <EEPROM.h>
+#include "../core/NVData.h"
 
 #define NVMADDRESS 0x290000
 
@@ -102,11 +102,12 @@ void saveTrack(Track* t, uint8_t slot)
     uint8_t si = TRACKS_SLOT_1 + (4 * slot);
     
     uint16_t size = t->size;
-    eeWrite(si, t->clockDivision);
-    eeWrite(si + TRACK_USEMOD, t->useMod);
-    eeWrite(si + TRACK_HALFTIME, t->halfTime);
-    eeWrite(si + TRACK_SIZE, size & 0xFF);
-    EEPROM.commit();
+    
+    openDataSpace(DataSpace::Tracks, true);
+    TrackSave ts = { size & 0xFF, t->clockDivision, t->useMod, t->halfTime };
+    setSpaceData<TrackSave>(si, ts);
+    commitSpace();
+    closeDataSpace();
     
     // data already written
     if (t->saveSlot == slot) { return; }
@@ -125,30 +126,34 @@ void deleteSave(uint8_t slot)
 {
     uint8_t si = TRACKS_SLOT_1 + (4 * slot);
     
-    eeWrite(si, 1);
-    eeWrite(si + TRACK_USEMOD, 0);
-    eeWrite(si + TRACK_HALFTIME, 0);
+    openDataSpace(DataSpace::Tracks, true);
     // size of 1 is invalid
-    eeWrite(si + TRACK_SIZE, 1);
-    EEPROM.commit();
+    setSpaceData<TrackSave>(si, { 1, 1, 0, 0 });
+    commitSpace();
+    closeDataSpace();
 }
 Track* loadTrack(uint8_t slot)
 {   
     uint32_t address = NVMADDRESS + (4096 * (uint32_t)slot);
     uint8_t si = TRACKS_SLOT_1 + (4 * slot);
     
-    uint16_t size = EEPROM.read(si + TRACK_SIZE);
+    openDataSpace(DataSpace::Tracks, false);
+    
+    TrackSave ts = getSpaceData<TrackSave>(si);
+    uint16_t size = ts.size;
     if (size == 0) { size = 256; }
-    if (size < 4) { return nullptr; } 
+    if (size < 4) { closeDataSpace(); return nullptr; } 
     
     Track* t = CREATE(Track);
     t->memBank = false;
     
-    t->clockDivision = EEPROM.read(si);
-    t->useMod = EEPROM.read(si + TRACK_USEMOD);
-    t->halfTime = EEPROM.read(si + TRACK_HALFTIME);
+    t->clockDivision = ts.clockDiv;
+    t->useMod = ts.useMod;
+    t->halfTime = ts.ht;
     t->playing = true;
     t->saveSlot = slot;
+    
+    closeDataSpace();
     
     t->size = size;
     t->notes = FlashRead<Note>(address, size);

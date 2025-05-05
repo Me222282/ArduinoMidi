@@ -1,11 +1,11 @@
 #include <Arduino.h>
-#include <EEPROM.h>
 #include "CCMenu.h"
 
 #include "../../Callbacks.h"
 #include "SpeicalOps.h"
 #include "../core/Coms.h"
 #include "../core/Globals.h"
+#include "../core/NVData.h"
 #include "../../MemLocations.h"
 
 bool _setCCSource;
@@ -169,34 +169,42 @@ void resetCCMValues()
 
 void saveCCMState()
 {
-    eeWrite(CC_OUT_NUMBER_1, ccListeners[0]);
-    eeWrite(CC_OUT_NUMBER_2, ccListeners[1]);
-    eeWrite(CC_OUT_NUMBER_3, ccListeners[2]);
-    eeWrite(CC_OUT_NUMBER_4, ccListeners[3]);
-    eeWrite(CC_OUT_NUMBER_5, ccListeners[4]);
+    openDataSpace(DataSpace::CCData, true);
     
-    eeWrite(CC_USE_OUT_1, ccOutputs[0]);
-    eeWrite(CC_USE_OUT_2, ccOutputs[1]);
-    eeWrite(CC_USE_OUT_3, ccOutputs[2]);
-    eeWrite(CC_USE_OUT_4, ccOutputs[3]);
-    eeWrite(CC_USE_OUT_5, ccOutputs[4]);
+    setSpaceByte(CC_OUT_NUMBER_1, ccListeners[0]);
+    setSpaceByte(CC_OUT_NUMBER_2, ccListeners[1]);
+    setSpaceByte(CC_OUT_NUMBER_3, ccListeners[2]);
+    setSpaceByte(CC_OUT_NUMBER_4, ccListeners[3]);
+    setSpaceByte(CC_OUT_NUMBER_5, ccListeners[4]);
     
-    eeWrite(CC_MULTI_CHANNEL, ccChannelMode);
-    EEPROM.commit();
+    setSpaceByte(CC_USE_OUT_1, ccOutputs[0]);
+    setSpaceByte(CC_USE_OUT_2, ccOutputs[1]);
+    setSpaceByte(CC_USE_OUT_3, ccOutputs[2]);
+    setSpaceByte(CC_USE_OUT_4, ccOutputs[3]);
+    setSpaceByte(CC_USE_OUT_5, ccOutputs[4]);
+    
+    setSpaceByte(CC_MULTI_CHANNEL, ccChannelMode);
+    
+    commitSpace();
+    closeDataSpace();
 }
 void loadCCMState()
 {
-    ccListeners[0] = EEPROM.read(CC_OUT_NUMBER_1);
-    ccListeners[1] = EEPROM.read(CC_OUT_NUMBER_2);
-    ccListeners[2] = EEPROM.read(CC_OUT_NUMBER_3);
-    ccListeners[3] = EEPROM.read(CC_OUT_NUMBER_4);
-    ccListeners[4] = EEPROM.read(CC_OUT_NUMBER_5);
+    openDataSpace(DataSpace::CCData, false);
     
-    ccOutputs[0] = EEPROM.read(CC_USE_OUT_1);
-    ccOutputs[1] = EEPROM.read(CC_USE_OUT_2);
-    ccOutputs[2] = EEPROM.read(CC_USE_OUT_3);
-    ccOutputs[3] = EEPROM.read(CC_USE_OUT_4);
-    ccOutputs[4] = EEPROM.read(CC_USE_OUT_5);
+    ccListeners[0] = getSpaceByte(CC_OUT_NUMBER_1);
+    ccListeners[1] = getSpaceByte(CC_OUT_NUMBER_2);
+    ccListeners[2] = getSpaceByte(CC_OUT_NUMBER_3);
+    ccListeners[3] = getSpaceByte(CC_OUT_NUMBER_4);
+    ccListeners[4] = getSpaceByte(CC_OUT_NUMBER_5);
     
-    ccChannelMode = EEPROM.read(CC_MULTI_CHANNEL);
+    ccOutputs[0] = getSpaceByte(CC_USE_OUT_1);
+    ccOutputs[1] = getSpaceByte(CC_USE_OUT_2);
+    ccOutputs[2] = getSpaceByte(CC_USE_OUT_3);
+    ccOutputs[3] = getSpaceByte(CC_USE_OUT_4);
+    ccOutputs[4] = getSpaceByte(CC_USE_OUT_5);
+    
+    ccChannelMode = getSpaceByte(CC_MULTI_CHANNEL);
+    
+    closeDataSpace();
 }

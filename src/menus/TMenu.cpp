@@ -1,11 +1,11 @@
 #include <Arduino.h>
-#include <EEPROM.h>
 #include "TMenu.h"
 
 #include "../../Callbacks.h"
 #include "SpeicalOps.h"
 #include "../core/Coms.h"
 #include "../core/Globals.h"
+#include "../core/NVData.h"
 #include "../../MemLocations.h"
 #include "../notes/Channels.h"
 
@@ -95,16 +95,6 @@ void resetTTMValues()
     }
 }
 
-uint32_t f_to_i(float v)
-{
-    uint32_t* ptr = (uint32_t*)&v;
-    return *ptr;
-}
-float i_to_f(uint32_t v)
-{
-    float* ptr = (float*)&v;
-    return *ptr;
-}
 int8_t u_to_i(uint8_t v)
 {
     int8_t* ptr = (int8_t*)&v;
@@ -130,70 +120,52 @@ void calcRunTrem()
 
 void saveTTMState()
 {
+    openDataSpace(DataSpace::TTData, true);
+    
     for (uint8_t i = 0; i < 5; i++)
     {
         Tremolo t = _tremolos[i];
         uint8_t si = i * 10;
-        uint32_t rate = f_to_i(t.w);
-        eeWrite(si, rate >> 24);
-        eeWrite(si + T_RATE_B, (rate >> 16) & 0xFF);
-        eeWrite(si + T_RATE_C, (rate >> 8) & 0xFF);
-        eeWrite(si + T_RATE_D, rate & 0xFF);
-        uint32_t scale = f_to_i(t.scale);
-        eeWrite(si + T_SCALE_A, scale >> 24);
-        eeWrite(si + T_SCALE_B, (scale >> 16) & 0xFF);
-        eeWrite(si + T_SCALE_C, (scale >> 8) & 0xFF);
-        eeWrite(si + T_SCALE_D, scale & 0xFF);
-        eeWrite(si + T_MODE, t.function == sinf);
-        eeWrite(si + T_ENABLED, t.enabled);
+        t.function = (float (*)(float))(t.function == sinf);
+        setSpaceData(si, t);
     }
     for (uint8_t i = 0; i < 5; i++)
     {
         uint8_t si = i * 2;
         Offset o = _noteOffsets[i];
-        eeWrite(si + OFF_OCT, i_to_u(o.oct));
-        eeWrite(si + OFF_ST, i_to_u(o.st));
+        setSpaceByte(si + OFF_OCT, i_to_u(o.oct));
+        setSpaceByte(si + OFF_ST, i_to_u(o.st));
     }
     
-    eeWrite(TREM_GLOB, _globalRate);
-    EEPROM.commit();
+    setSpaceByte(TREM_GLOB, _globalRate);
+    commitSpace();
+    closeDataSpace();
 }
 void loadTTMState()
 {
+    openDataSpace(DataSpace::TTData, false);
+    
     for (uint8_t i = 0; i < 5; i++)
     {
         uint8_t si = i * 10;
-        uint32_t rateA = EEPROM.read(si) << 24;
-        uint32_t rateB = EEPROM.read(si + T_RATE_B) << 16;
-        uint32_t rateC = EEPROM.read(si + T_RATE_C) << 8;
-        uint32_t rateD = EEPROM.read(si + T_RATE_D);
-        uint32_t scaleA = EEPROM.read(si + T_SCALE_A) << 24;
-        uint32_t scaleB = EEPROM.read(si + T_SCALE_B) << 16;
-        uint32_t scaleC = EEPROM.read(si + T_SCALE_C) << 8;
-        uint32_t scaleD = EEPROM.read(si + T_SCALE_D);
-        bool mode = EEPROM.read(si + T_MODE);
-        bool enabled = EEPROM.read(si + T_ENABLED);
-        _tremolos[i] =
-        {
-            mode ? sinf : tri,
-            i_to_f(rateA + rateB + rateC + rateD),
-            i_to_f(scaleA + scaleB + scaleC + scaleD),
-            enabled
-        };
+        Tremolo t = getSpaceData<Tremolo>(si);
+        t.function = t.function ? sinf : tri;
+        _tremolos[i] = t;
     }
     calcRunTrem();
     for (uint8_t i = 0; i < 5; i++)
     {
         uint8_t si = i * 2;
         Offset o = {
-            u_to_i(EEPROM.read(si + OFF_OCT)),
-            u_to_i(EEPROM.read(si + OFF_ST))
+            u_to_i(getSpaceByte(si + OFF_OCT)),
+            u_to_i(getSpaceByte(si + OFF_ST))
         };
         _noteOffsets[i] = o;
         calcOffset(i);
     }
     
-    _globalRate = EEPROM.read(TREM_GLOB);
+    _globalRate = getSpaceByte(TREM_GLOB);
+    closeDataSpace();
 }
 
 uint16_t _lv_hz = 4;

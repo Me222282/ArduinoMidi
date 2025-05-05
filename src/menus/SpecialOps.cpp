@@ -1,10 +1,10 @@
 #include <Arduino.h>
-#include <EEPROM.h>
 #include "SpeicalOps.h"
 
 #include "../../Arpeggio.h"
 #include "../core/Globals.h"
 #include "../core/Coms.h"
+#include "../core/NVData.h"
 #include "../notes/Notes.h"
 #include "../../Callbacks.h"
 #include "../../MemLocations.h"
@@ -67,6 +67,11 @@ void manageSpecie(uint8_t channel, NoteName n)
     
     switch (n)
     {
+        case NoteName::B2:
+            clearAllNV();
+            triggerFeedback(true);
+            return;
+        
         // set to defaults
         case NoteName::B3:
             resetOpsValues();
@@ -267,49 +272,57 @@ void saveOpsState()
 {
     saveArps();
     
-    eeWrite(RETRIG_OLD, retriggerOld);
-    eeWrite(RETRIG_NEW, retriggerNew);
-    eeWrite(ALWAYS_DELAY, alwaysDelay);
-    eeWrite(MICROTONAL, setNote == _setSubNote);
-    eeWrite(SORT_NOTES, sortNotes);
+    openDataSpace(DataSpace::Special, true);
     
-    eeWrite(ENABLE_ARP_1, channelArps[0]);
-    eeWrite(ENABLE_ARP_2, channelArps[1]);
-    eeWrite(ENABLE_ARP_3, channelArps[2]);
-    eeWrite(ENABLE_ARP_4, channelArps[3]);
-    eeWrite(ENABLE_ARP_5, channelArps[4]);
+    setSpaceByte(RETRIG_OLD, retriggerOld);
+    setSpaceByte(RETRIG_NEW, retriggerNew);
+    setSpaceByte(ALWAYS_DELAY, alwaysDelay);
+    setSpaceByte(MICROTONAL, setNote == _setSubNote);
+    setSpaceByte(SORT_NOTES, sortNotes);
     
-    eeWrite(FILTER_KEYS, filterKeys);
-    eeWrite(KEY_FILTER, filter);
-    eeWrite(MIDI_CLOCKED_ARP, arpClocked);
-    eeWrite(FORGET_NOTES, forgetNotes);
-    eeWrite(ALL_CHANNEL, allChannelMode);
-    eeWrite(FEEDBACK_ENABLED, isMenuFeedback);
-    EEPROM.commit();
+    setSpaceByte(ENABLE_ARP_1, channelArps[0]);
+    setSpaceByte(ENABLE_ARP_2, channelArps[1]);
+    setSpaceByte(ENABLE_ARP_3, channelArps[2]);
+    setSpaceByte(ENABLE_ARP_4, channelArps[3]);
+    setSpaceByte(ENABLE_ARP_5, channelArps[4]);
+    
+    setSpaceByte(FILTER_KEYS, filterKeys);
+    setSpaceByte(KEY_FILTER, filter);
+    setSpaceByte(MIDI_CLOCKED_ARP, arpClocked);
+    setSpaceByte(FORGET_NOTES, forgetNotes);
+    setSpaceByte(ALL_CHANNEL, allChannelMode);
+    setSpaceByte(FEEDBACK_ENABLED, isMenuFeedback);
+    
+    commitSpace();
+    closeDataSpace();
 }
 void loadOpsState()
 {
     loadArps();
     
-    retriggerOld = EEPROM.read(RETRIG_OLD);
-    retriggerNew = EEPROM.read(RETRIG_NEW);
-    alwaysDelay = EEPROM.read(ALWAYS_DELAY);
-    bool microtone = EEPROM.read(MICROTONAL);
-    sortNotes = EEPROM.read(SORT_NOTES);
+    openDataSpace(DataSpace::Special, false);
+    
+    retriggerOld = getSpaceByte(RETRIG_OLD);
+    retriggerNew = getSpaceByte(RETRIG_NEW);
+    alwaysDelay = getSpaceByte(ALWAYS_DELAY);
+    bool microtone = getSpaceByte(MICROTONAL);
+    sortNotes = getSpaceByte(SORT_NOTES);
     
     setNote = microtone ? _setSubNote : _setNoteNorm;
     
-    channelArps[0] = EEPROM.read(ENABLE_ARP_1);
-    channelArps[1] = EEPROM.read(ENABLE_ARP_2);
-    channelArps[2] = EEPROM.read(ENABLE_ARP_3);
-    channelArps[3] = EEPROM.read(ENABLE_ARP_4);
-    channelArps[4] = EEPROM.read(ENABLE_ARP_5);
+    channelArps[0] = getSpaceByte(ENABLE_ARP_1);
+    channelArps[1] = getSpaceByte(ENABLE_ARP_2);
+    channelArps[2] = getSpaceByte(ENABLE_ARP_3);
+    channelArps[3] = getSpaceByte(ENABLE_ARP_4);
+    channelArps[4] = getSpaceByte(ENABLE_ARP_5);
     shouldInvokeArp();
     
-    filterKeys = EEPROM.read(FILTER_KEYS);
-    filter = (Notes)EEPROM.read(KEY_FILTER);
-    arpClocked = EEPROM.read(MIDI_CLOCKED_ARP);
-    forgetNotes = EEPROM.read(FORGET_NOTES);
-    allChannelMode = EEPROM.read(ALL_CHANNEL);
-    isMenuFeedback = EEPROM.read(FEEDBACK_ENABLED);
+    filterKeys = getSpaceByte(FILTER_KEYS);
+    filter = (Notes)getSpaceByte(KEY_FILTER);
+    arpClocked = getSpaceByte(MIDI_CLOCKED_ARP);
+    forgetNotes = getSpaceByte(FORGET_NOTES);
+    allChannelMode = getSpaceByte(ALL_CHANNEL);
+    isMenuFeedback = getSpaceByte(FEEDBACK_ENABLED);
+    
+    closeDataSpace();
 }

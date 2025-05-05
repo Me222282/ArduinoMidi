@@ -57,8 +57,10 @@ extern "C" {
 #define TRACK_USEMOD 1
 #define TRACK_HALFTIME 2
 #define TRACK_SIZE 3
+// repeat 32x
 
 #define SEQS_SLOT_1 197
+// repeat 16x
 
 #define TREMOLO_1 213
 #define T_RATE_A 0
@@ -71,10 +73,12 @@ extern "C" {
 #define T_SCALE_D 7
 #define T_MODE 8
 #define T_ENABLED 9
+// repeat 5x
 
 #define OFFSETS_1 263
 #define OFF_OCT 0
 #define OFF_ST 1
+// repeat 5x
 
 #define TREM_GLOB 273
 
