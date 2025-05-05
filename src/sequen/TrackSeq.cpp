@@ -11,7 +11,14 @@
 void createSequence(TrackSequence* seq, TrackPart* tracks, uint8_t size, uint8_t channel)
 {
     seq->tracks = tracks;
-    seq->current = nullptr;
+    if (tracks)
+    {
+        seq->current = tracks[0].track;
+    }
+    else
+    {
+        seq->current = nullptr;
+    }
     seq->channel = channel;
     seq->playing = true;
     seq->oneShot = false;
@@ -256,6 +263,7 @@ bool saveSequence(TrackSequence* seq, uint8_t slot)
     
     openDataSpace(DataSpace::Sequens, true);
     setSpaceByte(si, size - 1);
+    setSpaceByte(si << 1, true);
     commitSpace();
     closeDataSpace();
     
@@ -275,9 +283,13 @@ bool loadSequence(TrackSequence* seq, uint8_t slot, uint8_t channel)
     
     openDataSpace(DataSpace::Sequens, false);
     uint16_t size = getSpaceByte(si) + 1;
+    bool exists = getSpaceByte(si << 1);
     closeDataSpace();
     // cannot occur
     // if (size < 1) { return false; }
+    
+    // true with written sequence
+    if (!exists) { return false; }
     
     // get loaded tracks
     Track** loadedTracks = CREATE_ARRAY(Track*, 32);

@@ -217,6 +217,9 @@ void ccOpen()
 void ccExit()
 {
     _cc_Menu.active = false;
+    _setCCSource = false;
+    _ccSetPos = (NoteName)0;
+    getEnteredValue(0);
 }
 
 Menu* getCCMenu()

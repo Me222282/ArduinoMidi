@@ -77,10 +77,11 @@ uint16_t _lv_S = 120;
 
 enum SlotState: uint8_t
 {
-    None,
+    None = 0U,
     Flatten,
     Pull,
     Delete,
+    Query,
     Copy,
     Paste,
     BankCurrent,
@@ -128,6 +129,22 @@ void onParamChange()
     _playMode[2] = false;
     _playMode[3] = false;
     _playMode[4] = false;
+    if (_trackSlotSelect)
+    {
+        _trackSlotSelect = SlotState::None;
+        playNote(NOTEFAIL_S, MF_DURATION);
+        return;
+    }
+    if (_setBarSize || _setSeqTime)
+    {
+        _setBarSize = false;
+        _setSeqTime = false;
+        // ensure digit is 0 again
+        getEnteredValue(0);
+        playNote(NOTEFAIL_S, MF_DURATION);
+        return;
+    }
+    
     Track* c = _trackSet.current;
     // trackset is creating or editing a track
     if (c && !exitTrackEdit())
@@ -439,6 +456,14 @@ void manageSlotSelection(NoteName n, uint8_t channel)
         case SlotState::Delete:
             deleteSave(slot);
             _trackSlotSelect = SlotState::Delete;
+            break;
+        case SlotState::Query:
+            _trackSlotSelect = SlotState::Query;
+            if (!isTrackSaved(slot))
+            {
+                playNote(NOTEFAIL_S, MF_DURATION);
+                return;
+            }
             break;
         case SlotState::Copy:
             if (!loadMemBank(slot)->notes)
@@ -756,6 +781,11 @@ void manageSeqNote(NoteName n, uint8_t vel, uint8_t channel)
             _playMode[3] = false;
             _playMode[4] = false;
             triggerFeedback(false);
+            return;
+        case NoteName::Ab2:
+            // query existing tracks
+            _trackSlotSelect = SlotState::Query;
+            playNote(NOTESELECT_S, MF_DURATION);
             return;
         case NoteName::_A2:
         {
@@ -1210,6 +1240,11 @@ bool exitTrackEdit()
 {
     uint8_t channel = _trackSet.channel;
     
+    _clockDivSet = false;
+    _selectTKOKey = false;
+    _offsetNoteSet = false;
+    getEnteredValue(0);
+    
     bool create = _trackSetState == TrackState::AddNotes;
     if (create && !finaliseTrack(&_trackSet))
     {
@@ -1227,9 +1262,8 @@ bool exitTrackEdit()
     {
         deleteSequence(&_sequences[channel]);
         TrackPart* tks = CREATE_ARRAY(TrackPart, 1);
-        createSequence(&_sequences[channel], tks, 1, channel);
         tks[0] = { _trackSet.current, 1 };
-        _sequences[channel].current = _trackSet.current;
+        createSequence(&_sequences[channel], tks, 1, channel);
     }
     
     deleteSequence(&_trackSet);
@@ -1315,7 +1349,6 @@ bool exitSeqCreator()
     TrackPart* tracks = RESIZE_ARRAY(TrackPart, _seqNewTracks, _seqCreatePtr);
     deleteSequence(&_sequences[channel]);
     createSequence(&_sequences[channel], tracks, _seqCreatePtr, channel);
-    _sequences[channel].current = tracks[0].track;
     _seqCreatePtr = 0;
     _seqCLastSlot = 255;
     _seqNewTracks = nullptr;

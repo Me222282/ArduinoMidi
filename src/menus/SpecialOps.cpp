@@ -23,7 +23,7 @@ void shouldInvokeArp()
 }
 bool _tapTempo = false;
 uint32_t _tapTempoTime = 0;
-bool _choseFilter = false;
+bool _chooseFilter = false;
 bool _setArpTime = false;
 uint32_t _lv = 120;
 uint8_t _resetCount = 0;
@@ -37,13 +37,13 @@ void manageSpecie(uint8_t channel, NoteName n)
         playNote(NOTEOPTION_S, MF_DURATION_SHORT);
         return;
     }
-    if (_choseFilter)
+    if (_chooseFilter)
     {
         uint8_t fk = n - NoteName::C1;
         if (fk < 12)
         {
             filter = (Notes)fk;
-            _choseFilter = false;
+            _chooseFilter = false;
             playNumber(n);
             return;
         }
@@ -102,7 +102,7 @@ void manageSpecie(uint8_t channel, NoteName n)
             triggerFeedback(retriggerNew);
             return;
         case NoteName::Eb4:
-            _choseFilter = !_choseFilter;
+            _chooseFilter = !_chooseFilter;
             playNote(NOTESELECT_S, MF_DURATION);
             return;
         case NoteName::E4:
@@ -347,6 +347,10 @@ void specOpen()
 void specExit()
 {
     _s_Menu.active = false;
+    _resetCount = 0;
+    _setArpTime = false;
+    _chooseFilter = false;
+    getEnteredValue(0);
 }
 
 Menu* getSpecialMenu()

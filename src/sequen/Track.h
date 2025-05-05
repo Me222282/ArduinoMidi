@@ -43,6 +43,7 @@ void copyTrack(Track* src, Track* dest);
 
 void saveTrack(Track* t, uint8_t slot);
 void deleteSave(uint8_t slot);
+bool isTrackSaved(uint8_t slot);
 Track* loadTrack(uint8_t slot);
 Track* loadMemBank(uint8_t slot);
 

@@ -104,16 +104,21 @@ void saveTrack(Track* t, uint8_t slot)
     uint16_t size = t->size;
     
     openDataSpace(DataSpace::Tracks, true);
-    TrackSave ts = { size & 0xFF, t->clockDivision, t->useMod, t->halfTime };
+    bool um = getSpaceData<TrackSave>(si).useMod;
+    TrackSave ts = { (uint8_t)(size & 0xFF), t->clockDivision, t->useMod, t->halfTime };
     setSpaceData<TrackSave>(si, ts);
     commitSpace();
     closeDataSpace();
     
     // data already written
-    if (t->saveSlot == slot) { return; }
-    // find track that was saved here
-    removeOldSlot(slot);
-    t->saveSlot = slot;
+    if (t->saveSlot != slot)
+    {
+        // find track that was saved here
+        removeOldSlot(slot);
+        t->saveSlot = slot;
+    }
+    // dont need to write mod data
+    else if (um || !t->useMod) { return; }
     
     ESP.flashEraseSector(address >> 12);
     FlashWrite<Note>(address, t->notes, size);
@@ -132,6 +137,16 @@ void deleteSave(uint8_t slot)
     commitSpace();
     closeDataSpace();
 }
+bool isTrackSaved(uint8_t slot)
+{
+    uint8_t si = TRACKS_SLOT_1 + (4 * slot);
+    
+    openDataSpace(DataSpace::Tracks, false);
+    
+    TrackSave ts = getSpaceData<TrackSave>(si);
+    closeDataSpace();
+    return ts.size >= 4 || ts.size == 0;
+}
 Track* loadTrack(uint8_t slot)
 {   
     uint32_t address = NVMADDRESS + (4096 * (uint32_t)slot);
@@ -140,9 +155,10 @@ Track* loadTrack(uint8_t slot)
     openDataSpace(DataSpace::Tracks, false);
     
     TrackSave ts = getSpaceData<TrackSave>(si);
+    closeDataSpace();
     uint16_t size = ts.size;
     if (size == 0) { size = 256; }
-    if (size < 4) { closeDataSpace(); return nullptr; } 
+    if (size < 4) { return nullptr; } 
     
     Track* t = CREATE(Track);
     t->memBank = false;
@@ -152,8 +168,6 @@ Track* loadTrack(uint8_t slot)
     t->halfTime = ts.ht;
     t->playing = true;
     t->saveSlot = slot;
-    
-    closeDataSpace();
     
     t->size = size;
     t->notes = FlashRead<Note>(address, size);

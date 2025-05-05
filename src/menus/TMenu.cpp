@@ -176,7 +176,6 @@ bool _setRatemHz = false;
 bool _setScale = false;
 
 uint16_t _lv_st = 2;
-bool _setOct = false;
 bool _setST = false;
 void manageMenuNotes(NoteName n, uint8_t channel)
 {
@@ -432,6 +431,11 @@ void tOpen()
 void tExit()
 {
     _t_Menu.active = false;
+    _setRateHz = false;
+    _setRatemHz = false;
+    _setScale = false;
+    _setST = false;
+    getEnteredValue(0);
 }
 
 Menu* getTMenu()
