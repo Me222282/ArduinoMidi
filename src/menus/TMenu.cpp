@@ -423,3 +423,19 @@ void ttMenuFunction()
         }
     }
 }
+
+Menu _t_Menu;
+void tOpen()
+{
+    playNote(NOTESELECT_S, MF_DURATION);
+}
+void tExit()
+{
+    _t_Menu.active = false;
+}
+
+Menu* getTMenu()
+{
+    _t_Menu = { true, ttMenuFunction, tExit, tOpen };
+    return &_t_Menu;
+}

@@ -16,6 +16,14 @@
 extern "C" {
 #endif
 
+typedef struct
+{
+    bool active;
+    void (*invoke)();
+    void (*onParamChange)();
+    void (*onOpen)();
+} Menu;
+
 extern bool isMenuFeedback;
 
 // extern uint8_t digit;

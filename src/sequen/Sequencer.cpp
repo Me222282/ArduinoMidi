@@ -2,7 +2,6 @@
 #include "Sequencer.h"
 
 #include "../../Callbacks.h"
-#include "../../MenuFeedback.h"
 #include "../menus/SpeicalOps.h"
 #include "../../MemLocations.h"
 #include "../core/Midi.h"
@@ -14,6 +13,7 @@
 #include "../core/Coms.h"
 #include "../../Arpeggio.h"
 
+Menu _seq_Menu;
 bool _playMode[5] = { false, false, false, false, false };
 // half the tempo time
 uint32_t _tempoTime = 250;
@@ -67,8 +67,6 @@ void restartTracks()
     resetTrack(&_sequences[3]);
     resetTrack(&_sequences[4]);
 }
-
-bool _exitSeq = false;
 
 bool _tapTempo_S = false;
 uint32_t _tapTempoTime_S = 0;
@@ -557,7 +555,7 @@ void manageSeqNote(NoteName n, uint8_t vel, uint8_t channel)
             triggerFeedback(true);
             return;
         case NoteName::B3:
-            _exitSeq = true;
+            _seq_Menu.active = false;
             return;
         case NoteName::C4:
             resetSequence();
@@ -851,7 +849,7 @@ void manageSeqNote(NoteName n, uint8_t vel, uint8_t channel)
     }
 }
 
-bool seqLoopInvoke()
+void seqLoopInvoke()
 {
     uint32_t time = millis();
     uint32_t dt = time - _elapsedTime;
@@ -876,7 +874,7 @@ bool seqLoopInvoke()
     {
         MidiCode type = MIDI.getType();
         uint8_t channel = MIDI.getChannel();
-        if (channel >= 5) { return false; }
+        if (channel >= 5) { _seq_Menu.active = false; return; }
         switch (type)
         {
             case MidiCode::NoteON:
@@ -890,9 +888,7 @@ bool seqLoopInvoke()
                     {
                         manageSeqNote(MIDI.getNote(), vel, channel);
                     }
-                    bool con = !_exitSeq;
-                    _exitSeq = false;
-                    return con;
+                    return;
                 }
                 
                 uint8_t n = MIDI.getData1();
@@ -901,30 +897,33 @@ bool seqLoopInvoke()
                     if (channel < 5 && channelArps[channel])
                     {
                         arpRemoveNote(channel, n);
-                        return true;
+                        return;
                     }
                     onNoteOff(channel, n);
-                    return true;
+                    return;
                 }
                 
                 if (channel < 5 && channelArps[channel])
                 {
                     arpAddNote(channel, { n, vel });
-                    return true;
+                    return;
                 }
                 onNoteOn(channel, n, vel);
-                return true;
+                return;
             }
             case MidiCode::CC:
-                if (_playing && _sequences[channel].playing &&
-                    _sequences[channel].current->useMod &&
-                    _sequences[channel].current->playing)
-                    { return true; }
+            {
+                TrackSequence* ts = &_sequences[channel];
+                if (_playing && ts->playing && ts->current &&
+                    ts->current->useMod &&
+                    ts->current->playing)
+                    { return; }
                 onControlChange(channel, MIDI.getCC(), MIDI.getData2());
-                return true;
+                return;
+            }
             case MidiCode::PitchWheel:
                 onPitchBend(channel, MIDI.getCombinedData());
-                return true;
+                return;
             case MidiCode::TimingClock:
             {
                 if (_playing && _seqClocked)
@@ -937,7 +936,7 @@ bool seqLoopInvoke()
                     }
                     modTracks(acc);
                 }
-                return true;
+                return;
             }
             case MidiCode::Start:
                 _playing = true;
@@ -947,18 +946,18 @@ bool seqLoopInvoke()
                     triggerTracks();
                     modTracks(0);
                 }
-                return true;
+                return;
             case MidiCode::Continue:
                 _playing = true;
-                return true;
+                return;
             case MidiCode::Stop:
                 _playing = false;
                 pauseSequence();
-                return true;
+                return;
         }
     }
     
-    return true;
+    return;
 }
 
 void triggerTracks()
@@ -982,7 +981,6 @@ void triggerTracks()
         
         triggerTrackSeq(seq, _playStep);
     }
-    
     _playStep++;
 }
 void modTracks(uint32_t pt)
@@ -1347,13 +1345,34 @@ void saveSeqState()
 }
 void loadSeqState()
 {
-    openDataSpace(DataSpace::SeqGlobals, false);
+    openDataSpace(DataSpace::SeqGlobals, true);
     
     _tempoTime = getSpaceInt(SEQ_TIMEOUT_A);
+    if (_tempoTime == 0)
+    {
+        _tempoTime = 250;
+        setSpaceInt(SEQ_TIMEOUT_A, 250);
+    }
     
     _seqClocked = getSpaceByte(SEQ_CLOCKED);
     _triggerOnBars = getSpaceByte(SEQ_BAR_TRIGGER);
     _barSize = getSpaceByte(SEQ_BAR_SIZE);
+    if (_barSize == 0)
+    {
+        _barSize = 32;
+        setSpaceByte(SEQ_BAR_SIZE, 32);
+    }
     
     closeDataSpace();
+}
+
+void seqOpen()
+{
+    playNote(NOTESELECT_S, MF_DURATION);
+}
+
+Menu* getSeqMenu()
+{
+    _seq_Menu = { true, seqLoopInvoke, onParamChange, seqOpen };
+    return &_seq_Menu;
 }

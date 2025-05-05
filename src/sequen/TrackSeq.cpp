@@ -229,6 +229,7 @@ void modTrackSeq(TrackSequence* t, CubicInput time)
 
 bool saveSequence(TrackSequence* seq, uint8_t slot)
 {
+    if (!seq->current) { return false; }
     // data already written
     if (seq->saveSlot == slot) { return true; }
     
@@ -269,6 +270,15 @@ bool saveSequence(TrackSequence* seq, uint8_t slot)
 
 bool loadSequence(TrackSequence* seq, uint8_t slot, uint8_t channel)
 {
+    uint32_t address = NVMADDRESS + (4096 * (uint32_t)slot);
+    uint8_t si = SEQS_SLOT_1 + slot;
+    
+    openDataSpace(DataSpace::Sequens, false);
+    uint16_t size = getSpaceByte(si) + 1;
+    closeDataSpace();
+    // cannot occur
+    // if (size < 1) { return false; }
+    
     // get loaded tracks
     Track** loadedTracks = CREATE_ARRAY(Track*, 32);
     for (uint8_t i = 0; i < 32; i++)
@@ -277,14 +287,6 @@ bool loadSequence(TrackSequence* seq, uint8_t slot, uint8_t channel)
         if (tk->saveSlot >= 32) { continue; }
         loadedTracks[tk->saveSlot] = tk;
     }
-    
-    uint32_t address = NVMADDRESS + (4096 * (uint32_t)slot);
-    uint8_t si = SEQS_SLOT_1 + slot;
-    
-    openDataSpace(DataSpace::Sequens, false);
-    uint16_t size = getSpaceByte(si) + 1;
-    closeDataSpace();
-    if (size < 1) { free(loadedTracks); return false; }
     
     Note* array = FlashRead<Note>(address, size);
     
@@ -352,7 +354,7 @@ Track** getUnsavedTracks(TrackSequence* seq, uint16_t* count)
     {
         Track* t = seq->tracks[i].track;
         // unsaved
-        if (t->saveSlot < 32)
+        if (t->saveSlot >= 32)
         {
             array[aPtr] = t;
             aPtr++;
@@ -364,6 +366,8 @@ Track** getUnsavedTracks(TrackSequence* seq, uint16_t* count)
 }
 bool flattenSequence(TrackSequence* seq)
 {
+    if (!seq->current) { return false; }
+    
     uint8_t openSlots = 0;
     uint16_t unsavedTracks = 0;
     uint8_t* slots = getOpenSaves(&openSlots);

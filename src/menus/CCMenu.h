@@ -8,7 +8,8 @@
 extern "C" {
 #endif
 
-void ccMenuFunction();
+// void ccMenuFunction();
+Menu* getCCMenu();
 
 void resetCCMValues();
 

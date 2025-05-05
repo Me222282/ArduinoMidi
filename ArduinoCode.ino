@@ -10,6 +10,7 @@
 #include "src/notes/Channels.h"
 #include "src/core/Midi.h"
 #include "MemLocations.h"
+#include "MenuFeedback.h"
 
 void setup()
 {
@@ -41,7 +42,7 @@ void setup()
     digitalWrite(GATEIC, HIGH);
     
     MIDI.begin();
-    // Serial.begin(38400);
+    Serial.begin(38400);
     // EEPROM.begin(EEPROM_SIZE);
     
     SPI.begin();
@@ -57,10 +58,7 @@ void setup()
     loadTTMState();
 }
 
-bool _specOps = false;
-bool _sequencer = false;
-bool _ccMenu = false;
-bool _tMenu = false;
+Menu* _cMenu = nullptr;
 NoteName _lastNote;
 void readControls()
 {
@@ -104,11 +102,35 @@ void readControls()
         gate = 0;
         setGate(0);
         updateAllPBs();
-        _specOps = _lastNote == NoteName::_A0;
-        _sequencer = _lastNote == NoteName::_B0;
-        _ccMenu = _lastNote == NoteName::C1;
-        _tMenu = _lastNote == NoteName::_D1;
-        onParamChange();
+        if (_cMenu)
+        {
+            _cMenu->onParamChange();
+        }
+        else
+        {
+            switch (_lastNote)
+            {
+                case NoteName::_A0:
+                    _cMenu = getSpecialMenu();
+                    _cMenu->onOpen();
+                    break;
+                case NoteName::_B0:
+                    _cMenu = getSeqMenu();
+                    _cMenu->onOpen();
+                    break;
+                case NoteName::C1:
+                    _cMenu = getCCMenu();
+                    _cMenu->onOpen();
+                    break;
+                case NoteName::_D1:
+                    _cMenu = getTMenu();
+                    _cMenu->onOpen();
+                    break;
+                default:
+                    _cMenu = nullptr;
+                    break;
+            }
+        }
     }
     else
     {
@@ -134,32 +156,17 @@ void loop()
     
     if (invokeArp) { invokeArps(); }
     
-    if (_sequencer)
+    if (_cMenu)
     {
-        _sequencer = seqLoopInvoke();
-        if (!_sequencer) { _lastNote = (NoteName)255U; }
-        return;
-    }
-    
-    if (_specOps)
-    {
-        specialOptions();
-        _lastNote = (NoteName)255U;
-        return;
-    }
-    
-    if (_ccMenu)
-    {
-        ccMenuFunction();
-        _lastNote = (NoteName)255U;
-        return;
-    }
-    
-    if (_tMenu)
-    {
-        ttMenuFunction();
-        _lastNote = (NoteName)255U;
-        return;
+        if (!_cMenu->active)
+        {
+            _cMenu = nullptr;
+        }
+        else
+        {
+            _cMenu->invoke();
+            return;
+        }
     }
     
     if (MIDI.read())

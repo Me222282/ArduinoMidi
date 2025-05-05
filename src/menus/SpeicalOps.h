@@ -11,7 +11,7 @@ extern "C" {
 extern bool invokeArp;
 extern bool channelArps[5];
 
-void specialOptions();
+Menu* getSpecialMenu();
 
 void resetOpsValues();
 

@@ -208,3 +208,19 @@ void loadCCMState()
     
     closeDataSpace();
 }
+
+Menu _cc_Menu;
+void ccOpen()
+{
+    playNote(NOTESELECT_S, MF_DURATION);
+}
+void ccExit()
+{
+    _cc_Menu.active = false;
+}
+
+Menu* getCCMenu()
+{
+    _cc_Menu = { true, ccMenuFunction, ccExit, ccOpen };
+    return &_cc_Menu;
+}

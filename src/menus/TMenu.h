@@ -8,7 +8,8 @@
 extern "C" {
 #endif
 
-void ttMenuFunction();
+// void ttMenuFunction();
+Menu* getTMenu();
 
 void invokeTremelo();
 

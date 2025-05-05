@@ -26,6 +26,7 @@ uint32_t _tapTempoTime = 0;
 bool _choseFilter = false;
 bool _setArpTime = false;
 uint32_t _lv = 120;
+uint8_t _resetCount = 0;
 void manageSpecie(uint8_t channel, NoteName n)
 {
     if (_tapTempo)
@@ -65,13 +66,24 @@ void manageSpecie(uint8_t channel, NoteName n)
         }
     }
     
-    switch (n)
+    // hard memory reset
+    if (n == NoteName::B2)
     {
-        case NoteName::B2:
+        _resetCount++;
+        if (_resetCount >= 3)
+        {
+            _resetCount = 0;
             clearAllNV();
             triggerFeedback(true);
             return;
-        
+        }
+        triggerFeedback(false);
+        return;
+    }
+    else { _resetCount = 0; }
+    
+    switch (n)
+    {
         // set to defaults
         case NoteName::B3:
             resetOpsValues();
@@ -325,4 +337,20 @@ void loadOpsState()
     isMenuFeedback = getSpaceByte(FEEDBACK_ENABLED);
     
     closeDataSpace();
+}
+
+Menu _s_Menu;
+void specOpen()
+{
+    playNote(NOTESELECT_S, MF_DURATION);
+}
+void specExit()
+{
+    _s_Menu.active = false;
+}
+
+Menu* getSpecialMenu()
+{
+    _s_Menu = { true, specialOptions, specExit, specOpen };
+    return &_s_Menu;
 }
