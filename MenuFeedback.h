@@ -52,6 +52,14 @@ inline void playNumberC(NoteName n, uint8_t channel)
 {
     playNoteC((NoteName)(n + (NoteName::_A3 - NoteName::_A0)), channel, MF_DURATION);
 }
+inline void playSlot(NoteName n)
+{
+    playNote((NoteName)(n + (NoteName::_A2 - NoteName::_A0)), MF_DURATION);
+}
+inline void playSlotC(NoteName n, uint8_t channel)
+{
+    playNoteC((NoteName)(n + (NoteName::_A2 - NoteName::_A0)), channel, MF_DURATION);
+}
 
 #ifdef __cplusplus
 } // extern "C"
