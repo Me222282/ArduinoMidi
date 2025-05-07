@@ -107,7 +107,7 @@ void manageSpecie(uint8_t channel, NoteName n)
         triggerFeedback(false);
         return;
     }
-    else { _resetCount = 0; }
+    _resetCount = 0;
     
     switch (n)
     {
