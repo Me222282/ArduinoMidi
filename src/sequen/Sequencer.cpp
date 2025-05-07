@@ -58,12 +58,11 @@ void resetTrack(TrackSequence* seq, bool ln = true)
     {
         seq->lastNote = NOTEOFF;
     }
-    uint8_t pos = seq->skip % seq->size;
     seq->skip = 0;
-    seq->position = pos;
+    seq->position = 0;
     seq->currentCount = 0;
     seq->stepOffset = 0;
-    seq->current = seq->tracks[pos].track;
+    seq->current = seq->tracks[0].track;
 }
 void restartTracks()
 {
@@ -306,7 +305,6 @@ void playingFunc(NoteName n, uint8_t channel)
             else { _sequences[0].playing = true; }
             return;
         case NoteName::Db6:
-            _sequences[0].skip = 0;
             resetTrack(&_sequences[0], false);
             playNoteC(NOTEOPTION_S, 0, MF_DURATION);
             return;
@@ -320,7 +318,6 @@ void playingFunc(NoteName n, uint8_t channel)
             else { _sequences[1].playing = true; }
             return;
         case NoteName::Eb6:
-            _sequences[1].skip = 0;
             resetTrack(&_sequences[1], false);
             playNoteC(NOTEOPTION_S, 1, MF_DURATION);
             return;
@@ -343,7 +340,6 @@ void playingFunc(NoteName n, uint8_t channel)
             else { _sequences[3].playing = true; }
             return;
         case NoteName::Gb6:
-            _sequences[2].skip = 0;
             resetTrack(&_sequences[2], false);
             playNoteC(NOTEOPTION_S, 2, MF_DURATION);
             return;
@@ -357,12 +353,10 @@ void playingFunc(NoteName n, uint8_t channel)
             else { _sequences[4].playing = true; }
             return;
         case NoteName::Ab6:
-            _sequences[3].skip = 0;
             resetTrack(&_sequences[3], false);
             playNoteC(NOTEOPTION_S, 3, MF_DURATION);
             return;
         case NoteName::Bb6:
-            _sequences[4].skip = 0;
             resetTrack(&_sequences[4], false);
             playNoteC(NOTEOPTION_S, 4, MF_DURATION);
             return;
@@ -812,7 +806,6 @@ void manageSeqNote(NoteName n, uint8_t vel, uint8_t channel)
             triggerFeedbackC(true, 0);
             return;
         case NoteName::Db6:
-            _sequences[0].skip = 0;
             resetTrack(&_sequences[0]);
             playNoteC(NOTEOPTION_S, 0, MF_DURATION);
             return;
@@ -828,7 +821,6 @@ void manageSeqNote(NoteName n, uint8_t vel, uint8_t channel)
             triggerFeedbackC(true, 1);
             return;
         case NoteName::Eb6:
-            _sequences[1].skip = 0;
             resetTrack(&_sequences[1]);
             playNoteC(NOTEOPTION_S, 1, MF_DURATION);
             return;
@@ -855,7 +847,6 @@ void manageSeqNote(NoteName n, uint8_t vel, uint8_t channel)
             triggerFeedbackC(true, 3);
             return;
         case NoteName::Gb6:
-            _sequences[2].skip = 0;
             resetTrack(&_sequences[2]);
             playNoteC(NOTEOPTION_S, 2, MF_DURATION);
             return;
@@ -871,12 +862,10 @@ void manageSeqNote(NoteName n, uint8_t vel, uint8_t channel)
             triggerFeedbackC(true, 4);
             return;
         case NoteName::Ab6:
-            _sequences[3].skip = 0;
             resetTrack(&_sequences[3]);
             playNoteC(NOTEOPTION_S, 3, MF_DURATION);
             return;
         case NoteName::Bb6:
-            _sequences[4].skip = 0;
             resetTrack(&_sequences[4]);
             playNoteC(NOTEOPTION_S, 4, MF_DURATION);
             return;
