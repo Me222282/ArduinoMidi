@@ -8,9 +8,36 @@
 #include "../notes/Notes.h"
 #include "../../Callbacks.h"
 #include "../../MemLocations.h"
+#include "CCMenu.h"
+#include "TMenu.h"
+#include "../sequen/Sequencer.h"
 
 bool invokeArp = false;
 bool channelArps[5] = { false, false, false, false, false };
+
+void factoryReset()
+{
+    clearAllNV();
+    
+    // reset all values then save them to flash
+    
+    resetOpsValues();
+    saveOpsState();
+    
+    resetCCMValues();
+    saveCCMState();
+    
+    resetTTMValues();
+    saveTTMState();
+    
+    resetSeqValues();
+    saveSeqState();
+    
+    for (uint8_t i = 0; i < 32; i++)
+    {
+        deleteSave(i);
+    }
+}
 
 void shouldInvokeArp()
 {
@@ -73,7 +100,7 @@ void manageSpecie(uint8_t channel, NoteName n)
         if (_resetCount >= 3)
         {
             _resetCount = 0;
-            clearAllNV();
+            factoryReset();
             triggerFeedback(true);
             return;
         }
@@ -129,8 +156,8 @@ void manageSpecie(uint8_t channel, NoteName n)
         {
             bool v = !channelArps[channel];
             channelArps[channel] = v;
-            if (!v) { clearArp(channel); }
-            else { clearNotes(&channels[channel]); }
+            // if (!v) { clearArp(channel); }
+            // else { clearNotes(&channels[channel]); }
             shouldInvokeArp();
             triggerFeedbackC(v, channel);
             return;
@@ -144,15 +171,15 @@ void manageSpecie(uint8_t channel, NoteName n)
             playNote(NOTEOPTION_S, MF_DURATION);
             return;
         case NoteName::Bb4:
-            clearArps();
-            clearNotes(&channels[0]);
-            clearNotes(&channels[1]);
-            clearNotes(&channels[2]);
-            clearNotes(&channels[3]);
-            clearNotes(&channels[4]);
+            // clearArps();
+            // clearNotes(&channels[0]);
+            // clearNotes(&channels[1]);
+            // clearNotes(&channels[2]);
+            // clearNotes(&channels[3]);
+            // clearNotes(&channels[4]);
             
-            gate = 0;
-            setGate(0);
+            // gate = 0;
+            // setGate(0);
             loadOpsState();
             playNote(NOTEOPTION_S, MF_DURATION);
             return;
