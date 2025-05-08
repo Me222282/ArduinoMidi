@@ -4,6 +4,7 @@
 #include "Globals.h"
 
 bool ccOutputs[5];
+bool ccChannelMode = false;
 int16_t pbOffsets[5];
 
 Note oldValues[5];
@@ -51,7 +52,8 @@ void _dac8(uint8_t n, uint8_t value, uint16_t command)
 }
 void setVel(uint8_t n, uint8_t value)
 {
-    if (ccOutputs[n] || oldValues[n].vel == value) { return; }
+    // channel mode managed by callbacks
+    if ((!ccChannelMode && ccOutputs[n]) || oldValues[n].vel == value) { return; }
     oldValues[n].vel = value;
     
     _dac8(n, value, 0xF000);
@@ -59,7 +61,8 @@ void setVel(uint8_t n, uint8_t value)
 void setCCOut(uint8_t n, uint8_t value)
 {
     value <<= 1;
-    if (!ccOutputs[n] || oldValues[n].vel == value) { return; }
+    // channel mode managed by callbacks
+    if ((!ccChannelMode && !ccOutputs[n]) || oldValues[n].vel == value) { return; }
     oldValues[n].vel = value;
     
     _dac8(n, value, 0xF000);

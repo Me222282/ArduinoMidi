@@ -11,6 +11,7 @@ extern "C" {
 #endif
 
 extern bool ccOutputs[5];
+extern bool ccChannelMode;
 extern int16_t pbOffsets[5];
 
 extern uint8_t gateCurrent;

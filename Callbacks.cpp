@@ -27,7 +27,6 @@ void _updateSlot(uint8_t com, Note n)
     }
 }
 uint8_t ccListeners[5];
-bool ccChannelMode = false;
 
 bool alwaysDelay = false;
 bool filterKeys = false;
@@ -151,7 +150,7 @@ void _gateOff(Channel* c)
     setGate(gate);
 }
 
-void ccUpdate(Channel* c, CCType number, uint8_t value)
+void ccUpdate(Channel* c, CCType number, uint8_t value, uint8_t channel)
 {
     uint8_t offset = 0;
     if (ccListeners[0] == number)       { offset = 0; }
@@ -163,11 +162,12 @@ void ccUpdate(Channel* c, CCType number, uint8_t value)
     
     if (!ccChannelMode)
     {
+        if (channel != 0) { return; }
         setCCOut(offset, value);
         return;
     }
     
-    if (offset >= c->places) { return; }
+    if (offset >= c->places || !ccOutputs[channel]) { return; }
     setCCOut(offset + c->position, value);
 }
 void onControlChange(uint8_t channel, CCType number, uint8_t value)
@@ -179,7 +179,7 @@ void onControlChange(uint8_t channel, CCType number, uint8_t value)
     else if (channel >= activeChannels) { return; }
     Channel* c = &channels[channel];
     
-    ccUpdate(c, number, value);
+    ccUpdate(c, number, value, channel);
     
     if (number == CCType::AllNotesOff)
     {
