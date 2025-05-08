@@ -4,7 +4,7 @@
 #include "Arpeggio.h"
 #include "src/menus/SpeicalOps.h"
 #include "src/menus/CCMenu.h"
-#include "src/menus/TMenu.h"
+#include "src/menus/VMenu.h"
 #include "src/sequen/Sequencer.h"
 #include "src/core/Globals.h"
 #include "src/notes/Channels.h"
@@ -55,7 +55,7 @@ void setup()
     loadOpsState();
     loadCCMState();
     loadSeqState();
-    loadTTMState();
+    loadVVMState();
 }
 
 Menu* _cMenu = nullptr;
@@ -123,7 +123,7 @@ void readControls()
                     _cMenu->onOpen();
                     break;
                 case NoteName::_D1:
-                    _cMenu = getTMenu();
+                    _cMenu = getVMenu();
                     _cMenu->onOpen();
                     break;
                 default:
@@ -152,7 +152,7 @@ void readControls()
 void loop()
 {
     readControls();
-    invokeTremelo();
+    invokeVibrato();
     
     if (invokeArp) { invokeArps(); }
     

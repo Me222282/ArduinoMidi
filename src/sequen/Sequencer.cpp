@@ -226,7 +226,11 @@ void playingFunc(NoteName n, uint8_t channel)
         case NoteName::C5:
         {
             bool v = _sequences[0].playing;
-            _sequences[0].oneShot = false;
+            if (_sequences[0].oneShot)
+            {
+                _sequences[0].oneShot = false;
+                return;
+            }
             if (_triggerOnBars) { _sequences[0].nextBar = !_sequences[0].nextBar; }
             else
             {
@@ -241,7 +245,11 @@ void playingFunc(NoteName n, uint8_t channel)
         case NoteName::_D5:
         {
             bool v = _sequences[1].playing;
-            _sequences[1].oneShot = false;
+            if (_sequences[1].oneShot)
+            {
+                _sequences[1].oneShot = false;
+                return;
+            }
             if (_triggerOnBars) { _sequences[1].nextBar = !_sequences[1].nextBar; }
             else
             {
@@ -256,7 +264,11 @@ void playingFunc(NoteName n, uint8_t channel)
         case NoteName::E5:
         {
             bool v = _sequences[2].playing;
-            _sequences[2].oneShot = false;
+            if (_sequences[2].oneShot)
+            {
+                _sequences[2].oneShot = false;
+                return;
+            }
             if (_triggerOnBars) { _sequences[2].nextBar = !_sequences[2].nextBar; }
             else
             {
@@ -268,7 +280,11 @@ void playingFunc(NoteName n, uint8_t channel)
         case NoteName::F5:
         {
             bool v = _sequences[3].playing;
-            _sequences[3].oneShot = false;
+            if (_sequences[3].oneShot)
+            {
+                _sequences[3].oneShot = false;
+                return;
+            }
             if (_triggerOnBars) { _sequences[3].nextBar = !_sequences[3].nextBar; }
             else
             {
@@ -283,7 +299,11 @@ void playingFunc(NoteName n, uint8_t channel)
         case NoteName::G5:
         {
             bool v = _sequences[4].playing;
-            _sequences[4].oneShot = false;
+            if (_sequences[4].oneShot)
+            {
+                _sequences[4].oneShot = false;
+                return;
+            }
             if (_triggerOnBars) { _sequences[4].nextBar = !_sequences[4].nextBar; }
             else
             {
@@ -389,6 +409,7 @@ void playingFunc(NoteName n, uint8_t channel)
                 return;
             }
             _barSize = bs;
+            _psBarOffset = _playStep;
         }
         case NoteName::C3:
         {
@@ -1196,14 +1217,21 @@ void trackManager(NoteName n, uint8_t vel)
                 playNoteC(NOTEFAIL_S, channel, MF_DURATION);
                 return;
             }
-            _trackSetSaveSlot = slot;
-            _trackSet.current = loadMemBank(slot);
+            Track* tk = loadMemBank(slot);
+            // track does not exist
+            if (_trackSetState == TrackState::SelectEditSlot && !tk->notes)
+            {
+                playNoteC(NOTEFAIL_S, channel, MF_DURATION);
+                return;
+            }
             if (_trackSetState == TrackState::SelectSlot)
             {
                 // override whats there
-                deleteTrack(_trackSet.current);
-                createTrack(_trackSet.current);
+                deleteTrack(tk);
+                createTrack(tk);
             }
+            _trackSetSaveSlot = slot;
+            _trackSet.current = tk;
             // next mode must be next in list
             _trackSetState = (TrackState)(_trackSetState + 1);
             playSlotC(n, channel);
@@ -1314,6 +1342,8 @@ void trackManager(NoteName n, uint8_t vel)
         case Notes::D:
             if (_trackSetState == TrackState::Edit) { return; }
             addTrackValue(&_trackSet, NOTEOFF, mod);
+            _trackSet.lastNote = NOTEOFF;
+            playNoteC(NOTEOPTION_S, channel, MF_DURATION);
             return;
         case Notes::Eb:
             _selectTKOKey = true;
@@ -1325,7 +1355,11 @@ void trackManager(NoteName n, uint8_t vel)
             if (_trackSetState == TrackState::Edit) { return; }
             uint8_t pos = _trackSet.tPosition;
             addTrackValue(&_trackSet, NOTEHOLD, mod);
-            if (pos != 0)
+            if (noteEquals(_trackSet.lastNote, NOTEOFF))
+            {
+                playNoteC(NOTEOPTION_S, channel, MF_DURATION);
+            }
+            else if (pos != 0)
             {
                 playNoteC((NoteName)_trackSet.lastNote.key, channel, MF_DURATION);
             }

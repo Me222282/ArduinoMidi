@@ -1,5 +1,5 @@
-#ifndef __ttttttttttttt
-#define __ttttttttttttt
+#ifndef __vvvvvvvvvvvvv
+#define __vvvvvvvvvvvvv
 
 #include "../core/Midi.h"
 #include "../../MenuFeedback.h"
@@ -9,14 +9,14 @@ extern "C" {
 #endif
 
 // void ttMenuFunction();
-Menu* getTMenu();
+Menu* getVMenu();
 
-void invokeTremelo();
+void invokeVibrato();
 
-void resetTTMValues();
+void resetVVMValues();
 
-void saveTTMState();
-void loadTTMState();
+void saveVVMState();
+void loadVVMState();
 
 #ifdef __cplusplus
 } // extern "C"

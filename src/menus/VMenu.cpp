@@ -1,5 +1,5 @@
 #include <Arduino.h>
-#include "TMenu.h"
+#include "VMenu.h"
 
 #include "../../Callbacks.h"
 #include "SpeicalOps.h"
@@ -15,7 +15,7 @@ typedef struct
     float w;
     float scale;
     bool enabled;
-} Tremolo;
+} Vibrato;
 
 typedef struct
 {
@@ -25,7 +25,7 @@ typedef struct
 
 bool _runTrem = false;
 bool _globalRate = false;
-Tremolo _tremolos[5];
+Vibrato _vibratos[5];
 Offset _noteOffsets[5];
 
 void setCP(Channel* c, int16_t value)
@@ -37,19 +37,19 @@ void setCP(Channel* c, int16_t value)
         updatePitchBend(i);
     }
 }
-void invokeTremelo()
+void invokeVibrato()
 {
     if (!_runTrem) { return; }
     float time = (float)millis();
     
     if (_globalRate)
     {
-        float y = _tremolos[0].function(time * _tremolos[0].w);
+        float y = _vibratos[0].function(time * _vibratos[0].w);
         for (uint8_t i = 0; i < activeChannels; i++)
         {
-            Tremolo t = _tremolos[i];
-            if (!t.enabled) { continue; }
-            float nv = y * channels[i].modulation * t.scale;
+            Vibrato v = _vibratos[i];
+            if (!v.enabled) { continue; }
+            float nv = y * channels[i].modulation * v.scale;
             setCP(&channels[i], (int16_t)nv);
         }
         return;
@@ -57,7 +57,7 @@ void invokeTremelo()
     
     for (uint8_t i = 0; i < activeChannels; i++)
     {
-        Tremolo t = _tremolos[i];
+        Vibrato t = _vibratos[i];
         if (!t.enabled) { continue; }
         float v = t.function(time * t.w);
         v *= channels[i].modulation * t.scale;
@@ -82,13 +82,13 @@ const float setmW = PI * 0.000002f;
 const float setScale = 1.0f / 16384.0f;
 const float initW = 4.0f * setW;
 const float initScale = 43.0f * setScale;
-void resetTTMValues()
+void resetVVMValues()
 {
     _runTrem = false;
     _globalRate = false;
     for (uint8_t i = 0; i < 5; i++)
     {
-        _tremolos[i] = { sinf, initW, initScale, false };
+        _vibratos[i] = { sinf, initW, initScale, false };
         _noteOffsets[i] = { 0, 0 };
         noteOffsets[i] = 0;
         setCP(&channels[i], 0);
@@ -112,19 +112,19 @@ void calcOffset(uint8_t channel)
 }
 void calcRunTrem()
 {
-    _runTrem = _tremolos[0].enabled | _tremolos[1].enabled |
-        _tremolos[2].enabled | _tremolos[3].enabled |
-        _tremolos[4].enabled;
+    _runTrem = _vibratos[0].enabled | _vibratos[1].enabled |
+        _vibratos[2].enabled | _vibratos[3].enabled |
+        _vibratos[4].enabled;
 }
 
 
-void saveTTMState()
+void saveVVMState()
 {
     openDataSpace(DataSpace::TTData, true);
     
     for (uint8_t i = 0; i < 5; i++)
     {
-        Tremolo t = _tremolos[i];
+        Vibrato t = _vibratos[i];
         uint8_t si = i * 10;
         t.function = (float (*)(float))(t.function == sinf);
         setSpaceData(si, t);
@@ -141,16 +141,16 @@ void saveTTMState()
     commitSpace();
     closeDataSpace();
 }
-void loadTTMState()
+void loadVVMState()
 {
     openDataSpace(DataSpace::TTData, false);
     
     for (uint8_t i = 0; i < 5; i++)
     {
         uint8_t si = i * 10;
-        Tremolo t = getSpaceData<Tremolo>(si);
-        t.function = t.function ? sinf : tri;
-        _tremolos[i] = t;
+        Vibrato v = getSpaceData<Vibrato>(si);
+        v.function = v.function ? sinf : tri;
+        _vibratos[i] = v;
     }
     calcRunTrem();
     for (uint8_t i = 0; i < 5; i++)
@@ -229,13 +229,13 @@ void manageMenuNotes(NoteName n, uint8_t channel)
     {
         // set to defaults
         case NoteName::B3:
-            resetTTMValues();
+            resetVVMValues();
             triggerFeedback(true);
             return;
         case NoteName::C4:
         {
-            bool v = !_tremolos[channel].enabled;
-            _tremolos[channel].enabled = v;
+            bool v = !_vibratos[channel].enabled;
+            _vibratos[channel].enabled = v;
             triggerFeedbackC(v, channel);
             calcRunTrem();
             if (!v)
@@ -245,11 +245,11 @@ void manageMenuNotes(NoteName n, uint8_t channel)
             return;
         }
         case NoteName::_D4:
-            _tremolos[channel].function = sinf;
+            _vibratos[channel].function = sinf;
             triggerFeedbackC(true, channel);
             return;
         case NoteName::E4:
-            _tremolos[channel].function = tri;
+            _vibratos[channel].function = tri;
             triggerFeedbackC(false, channel);
             return;
         case NoteName::F4:
@@ -266,7 +266,7 @@ void manageMenuNotes(NoteName n, uint8_t channel)
                 }
                 _lv_hz = v;
                 uint8_t i = _globalRate ? 0 : channel;
-                _tremolos[i].w = setW * v;
+                _vibratos[i].w = setW * v;
             }
             playNoteC(NOTESELECT_S, channel, MF_DURATION);
             return;
@@ -285,7 +285,7 @@ void manageMenuNotes(NoteName n, uint8_t channel)
                 }
                 _lv_mhz = v;
                 uint8_t i = _globalRate ? 0 : channel;
-                _tremolos[i].w = setmW * v;
+                _vibratos[i].w = setmW * v;
             }
             playNoteC(NOTESELECT_S, channel, MF_DURATION);
             return;
@@ -303,18 +303,18 @@ void manageMenuNotes(NoteName n, uint8_t channel)
                     return;
                 }
                 _lv_scale = v;
-                _tremolos[channel].scale = setScale * v;
+                _vibratos[channel].scale = setScale * v;
             }
             playNoteC(NOTESELECT_S, channel, MF_DURATION);
             return;
         }
         
         case NoteName::B4:
-            saveTTMState();
+            saveVVMState();
             playNote(NOTEOPTION_S, MF_DURATION);
             return;
         case NoteName::Bb4:
-            loadTTMState();
+            loadVVMState();
             playNote(NOTEOPTION_S, MF_DURATION);
             return;
         case NoteName::C5:
@@ -438,7 +438,7 @@ void tExit()
     getEnteredValue(0);
 }
 
-Menu* getTMenu()
+Menu* getVMenu()
 {
     _t_Menu = { true, ttMenuFunction, tExit, tOpen };
     return &_t_Menu;
