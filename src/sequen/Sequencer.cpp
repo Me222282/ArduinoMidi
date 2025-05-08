@@ -20,7 +20,8 @@ uint32_t _tempoTime = 250;
 bool _seqClocked = false;
 uint32_t _seqClockCount = 0;
 bool _playing = false;
-uint16_t _playStep = 0;
+uint32_t _playStep = 0;
+uint32_t _psBarOffset = 0;
 
 // in half semiquavers
 uint8_t _barSize = 32;
@@ -188,6 +189,7 @@ void pauseSomeSequence(uint8_t channel)
 void resetSequence()
 {
     _playStep = 0;
+    _psBarOffset = 0;
     _seqClockCount = 0;
     _playingTime = 0;
     restartTracks();
@@ -1115,7 +1117,7 @@ void seqLoopInvoke()
 
 void triggerTracks()
 {
-    bool onBar = _playStep % _barSize == 0;
+    bool onBar = (_playStep - _psBarOffset) % _barSize == 0;
     if (onBar && _nextTempoTime)
     {
         _tempoTime = _nextTempoTime;
@@ -1126,6 +1128,7 @@ void triggerTracks()
     {
         _barSize = _nextBarSize;
         _nextBarSize = 0;
+        _psBarOffset = _playStep;
     }
     
     for (uint8_t i = 0; i < 5; i++)

@@ -173,7 +173,7 @@ FindNextTrack:
     t->current = t->tracks[ncp].track;
 }
 
-void triggerTrackSeq(TrackSequence* t, uint16_t playStep)
+void triggerTrackSeq(TrackSequence* t, uint32_t playStep)
 {
     Track* tk = t->current;
     if (!tk) { return; }
@@ -188,7 +188,7 @@ void triggerTrackSeq(TrackSequence* t, uint16_t playStep)
     }
     
     // plus 1 allows ht to occur the step before the next clockdiv note trigger
-    uint16_t div = ((playStep - t->stepOffset + 1) >> 1) % tk->clockDivision;
+    uint32_t div = ((playStep - t->stepOffset + 1) >> 1) % tk->clockDivision;
     if (div) { return; }
     // div == 0
     
