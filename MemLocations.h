@@ -62,7 +62,7 @@ extern "C" {
 #define SEQS_SLOT_1 197
 // repeat 16x
 
-#define TREMOLO_1 213
+#define VIBRATO_1 213
 #define T_RATE_A 0
 #define T_RATE_B 1
 #define T_RATE_C 2
