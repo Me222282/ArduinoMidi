@@ -52,7 +52,7 @@ bool _tapTempo = false;
 uint32_t _tapTempoTime = 0;
 bool _chooseFilter = false;
 bool _setArpTime = false;
-uint32_t _lv = 120;
+uint16_t _lv = 120;
 uint8_t _resetCount = 0;
 void manageSpecie(uint8_t channel, NoteName n)
 {

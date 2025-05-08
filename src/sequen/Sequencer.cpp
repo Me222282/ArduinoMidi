@@ -26,6 +26,7 @@ uint16_t _playStep = 0;
 uint8_t _barSize = 32;
 bool _triggerOnBars = true;
 uint32_t _nextTempoTime = 0;
+uint32_t _nextBarSize = 0;
 
 TrackSequence _sequences[5];
 
@@ -368,6 +369,25 @@ void playingFunc(NoteName n, uint8_t channel)
             _playMode[3] = false;
             _playMode[4] = false;
             return;
+        case NoteName::_A2:
+        {
+            _triggerOnBars = !_triggerOnBars;
+            return;
+        }
+        case NoteName::B2:
+        {
+            _setBarSize = !_setBarSize;
+            if (_setBarSize) { return; }
+            uint16_t input = getEnteredValue(_barSize >> 1);
+            if (input > 127) { return; }
+            uint8_t bs = max(input << 1, 2);
+            if (_triggerOnBars)
+            {
+                _nextBarSize = bs;
+                return;
+            }
+            _barSize = bs;
+        }
         case NoteName::C3:
         {
             _setSeqTime = !_setSeqTime;
@@ -595,6 +615,17 @@ void manageSeqNote(NoteName n, uint8_t vel, uint8_t channel)
             return;
         }
     }
+    if (_setBarSize)
+    {
+        // valid digit
+        bool v = addDigit(n, 3);
+        if (v) { return; }
+        if (n != NoteName::B2)
+        {
+            playNote(NOTEFAIL_S, MF_DURATION);
+            return;
+        }
+    }
     if (_playing)
     {
         playingFunc(n, channel);
@@ -611,17 +642,6 @@ void manageSeqNote(NoteName n, uint8_t vel, uint8_t channel)
         return;
     }
     
-    if (_setBarSize)
-    {
-        // valid digit
-        bool v = addDigit(n, 3);
-        if (v) { return; }
-        if (n != NoteName::B2)
-        {
-            playNote(NOTEFAIL_S, MF_DURATION);
-            return;
-        }
-    }
     if (_trackSlotSelect)
     {
         manageSlotSelection(n, channel);
@@ -897,13 +917,20 @@ void manageSeqNote(NoteName n, uint8_t vel, uint8_t channel)
         case NoteName::B2:
         {
             _setBarSize = !_setBarSize;
-            playNote(NOTESELECT_S, MF_DURATION);
             // set arp time value
             if (!_setBarSize)
             {
+                uint16_t input = getEnteredValue(_barSize >> 1);
+                if (input > 127)
+                {
+                    playNote(NOTEFAIL_S, MF_DURATION);
+                    return;
+                }
+                
                 // x2 for half time
-                _barSize = max(getEnteredValue(_barSize >> 1) << 1, 2);
+                _barSize = max(input << 1, 2);
             }
+            playNote(NOTESELECT_S, MF_DURATION);
             return;
         }
         case NoteName::C3:
@@ -1094,6 +1121,11 @@ void triggerTracks()
         _tempoTime = _nextTempoTime;
         _nextTempoTime = 0;
         _playingTime %= _tempoTime;
+    }
+    if (onBar && _nextBarSize)
+    {
+        _barSize = _nextBarSize;
+        _nextBarSize = 0;
     }
     
     for (uint8_t i = 0; i < 5; i++)

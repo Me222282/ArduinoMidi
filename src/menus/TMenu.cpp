@@ -175,7 +175,7 @@ bool _setRateHz = false;
 bool _setRatemHz = false;
 bool _setScale = false;
 
-uint16_t _lv_st = 2;
+uint8_t _lv_st = 2;
 bool _setST = false;
 void manageMenuNotes(NoteName n, uint8_t channel)
 {
@@ -327,7 +327,7 @@ void manageMenuNotes(NoteName n, uint8_t channel)
             _setST = !_setST;
             if (!_setST)
             {
-                uint16_t v = getEnteredValue(_lv_st);
+                uint8_t v = getEnteredValue(_lv_st);
                 // max offset
                 if (v > 24)
                 {
@@ -346,7 +346,7 @@ void manageMenuNotes(NoteName n, uint8_t channel)
             _setST = !_setST;
             if (!_setST)
             {
-                uint16_t v = getEnteredValue(_lv_st);
+                uint8_t v = getEnteredValue(_lv_st);
                 // max offset
                 if (v > 24)
                 {
