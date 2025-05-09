@@ -5,6 +5,7 @@
 #include "../../Callbacks.h"
 #include "../../MemLocations.h"
 #include "../core/NVData.h"
+#include "../menus/CCMenu.h"
 
 #define NVMADDRESS 0x2B0000
 
@@ -82,6 +83,7 @@ Note noteOn(Track* t, uint8_t pos, uint8_t channel, Note last)
     if (noteEquals(n, NOTEHOLD)) { return last; }
     if (!noteEquals(n, NOTEOFF))
     {
+        onTrack(channel);
         onNoteOn(channel, n.key, n.vel);
     }
     // always in case of track change

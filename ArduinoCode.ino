@@ -102,6 +102,7 @@ void readControls()
         gate = 0;
         setGate(0);
         updateAllPBs();
+        updateCCOuts();
         if (_cMenu)
         {
             _cMenu->onParamChange();
@@ -153,6 +154,7 @@ void loop()
 {
     readControls();
     invokeVibrato();
+    invokePulse();
     
     if (invokeArp) { invokeArps(); }
     

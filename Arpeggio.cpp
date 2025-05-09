@@ -5,6 +5,7 @@
 #include "src/notes/Notes.h"
 #include "Callbacks.h"
 #include "MemLocations.h"
+#include "src/menus/CCMenu.h"
 
 Arpeggio arps[5];
 uint32_t _tElapsed;
@@ -78,6 +79,7 @@ void _triggerNextArp(uint8_t i, Arpeggio* a)
     NoteList* rem = previous;
     if (a->halfTime || !a->current) { rem = nullptr; }
     a->current = nextN;
+    onArp(i);
     swap(i, rem, nextN);
     
     if (a->freeCurrent)

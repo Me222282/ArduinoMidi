@@ -52,8 +52,7 @@ void _dac8(uint8_t n, uint8_t value, uint16_t command)
 }
 void setVel(uint8_t n, uint8_t value)
 {
-    // channel mode managed by callbacks
-    if ((!ccChannelMode && ccOutputs[n]) || oldValues[n].vel == value) { return; }
+    if (ccOutputs[n] || oldValues[n].vel == value) { return; }
     oldValues[n].vel = value;
     
     _dac8(n, value, 0xF000);
@@ -61,8 +60,14 @@ void setVel(uint8_t n, uint8_t value)
 void setCCOut(uint8_t n, uint8_t value)
 {
     value <<= 1;
-    // channel mode managed by callbacks
-    if ((!ccChannelMode && !ccOutputs[n]) || oldValues[n].vel == value) { return; }
+    if (!ccOutputs[n] || oldValues[n].vel == value) { return; }
+    oldValues[n].vel = value;
+    
+    _dac8(n, value, 0xF000);
+}
+void setVelUnchecked(uint8_t n, uint8_t value)
+{
+    if (oldValues[n].vel == value) { return; }
     oldValues[n].vel = value;
     
     _dac8(n, value, 0xF000);

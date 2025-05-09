@@ -12,6 +12,7 @@
 #include "TrackSeq.h"
 #include "../core/Coms.h"
 #include "../../Arpeggio.h"
+#include "../menus/CCMenu.h"
 
 Menu _seq_Menu;
 bool _playMode[5] = { false, false, false, false, false };
@@ -1152,6 +1153,7 @@ void triggerTracks()
         _psBarOffset = _playStep;
     }
     
+    onSequence();
     for (uint8_t i = 0; i < 5; i++)
     {
         TrackSequence* seq = &_sequences[i];

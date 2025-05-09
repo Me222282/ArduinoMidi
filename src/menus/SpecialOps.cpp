@@ -9,7 +9,7 @@
 #include "../../Callbacks.h"
 #include "../../MemLocations.h"
 #include "CCMenu.h"
-#include "TMenu.h"
+#include "VMenu.h"
 #include "../sequen/Sequencer.h"
 
 bool invokeArp = false;
@@ -27,8 +27,8 @@ void factoryReset()
     resetCCMValues();
     saveCCMState();
     
-    resetTTMValues();
-    saveTTMState();
+    resetVVMValues();
+    saveVVMState();
     
     resetSeqValues();
     saveSeqState();
