@@ -27,7 +27,6 @@ void createSequence(TrackSequence* seq, TrackPart* tracks, uint8_t size, uint8_t
     seq->tPosition = 0;
     seq->lastNote = NOTEOFF;
     seq->currentCount = 0;
-    seq->saveSlot = 255;
     seq->size = size;
     seq->skip = 0;
     seq->nextBar = false;
@@ -243,8 +242,6 @@ void modTrackSeq(TrackSequence* t, CubicInput time)
 bool saveSequence(TrackSequence* seq, uint8_t slot)
 {
     if (!seq->current) { return false; }
-    // data already written
-    if (seq->saveSlot == slot) { return true; }
     
     uint16_t size = seq->size;
     
@@ -273,12 +270,24 @@ bool saveSequence(TrackSequence* seq, uint8_t slot)
     commitSpace();
     closeDataSpace();
     
-    seq->saveSlot = slot;
+    // check that the data has changed before writing flash
+    Note* oldData = FlashRead<Note>(address, size);
+    bool write = false;
+    for (uint16_t i = 0; i < size; i++)
+    {
+        if (noteEquals(oldData[i], array[i])) { continue; }
+        write = true;
+        break;
+    }
     
-    ESP.flashEraseSector(address >> 12);
-    FlashWrite<Note>(address, array, size);
+    if (write)
+    {
+        ESP.flashEraseSector(address >> 12);
+        FlashWrite<Note>(address, array, size);
+    }
     
     free(array);
+    free(oldData);
     return true;
 }
 

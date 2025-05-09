@@ -30,7 +30,6 @@ typedef struct
     uint8_t currentCount;
     uint8_t skip;
     uint8_t channel;
-    uint8_t saveSlot;
     bool playing;
     bool oneShot;
     bool nextBar;
