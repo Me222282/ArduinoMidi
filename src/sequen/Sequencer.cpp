@@ -158,6 +158,7 @@ void onParamChange()
     if (c && !exitTrackEdit())
     {
         deleteTrack(c);
+        deleteSequence(&_trackSet);
         _trackSetState = TrackState::Not;
         _trackSetSaveSlot = 255;
     }
@@ -1153,7 +1154,11 @@ void triggerTracks()
         _psBarOffset = _playStep;
     }
     
-    onSequence();
+    // not ht
+    if (!(_playStep & 1U))
+    {
+        onSequence();
+    }
     for (uint8_t i = 0; i < 5; i++)
     {
         TrackSequence* seq = &_sequences[i];
@@ -1205,6 +1210,7 @@ bool _selectTKOKey = false;
 uint8_t _lastNoteOffset = 1;
 Notes _nOKey = Notes::C;
 bool _maxTrackNotes = false;
+bool _enteredNote = false;
 void trackManager(NoteName n, uint8_t vel)
 {
     uint8_t channel = _trackSet.channel;
@@ -1331,6 +1337,7 @@ void trackManager(NoteName n, uint8_t vel)
         }
         
         _maxTrackNotes = addTrackValue(&_trackSet, { n, vel }, mod);
+        _enteredNote = true;
         _trackSet.lastNote = { n, vel };
         playNoteC(n, channel, MF_DURATION);
         return;
@@ -1356,6 +1363,7 @@ void trackManager(NoteName n, uint8_t vel)
                 return;
             }
             _maxTrackNotes = addTrackValue(&_trackSet, NOTEOFF, mod);
+            _enteredNote = true;
             _trackSet.lastNote = NOTEOFF;
             playNoteC(NOTEOPTION_S, channel, MF_DURATION);
             return;
@@ -1374,6 +1382,7 @@ void trackManager(NoteName n, uint8_t vel)
             }
             uint8_t pos = _trackSet.tPosition;
             _maxTrackNotes = addTrackValue(&_trackSet, NOTEHOLD, mod);
+            _enteredNote = true;
             if (noteEquals(_trackSet.lastNote, NOTEOFF))
             {
                 playNoteC(NOTEOPTION_S, channel, MF_DURATION);
@@ -1435,13 +1444,17 @@ bool exitTrackEdit()
     _offsetNoteSet = false;
     getEnteredValue(0);
     
+    bool ent = _enteredNote;
+    // can do it here - must enter note for it not to fail
+    _enteredNote = false;
     bool create = _trackSetState == TrackState::AddNotes;
-    if (create && !finaliseTrack(&_trackSet))
+    if (!_enteredNote ||
+    // cant finish
+        (create && !finaliseTrack(&_trackSet)))
     {
         playNoteC(NOTEFAIL_S, channel, MF_DURATION);
         return false;
     }
-    _trackSet.lastNote = NOTEOFF;
     _trackSetState = TrackState::Not;
     uint8_t slot = _trackSetSaveSlot;
     _trackSetSaveSlot = 255;

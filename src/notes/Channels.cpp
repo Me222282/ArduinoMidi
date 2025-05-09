@@ -1,5 +1,6 @@
 #include <Arduino.h>
 #include "Channels.h"
+#include "../menus/CCMenu.h"
 
 uint8_t _ss0[5] = { 0x00, 0x00, 0x00, 0x00, 0x00 };
 uint8_t _ss1[5] = { 0x00, 0x00, 0x00, 0x01, 0x01 };
@@ -149,6 +150,7 @@ void gateChannelNote(uint8_t ci, uint8_t vi, bool v)
 {
     uint8_t com = (ci << 4) | vi;
     
+    if (v) { onNoteGateTrig(ci); }
     for (uint8_t i = 0; i < 5; i++)
     {
         if (slotAllocation[i] == com)
@@ -161,6 +163,7 @@ void reTrigChannelNote(uint8_t ci, uint8_t vi)
 {
     uint8_t com = (ci << 4) | vi;
     
+    onNoteGateTrig(ci);
     for (uint8_t i = 0; i < 5; i++)
     {
         if (slotAllocation[i] == com)

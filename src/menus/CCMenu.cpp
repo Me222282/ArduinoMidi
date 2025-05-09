@@ -18,7 +18,8 @@ enum PulseSource : uint8_t
 {
     Arpeggio,
     Sequencer,
-    Track
+    Track,
+    NoteTrig
 };
 
 typedef struct
@@ -35,15 +36,15 @@ uint8_t getSetPosLocation(NoteName pos)
 {
     switch (pos)
     {
-        case NoteName::C3:
+        case NoteName::C5:
             return 0;
-        case NoteName::_D3:
+        case NoteName::_D5:
             return 1;
-        case NoteName::E3:
+        case NoteName::E5:
             return 2;
-        case NoteName::F3:
+        case NoteName::F5:
             return 3;
-        case NoteName::G3:
+        case NoteName::G5:
             return 4;
     }
     
@@ -82,12 +83,19 @@ void updateCCOuts()
     {
         for (uint8_t i = 0; i < activeChannels; i++)
         {
-            if (!_useCCNumber[i]) { continue; }
+            // if (!_useCCNumber[i]) { continue; }
+            bool uc = _useCCNumber[i];
             Channel* c = &channels[i];
             uint8_t end = c->position + c->places;
             for (uint8_t j = c->position; j < end; j++)
             {
-                ccOutputs[j] = !_pulseSlots[j].enabled;
+                bool pse = !_pulseSlots[j].enabled;
+                ccOutputs[j] = uc && pse;
+                velOutputs[j] = pse && !uc;
+                if (!pse || uc)
+                {
+                    setVelUnchecked(j, 0);
+                }
                 _pulseTimes[j] = 0;
             }
         }
@@ -96,7 +104,14 @@ void updateCCOuts()
     
     for (uint8_t i = 0; i < 5; i++)
     {
-        ccOutputs[i] = _useCCNumber[i] && !_pulseSlots[i].enabled;
+        bool pse = !_pulseSlots[i].enabled;
+        bool uc = _useCCNumber[i];
+        ccOutputs[i] = uc && pse;
+        velOutputs[i] = pse && !uc;
+        if (!pse || uc)
+        {
+            setVelUnchecked(i, 0);
+        }
         _pulseTimes[i] = 0;
     }
 }
@@ -130,6 +145,17 @@ void onArp(uint8_t channel)
     {
         Pulse p = _pulseSlots[i];
         if (!p.enabled || p.source != PulseSource::Arpeggio || p.channel != channel) { continue; }
+        setVelUnchecked(i, 0xFF);
+        _pulseTimes[i] = time;
+    }
+}
+void onNoteGateTrig(uint8_t channel)
+{
+    uint32_t time = millis();
+    for (uint8_t i = 0; i < 5; i++)
+    {
+        Pulse p = _pulseSlots[i];
+        if (!p.enabled || p.source != PulseSource::NoteTrig || p.channel != channel) { continue; }
         setVelUnchecked(i, 0xFF);
         _pulseTimes[i] = time;
     }
@@ -169,7 +195,7 @@ void manageMenuNotes(NoteName n, uint8_t channel)
     if (_setPulseChan)
     {
         // valid digit
-        bool v = addDigit(n, 2);
+        bool v = addDigit(n, 1);
         if (v) { return; }
         if (n != NoteName::G3)
         {
@@ -261,6 +287,10 @@ void manageMenuNotes(NoteName n, uint8_t channel)
             _pulseSlots[channel].source = PulseSource::Arpeggio;
             playNote(NOTEOPTION_S, MF_DURATION);
             return;
+        case NoteName::Eb3:
+            _pulseSlots[channel].source = PulseSource::NoteTrig;
+            playNote(NOTEOPTION_S, MF_DURATION);
+            return;
         case NoteName::E3:
             _pulseSlots[channel].source = PulseSource::Sequencer;
             playNote(NOTEOPTION_S, MF_DURATION);
@@ -277,13 +307,13 @@ void manageMenuNotes(NoteName n, uint8_t channel)
             {
                 uint16_t v = getEnteredValue(_lv_chan);
                 // min tempo
-                if (v > 16 || v < 1)
+                if (v > 5 || v < 1)
                 {
                     playNote(NOTEFAIL_S, MF_DURATION);
                     return;
                 }
                 _lv_chan = v;
-                _pulseSlots[channel].channel = v;
+                _pulseSlots[channel].channel = v - 1;
             }
             playNote(NOTESELECT_S, MF_DURATION);
             return;
@@ -353,7 +383,7 @@ void resetCCMValues()
     {
         _pulseSlots[i] = { false, PulseSource::Sequencer, 0 };
     }
-    _timeOut_Pulse = 5;
+    _timeOut_Pulse = 10;
 }
 
 void saveCCMState()

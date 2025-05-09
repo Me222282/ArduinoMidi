@@ -59,7 +59,11 @@ bool addTrackValue(TrackSequence* t, Note n, uint16_t m)
 bool finaliseTrack(TrackSequence* t)
 {
     uint8_t size = t->tPosition;
-    if (size == 0) { return true; }
+    if (size == 0)
+    {
+        t->current->size = size;
+        return true;
+    }
     if (size < 4) { return false; }
     
     t->current->notes = RESIZE_ARRAY(Note, t->current->notes, size)

@@ -56,6 +56,9 @@ void setup()
     loadCCMState();
     loadSeqState();
     loadVVMState();
+    
+    updateAllPBs();
+    updateCCOuts();
 }
 
 Menu* _cMenu = nullptr;
