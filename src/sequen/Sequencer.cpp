@@ -1204,6 +1204,7 @@ bool _offsetNoteSet = false;
 bool _selectTKOKey = false;
 uint8_t _lastNoteOffset = 1;
 Notes _nOKey = Notes::C;
+bool _maxTrackNotes = false;
 void trackManager(NoteName n, uint8_t vel)
 {
     uint8_t channel = _trackSet.channel;
@@ -1269,6 +1270,8 @@ void trackManager(NoteName n, uint8_t vel)
         // valid digit
         if (addDigit(n, 3)) { return; }
         _offsetNoteSet = false;
+        bool stkok = _selectTKOKey;
+        _selectTKOKey = false;
         uint16_t v = getEnteredValue(_lastNoteOffset);
         if (v > 127)
         {
@@ -1278,7 +1281,7 @@ void trackManager(NoteName n, uint8_t vel)
         _lastNoteOffset = v;
         int8_t offset = _tkInc ? v : -v;
         uint16_t range = _trackSetState == TrackState::AddNotes ? _trackSet.tPosition : _trackSet.current->size;
-        if (_selectTKOKey)
+        if (stkok)
         {
             transposeTrackKey(_trackSet.current, offset, _nOKey, range);
         }
@@ -1286,7 +1289,6 @@ void trackManager(NoteName n, uint8_t vel)
         {
             transposeTrack(_trackSet.current, offset, range);
         }
-        _selectTKOKey = false;
         playNoteC(NOTESELECT_S, channel, MF_DURATION);
         return;
     }
@@ -1311,7 +1313,7 @@ void trackManager(NoteName n, uint8_t vel)
         if (addDigit(n, 3)) { return; }
         if (q != Notes::A)
         {
-            playNote(NOTEFAIL_S, MF_DURATION);
+            playNoteC(NOTEFAIL_S, channel, MF_DURATION);
             return;
         }
     }
@@ -1322,8 +1324,13 @@ void trackManager(NoteName n, uint8_t vel)
     {
         // filter keys
         if (filterKeys && notInKey(n, filter)) { return; }
+        if (_maxTrackNotes)
+        {
+            playNoteC(NOTEFAIL_S, channel, MF_DURATION);
+            return;
+        }
         
-        addTrackValue(&_trackSet, { n, vel }, mod);
+        _maxTrackNotes = addTrackValue(&_trackSet, { n, vel }, mod);
         _trackSet.lastNote = { n, vel };
         playNoteC(n, channel, MF_DURATION);
         return;
@@ -1343,7 +1350,12 @@ void trackManager(NoteName n, uint8_t vel)
             return;
         case Notes::D:
             if (_trackSetState == TrackState::Edit) { return; }
-            addTrackValue(&_trackSet, NOTEOFF, mod);
+            if (_maxTrackNotes)
+            {
+                playNoteC(NOTEFAIL_S, channel, MF_DURATION);
+                return;
+            }
+            _maxTrackNotes = addTrackValue(&_trackSet, NOTEOFF, mod);
             _trackSet.lastNote = NOTEOFF;
             playNoteC(NOTEOPTION_S, channel, MF_DURATION);
             return;
@@ -1355,8 +1367,13 @@ void trackManager(NoteName n, uint8_t vel)
         case Notes::E:
         {
             if (_trackSetState == TrackState::Edit) { return; }
+            if (_maxTrackNotes)
+            {
+                playNoteC(NOTEFAIL_S, channel, MF_DURATION);
+                return;
+            }
             uint8_t pos = _trackSet.tPosition;
-            addTrackValue(&_trackSet, NOTEHOLD, mod);
+            _maxTrackNotes = addTrackValue(&_trackSet, NOTEHOLD, mod);
             if (noteEquals(_trackSet.lastNote, NOTEOFF))
             {
                 playNoteC(NOTEOPTION_S, channel, MF_DURATION);
@@ -1393,7 +1410,7 @@ void trackManager(NoteName n, uint8_t vel)
             if (!_clockDivSet)
             {
                 uint16_t v = getEnteredValue(_lastClockDiv);
-                if (v > 255)
+                if (v > 255 || v == 0)
                 {
                     playNoteC(NOTEFAIL_S, channel, MF_DURATION);
                     return;

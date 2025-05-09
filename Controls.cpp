@@ -44,7 +44,7 @@ uint8_t readControl(uint8_t index)
     }
     
     // num in row before change
-    if (count >= 10)
+    if (count >= 15)
     {
         _cv[index] = value;
         _nc[index] = 0;
