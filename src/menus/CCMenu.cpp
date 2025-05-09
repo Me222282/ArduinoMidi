@@ -99,7 +99,7 @@ void updateCCOuts()
 }
 
 uint32_t _pulseTimes[5];
-uint32_t _timeOut_Pulse;
+uint32_t _timeOut_Pulse = 5;
 
 void onSequence()
 {
@@ -342,12 +342,18 @@ void resetCCMValues()
     ccListeners[2] = 0;
     ccListeners[3] = 0;
     ccListeners[4] = 0;
-    ccOutputs[0] = false;
-    ccOutputs[1] = false;
-    ccOutputs[2] = false;
-    ccOutputs[3] = false;
-    ccOutputs[4] = false;
+    _useCCNumber[0] = false;
+    _useCCNumber[1] = false;
+    _useCCNumber[2] = false;
+    _useCCNumber[3] = false;
+    _useCCNumber[4] = false;
     ccChannelMode = false;
+    
+    for (uint8_t i = 0; i < 5; i++)
+    {
+        _pulseSlots[i] = { false, PulseSource::Sequencer, 0 };
+    }
+    _timeOut_Pulse = 5;
 }
 
 void saveCCMState()
@@ -360,13 +366,20 @@ void saveCCMState()
     setSpaceByte(CC_OUT_NUMBER_4, ccListeners[3]);
     setSpaceByte(CC_OUT_NUMBER_5, ccListeners[4]);
     
-    setSpaceByte(CC_USE_OUT_1, ccOutputs[0]);
-    setSpaceByte(CC_USE_OUT_2, ccOutputs[1]);
-    setSpaceByte(CC_USE_OUT_3, ccOutputs[2]);
-    setSpaceByte(CC_USE_OUT_4, ccOutputs[3]);
-    setSpaceByte(CC_USE_OUT_5, ccOutputs[4]);
+    setSpaceByte(CC_USE_OUT_1, _useCCNumber[0]);
+    setSpaceByte(CC_USE_OUT_2, _useCCNumber[1]);
+    setSpaceByte(CC_USE_OUT_3, _useCCNumber[2]);
+    setSpaceByte(CC_USE_OUT_4, _useCCNumber[3]);
+    setSpaceByte(CC_USE_OUT_5, _useCCNumber[4]);
     
     setSpaceByte(CC_MULTI_CHANNEL, ccChannelMode);
+    
+    for (uint8_t i = 0; i < 5; i++)
+    {
+        Pulse p = _pulseSlots[i];
+        setSpaceData(i, p);
+    }
+    setSpaceInt(77, _timeOut_Pulse);
     
     commitSpace();
     closeDataSpace();
@@ -381,13 +394,19 @@ void loadCCMState()
     ccListeners[3] = getSpaceByte(CC_OUT_NUMBER_4);
     ccListeners[4] = getSpaceByte(CC_OUT_NUMBER_5);
     
-    ccOutputs[0] = getSpaceByte(CC_USE_OUT_1);
-    ccOutputs[1] = getSpaceByte(CC_USE_OUT_2);
-    ccOutputs[2] = getSpaceByte(CC_USE_OUT_3);
-    ccOutputs[3] = getSpaceByte(CC_USE_OUT_4);
-    ccOutputs[4] = getSpaceByte(CC_USE_OUT_5);
+    _useCCNumber[0] = getSpaceByte(CC_USE_OUT_1);
+    _useCCNumber[1] = getSpaceByte(CC_USE_OUT_2);
+    _useCCNumber[2] = getSpaceByte(CC_USE_OUT_3);
+    _useCCNumber[3] = getSpaceByte(CC_USE_OUT_4);
+    _useCCNumber[4] = getSpaceByte(CC_USE_OUT_5);
     
     ccChannelMode = getSpaceByte(CC_MULTI_CHANNEL);
+    
+    for (uint8_t i = 0; i < 5; i++)
+    {
+        _pulseSlots[i] = getSpaceData<Pulse>(i);
+    }
+    _timeOut_Pulse = getSpaceInt(77);
     
     closeDataSpace();
 }
