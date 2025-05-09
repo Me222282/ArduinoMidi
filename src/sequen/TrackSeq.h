@@ -42,7 +42,7 @@ void deleteSequence(TrackSequence* seq);
 bool addTrackValue(TrackSequence* t, Note n, uint16_t m);
 bool finaliseTrack(TrackSequence* t);
 
-void triggerTrackSeq(TrackSequence* t, uint16_t playStep);
+void triggerTrackSeq(TrackSequence* t, uint32_t playStep);
 void modTrackSeq(TrackSequence* t, CubicInput time);
 
 void nextTrack(TrackSequence* t);

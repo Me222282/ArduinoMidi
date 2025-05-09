@@ -177,7 +177,7 @@ bool _setScale = false;
 
 uint8_t _lv_st = 2;
 bool _setST = false;
-void manageMenuNotes(NoteName n, uint8_t channel)
+void manageVMenuNotes(NoteName n, uint8_t channel)
 {
     // enter time - digit must start at 0
     if (_setRateHz)
@@ -413,7 +413,7 @@ void ttMenuFunction()
             {
                 // OFF
                 if (MIDI.getData2() == 0) { return; }
-                manageMenuNotes(MIDI.getNote(), channel);
+                manageVMenuNotes(MIDI.getNote(), channel);
                 return;
             }
             case MidiCode::CC:
@@ -423,14 +423,14 @@ void ttMenuFunction()
     }
 }
 
-Menu _t_Menu;
-void tOpen()
+Menu _v_Menu;
+void vtOpen()
 {
     playNote(NOTESELECT_S, MF_DURATION);
 }
-void tExit()
+void vExit()
 {
-    _t_Menu.active = false;
+    _v_Menu.active = false;
     _setRateHz = false;
     _setRatemHz = false;
     _setScale = false;
@@ -440,6 +440,6 @@ void tExit()
 
 Menu* getVMenu()
 {
-    _t_Menu = { true, ttMenuFunction, tExit, tOpen };
-    return &_t_Menu;
+    _v_Menu = { true, ttMenuFunction, vExit, vtOpen };
+    return &_v_Menu;
 }

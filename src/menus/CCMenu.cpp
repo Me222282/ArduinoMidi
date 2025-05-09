@@ -73,6 +73,9 @@ void setNumber(NoteName pos)
     playNote(NOTESELECT_S, MF_DURATION);
 }
 
+uint32_t _pulseTimes[5];
+uint32_t _timeOut_Pulse = 5;
+
 void updateCCOuts()
 {
     if (ccChannelMode)
@@ -97,9 +100,6 @@ void updateCCOuts()
         _pulseTimes[i] = 0;
     }
 }
-
-uint32_t _pulseTimes[5];
-uint32_t _timeOut_Pulse = 5;
 
 void onSequence()
 {
