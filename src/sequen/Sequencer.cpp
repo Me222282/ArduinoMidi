@@ -1117,6 +1117,22 @@ void seqLoopInvoke()
                 return;
             }
             case MidiCode::Start:
+            {
+                if (_playing)
+                {
+                    Note l0 = _sequences[0].lastNote;
+                    Note l1 = _sequences[1].lastNote;
+                    Note l2 = _sequences[2].lastNote;
+                    Note l3 = _sequences[3].lastNote;
+                    Note l4 = _sequences[4].lastNote;
+                    resetSequence();
+                    _sequences[0].lastNote = l0;
+                    _sequences[1].lastNote = l1;
+                    _sequences[2].lastNote = l2;
+                    _sequences[3].lastNote = l3;
+                    _sequences[4].lastNote = l4;
+                    return;
+                }
                 _playing = true;
                 resetSequence();
                 if (!_seqClocked)
@@ -1125,6 +1141,7 @@ void seqLoopInvoke()
                     modTracks(0);
                 }
                 return;
+            }
             case MidiCode::Continue:
                 _playing = true;
                 return;
