@@ -265,3 +265,22 @@ void updateOtherPorts()
     
     _updateMod(c, c->modulation);
 }
+
+void readChannelMod()
+{
+    if (option)
+    {
+        for (uint8_t i = 0; i < activeChannels; i++)
+        {
+            Channel* c = &channels[i];
+            uint8_t m = readVel(c->position);
+            m <<= 6;
+            c->modulation = m;
+            // slow
+            _updateMod(c, m);
+        }
+        return;
+    }
+    
+    channels[0].modulation = readMod() << 2;
+}

@@ -35,7 +35,6 @@ uint8_t readControl(uint8_t index)
         return value;
     }
     
-    uint8_t count = _nc[index] + 1;
     if (value != _nv[index])
     {
         _nv[index] = value;
@@ -43,6 +42,7 @@ uint8_t readControl(uint8_t index)
         return current;
     }
     
+    uint8_t count = _nc[index] + 1;
     // num in row before change
     if (count >= 15)
     {

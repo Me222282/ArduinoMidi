@@ -58,6 +58,11 @@ void setVel(uint8_t n, uint8_t value)
     
     _dac8(n, value, 0xF000);
 }
+uint8_t readVel(uint8_t n)
+{
+    if (!velOutputs[n]) { return 0; }
+    return oldValues[n].vel;
+}
 void setCCOut(uint8_t n, uint8_t value)
 {
     value <<= 1;
@@ -127,6 +132,7 @@ void setMod(uint16_t value)
     oldMod = value;
     _ic(PITCHDAC3, value, 0xF000);
 }
+uint16_t readMod() { return oldMod; }
 
 void updatePitchBend(uint8_t n)
 {

@@ -106,6 +106,7 @@ void readControls()
         setGate(0);
         updateAllPBs();
         updateCCOuts();
+        readChannelMod();
         if (_cMenu)
         {
             _cMenu->onParamChange();

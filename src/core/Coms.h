@@ -22,6 +22,9 @@ void setVel(uint8_t n, uint8_t value);
 void setCCOut(uint8_t n, uint8_t value);
 void setVelUnchecked(uint8_t n, uint8_t value);
 
+uint8_t readVel(uint8_t n);
+uint16_t readMod();
+
 void _setNoteNorm(uint8_t n, uint8_t value);
 void _setSubNote(uint8_t n, uint8_t value);
 extern void (*setNote)(uint8_t, uint8_t);

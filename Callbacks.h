@@ -23,6 +23,8 @@ void updateAllNotes();
 void updateAllPBs();
 void updateOtherPorts();
 
+void readChannelMod();
+
 #ifdef __cplusplus
 } // extern "C"
 #endif
