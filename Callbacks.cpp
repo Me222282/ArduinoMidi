@@ -273,11 +273,16 @@ void readChannelMod()
         for (uint8_t i = 0; i < activeChannels; i++)
         {
             Channel* c = &channels[i];
-            uint8_t m = readVel(c->position);
-            m <<= 6;
-            c->modulation = m;
-            // slow
-            _updateMod(c, m);
+            uint8_t p = c->position;
+            uint8_t m = readVel(p);
+            c->modulation = m << 6;
+            // // slow
+            // _updateMod(c, m);
+            uint8_t end = p + c->places;
+            for (uint8_t j = p + 1; j < end; j++)
+            {
+                setVel(j, m);
+            }
         }
         return;
     }
