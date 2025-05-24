@@ -1465,9 +1465,9 @@ bool exitTrackEdit()
     // can do it here - must enter note for it not to fail
     _enteredNote = false;
     bool create = _trackSetState == TrackState::AddNotes;
-    if (!_enteredNote ||
+    if (!ent &&
     // cant finish
-        (create && !finaliseTrack(&_trackSet)))
+        create && !finaliseTrack(&_trackSet))
     {
         playNoteC(NOTEFAIL_S, channel, MF_DURATION);
         return false;
