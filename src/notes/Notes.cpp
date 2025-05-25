@@ -197,9 +197,10 @@ NoteList* _losableUNote(Channel* c)
         
         NoteList* next = c->noteEnd;
         // start from top of stack
-        for (nl = next->last; nl; nl = nl->last)
+        for (nl = c->noteEnd->last; nl; nl = nl->last)
         {
             if (nl->index < 0) { return next; }
+            next = nl;
         }
         
         return nullptr;
