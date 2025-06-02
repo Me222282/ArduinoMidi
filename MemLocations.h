@@ -28,6 +28,7 @@ extern "C" {
 #define KEY_FILTER 46
 #define MIDI_CLOCKED_ARP 47
 #define FORGET_NOTES 48
+#define DUPLICATE_NOTES 274
 
 #define ALL_CHANNEL 60
 #define FEEDBACK_ENABLED 61
@@ -82,7 +83,7 @@ extern "C" {
 
 #define TREM_GLOB 273
 
-#define EEPROM_SIZE 274
+#define EEPROM_SIZE 275
 
 #ifdef __cplusplus
 } // extern "C"

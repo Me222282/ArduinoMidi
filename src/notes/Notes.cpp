@@ -1,7 +1,7 @@
 #include <Arduino.h>
 #include "Notes.h"
 
-int8_t _findNextIndex(Channel* c);
+int8_t _findNextIndex(Channel* c, uint8_t key);
 NoteList* _getNextNote(Channel* c);
 NoteList* _getLosableNote(Channel* c, uint8_t key);
 
@@ -9,6 +9,7 @@ bool retriggerNew = true;
 bool retriggerOld = false;
 bool sortNotes = false;
 bool forgetNotes = false;
+bool duplicateRelease = true;
 
 void _add(Channel* c, NoteList* nl)
 {
@@ -34,7 +35,7 @@ int8_t pushNote(Channel* c, uint8_t chI, Note n)
     nl->value = n;
     nl->index = -1;
     
-    int8_t hole = _findNextIndex(c);
+    int8_t hole = _findNextIndex(c, n.key);
     // not all slots are filled yet
     if (hole >= 0)
     {
@@ -42,12 +43,14 @@ int8_t pushNote(Channel* c, uint8_t chI, Note n)
         _add(c, nl);
         nl->index = hole;
         c->locations[hole] = nl;
+        // not an old note
+        c->oldNotes[hole] = 0;
         // trigger note
         gateChannelNote(chI, hole, true);
         return hole;
     }
     
-    // take a use slot
+    // take a used slot
     NoteList* take = _getLosableNote(c, n.key);
     // add to list after slot chosen
     if (take == nullptr)
@@ -96,6 +99,7 @@ int8_t removeNote(Channel* c, uint8_t chI, uint8_t key)
     if (replace == nullptr)
     {
         c->locations[hole] = nullptr;
+        c->oldNotes[hole] = ~key;
         if (!mode1)
         {
             // loop mode slot history
@@ -116,15 +120,29 @@ int8_t removeNote(Channel* c, uint8_t chI, uint8_t key)
 }
 
 // finding next open slot
-int8_t _findNextIndex(Channel* c)
+int8_t _findNextIndex(Channel* c, uint8_t key)
 {
+    uint8_t size = c->voices;
+    
+    if (!duplicateRelease)
+    {
+        // find key if already one of the open slots
+        key = ~key;
+        uint8_t* array = c->oldNotes;
+        for (uint8_t i = 0; i < size; i++)
+        {
+            if (array[i] != key) { continue; }
+            
+            return i;
+        }
+    }
+    
     if (!mode1)
     {
         return pullHistory(&c->history);
     }
     
     NoteList** list = c->locations;
-    uint8_t size = c->voices;
     for (int8_t i = 0; i < size; i++)
     {
         NoteList* nl = list[i];

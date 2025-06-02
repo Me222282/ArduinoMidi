@@ -22,6 +22,8 @@ typedef struct
     NoteList* noteStart;
     NoteList* noteEnd;
     NoteList** locations;
+    // stored as bitwise not of values
+    uint8_t* oldNotes;
     History history;
     
     uint16_t pitchBend;

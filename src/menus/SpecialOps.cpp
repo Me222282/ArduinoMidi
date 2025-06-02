@@ -162,6 +162,10 @@ void manageSpecie(uint8_t channel, NoteName n)
             triggerFeedbackC(v, channel);
             return;
         }
+        case NoteName::Ab4:
+            duplicateRelease = !duplicateRelease;
+            triggerFeedback(duplicateRelease);
+            return;
         case NoteName::_A4:
             sortNotes = !sortNotes;
             triggerFeedback(sortNotes);
@@ -303,6 +307,7 @@ void resetOpsValues()
     filter = Notes::C;
     arpClocked = false;
     forgetNotes = false;
+    duplicateRelease = true;
     allChannelMode = false;
     isMenuFeedback = true;
 }
@@ -329,6 +334,7 @@ void saveOpsState()
     setSpaceByte(KEY_FILTER, filter);
     setSpaceByte(MIDI_CLOCKED_ARP, arpClocked);
     setSpaceByte(FORGET_NOTES, forgetNotes);
+    setSpaceByte(DUPLICATE_NOTES, duplicateRelease);
     setSpaceByte(ALL_CHANNEL, allChannelMode);
     setSpaceByte(FEEDBACK_ENABLED, isMenuFeedback);
     
@@ -360,6 +366,7 @@ void loadOpsState()
     filter = (Notes)getSpaceByte(KEY_FILTER);
     arpClocked = getSpaceByte(MIDI_CLOCKED_ARP);
     forgetNotes = getSpaceByte(FORGET_NOTES);
+    duplicateRelease = getSpaceByte(DUPLICATE_NOTES);
     allChannelMode = getSpaceByte(ALL_CHANNEL);
     isMenuFeedback = getSpaceByte(FEEDBACK_ENABLED);
     

@@ -107,6 +107,7 @@ void initChannel(Channel* c, uint8_t voices, uint8_t index, uint8_t places)
     // c->noteStart = nullptr;
     // c->noteEnd = nullptr;
     c->locations = CREATE_ARRAY(NoteList*, voices);
+    c->oldNotes = CREATE_ARRAY(uint8_t, voices);
     c->voices = voices;
     c->pitchBend = 0x2000;
     c->modulation = 0;
@@ -140,6 +141,11 @@ void clearChannel(Channel* c)
     {
         free(c->locations);
         c->locations = nullptr;
+    }
+    if (c->oldNotes)
+    {
+        free(c->oldNotes);
+        c->oldNotes = nullptr;
     }
     c->position = 0;
     c->places = 0;
