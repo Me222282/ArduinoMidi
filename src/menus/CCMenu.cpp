@@ -50,7 +50,7 @@ uint8_t getSetPosLocation(NoteName pos)
     
     return 255;
 }
-void setNumber(NoteName pos)
+void setNumber(NoteName pos, uint8_t channel)
 {
     if (_ccSetPos != 0 && _ccSetPos != pos) { return; }
     
@@ -70,6 +70,7 @@ void setNumber(NoteName pos)
         }
         _lv_cc = v;
         ccListeners[index] = v;
+        ccListenersChannel[index] = channel;
     }
     playNote(NOTESELECT_S, MF_DURATION);
 }
@@ -262,19 +263,19 @@ void manageMenuNotes(NoteName n, uint8_t channel)
             playNote(NOTEOPTION_S, MF_DURATION);
             return;
         case NoteName::C5:
-            setNumber(n);
+            setNumber(n, channel);
             return;
         case NoteName::_D5:
-            setNumber(n);
+            setNumber(n, channel);
             return;
         case NoteName::E5:
-            setNumber(n);
+            setNumber(n, channel);
             return;
         case NoteName::F5:
-            setNumber(n);
+            setNumber(n, channel);
             return;
         case NoteName::G5:
-            setNumber(n);
+            setNumber(n, channel);
             return;
         
         // PULSE
@@ -372,6 +373,11 @@ void resetCCMValues()
     ccListeners[2] = 0;
     ccListeners[3] = 0;
     ccListeners[4] = 0;
+    ccListenersChannel[0] = 0;
+    ccListenersChannel[1] = 0;
+    ccListenersChannel[2] = 0;
+    ccListenersChannel[3] = 0;
+    ccListenersChannel[4] = 0;
     _useCCNumber[0] = false;
     _useCCNumber[1] = false;
     _useCCNumber[2] = false;
@@ -395,6 +401,12 @@ void saveCCMState()
     setSpaceByte(CC_OUT_NUMBER_3, ccListeners[2]);
     setSpaceByte(CC_OUT_NUMBER_4, ccListeners[3]);
     setSpaceByte(CC_OUT_NUMBER_5, ccListeners[4]);
+    
+    setSpaceByte(CC_OUT_CHANNEL_1, ccListenersChannel[0]);
+    setSpaceByte(CC_OUT_CHANNEL_2, ccListenersChannel[1]);
+    setSpaceByte(CC_OUT_CHANNEL_3, ccListenersChannel[2]);
+    setSpaceByte(CC_OUT_CHANNEL_4, ccListenersChannel[3]);
+    setSpaceByte(CC_OUT_CHANNEL_5, ccListenersChannel[4]);
     
     setSpaceByte(CC_USE_OUT_1, _useCCNumber[0]);
     setSpaceByte(CC_USE_OUT_2, _useCCNumber[1]);
@@ -423,6 +435,12 @@ void loadCCMState()
     ccListeners[2] = getSpaceByte(CC_OUT_NUMBER_3);
     ccListeners[3] = getSpaceByte(CC_OUT_NUMBER_4);
     ccListeners[4] = getSpaceByte(CC_OUT_NUMBER_5);
+    
+    ccListenersChannel[0] = getSpaceByte(CC_OUT_CHANNEL_1);
+    ccListenersChannel[1] = getSpaceByte(CC_OUT_CHANNEL_2);
+    ccListenersChannel[2] = getSpaceByte(CC_OUT_CHANNEL_3);
+    ccListenersChannel[3] = getSpaceByte(CC_OUT_CHANNEL_4);
+    ccListenersChannel[4] = getSpaceByte(CC_OUT_CHANNEL_5);
     
     _useCCNumber[0] = getSpaceByte(CC_USE_OUT_1);
     _useCCNumber[1] = getSpaceByte(CC_USE_OUT_2);

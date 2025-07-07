@@ -27,6 +27,7 @@ void _updateSlot(uint8_t com, Note n)
     }
 }
 uint8_t ccListeners[5];
+uint8_t ccListenersChannel[5];
 
 bool alwaysDelay = false;
 bool filterKeys = false;

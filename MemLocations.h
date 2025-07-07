@@ -38,6 +38,11 @@ extern "C" {
 #define CC_OUT_NUMBER_3 51
 #define CC_OUT_NUMBER_4 52
 #define CC_OUT_NUMBER_5 53
+#define CC_OUT_CHANNEL_1 275
+#define CC_OUT_CHANNEL_2 276
+#define CC_OUT_CHANNEL_3 277
+#define CC_OUT_CHANNEL_4 278
+#define CC_OUT_CHANNEL_5 279
 #define CC_USE_OUT_1 54
 #define CC_USE_OUT_2 55
 #define CC_USE_OUT_3 56

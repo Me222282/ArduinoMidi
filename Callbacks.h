@@ -12,6 +12,7 @@ extern bool filterKeys;
 extern Notes filter;
 
 extern uint8_t ccListeners[5];
+extern uint8_t ccListenersChannel[5];
 
 extern int8_t noteOffsets[5];
 
