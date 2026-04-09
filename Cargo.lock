@@ -9,13 +9,26 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c583acf993cf4245c4acb0a2cc2ab1f9cc097de73411bb6d3647ff6af2b1013d"
 
 [[package]]
+name = "api"
+version = "0.1.0"
+
+[[package]]
 name = "arduino"
 version = "0.1.0"
 dependencies = [
+ "api",
+ "backend",
  "critical-section",
  "esp-alloc",
  "esp-bootloader-esp-idf",
  "esp-hal",
+]
+
+[[package]]
+name = "backend"
+version = "0.1.0"
+dependencies = [
+ "api",
 ]
 
 [[package]]
