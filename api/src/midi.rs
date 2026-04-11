@@ -78,6 +78,40 @@ pub enum QF7
     FPS30
 }
 
+#[repr(u8)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum NoteKey
+{
+    C = Note::C_1,
+    Db = Note::Db_1,
+    D = Note::D_1,
+    Eb = Note::Eb_1,
+    E = Note::E_1,
+    F = Note::F_1,
+    Gb = Note::Gb_1,
+    G = Note::G_1,
+    Ab = Note::Ab_1,
+    A = Note::A_1,
+    Bb = Note::Bb_1,
+    B = Note::B_1
+}
+
+impl NoteKey
+{
+    pub const fn contains_note(self, key: u8) -> bool
+    {
+        let v = (self as u8 + 12 - key) % 12;
+        return !(v == 1 || v == 3 || v == 6 || v == 8 || v == 10);
+    }
+}
+impl PartialEq<u8> for NoteKey
+{
+    fn eq(&self, other: &u8) -> bool
+    {
+        return other % 12 == *self as u8;
+    }
+}
+
 pub struct Note
 {
     pub key: u8,
