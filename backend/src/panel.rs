@@ -24,10 +24,12 @@ pub enum VelFunc
 pub struct Panel
 {
     externals: Externals,
-    state: PanelState,
-    configuration: Configuration,
-    slot_allocations: [(u8, u8); 5],
-    vel_functions: [VelFunc; 5]
+    pub state: PanelState,
+    pub configuration: Configuration,
+    pub slot_allocations: [(u8, u8); 5],
+    pub vel_functions: [VelFunc; 5],
+    vibrato_values: [i16; 16],
+    pdvs: [u16; 16]
 }
 
 impl Panel
@@ -191,6 +193,48 @@ impl Panel
             {
                 (self.externals.set_vel)(i, v);
             }
+        }
+    }
+    pub fn set_pitch_bend(&mut self, channel: u8, value: u16)
+    {
+        unsafe
+        {
+            *self.pdvs.get_unchecked_mut(channel as usize) = value;
+        }
+        let offset = unsafe {
+            *self.vibrato_values.get_unchecked(channel as usize)
+        };
+        
+        // 14 bit to 12 bit
+        let nv = (value >> 2) as isize + offset as isize;
+        let nv = nv.clamp(0, 0xFFF) as u16;
+        
+        for (i, &com) in self.slot_allocations.iter().enumerate()
+        {
+            if com.0 != channel { continue; }
+            
+            (self.externals.set_pitch_bend)(i, nv);
+        }
+    }
+    pub fn set_pb_offset(&mut self, channel: u8, value: i16)
+    {
+        unsafe
+        {
+            *self.vibrato_values.get_unchecked_mut(channel as usize) = value;
+        }
+        let pb_value = unsafe {
+            *self.pdvs.get_unchecked(channel as usize)
+        };
+        
+        // 14 bit to 12 bit
+        let nv = (pb_value >> 2) as isize + value as isize;
+        let nv = nv.clamp(0, 0xFFF) as u16;
+        
+        for (i, &com) in self.slot_allocations.iter().enumerate()
+        {
+            if com.0 != channel { continue; }
+            
+            (self.externals.set_pitch_bend)(i, nv);
         }
     }
     

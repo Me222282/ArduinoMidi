@@ -10,6 +10,22 @@ use api::NoteKey;
 use api::NoteOffset;
 use api::{MidiCode, Note};
 
+// ==========PIPELINE==========
+// Channel Filter
+// Menu
+// Sequencer
+// Arpeggio
+// Channel Redirect
+// Channel Offset
+// KeyNote Filter
+// All Channel Mode
+// Note Voice Processor
+// Slot Allocation
+// Output
+
+// Mutable statics can be used but are unsafe
+// this is ok as the program cannot use multiple threads
+
 pub trait InputListener
 {
     fn on_loop(&mut self);
@@ -120,6 +136,7 @@ pub struct ChannelRedirect
     new_channel: u8
 }
 // channel enabled pre everything, channel redirects are only on note outputs
+// check for no channels enabled
 pub struct ChannelFilter
 {
     enabled: bool,
@@ -141,6 +158,7 @@ pub struct Configuration
     duplicate_release: bool,
     sort_notes: bool,
     all_channel_mode: bool,
+    all_channel_wrap: u8,
     alternate_allocations: bool,
     menu_feedback: bool,
     clocked_arpeggios: bool,

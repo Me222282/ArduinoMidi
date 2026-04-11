@@ -26,6 +26,7 @@ pub struct Externals
     pub set_gate: fn(Gate),
     pub set_note: fn(usize, u8),
     pub set_vel: fn(usize, u8),
+    pub set_pitch_bend: fn(usize, u16),
     pub set_mod: fn(u16),
     
     pub get_time: fn() -> usize
