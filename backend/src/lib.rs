@@ -6,14 +6,17 @@ pub use crate::panel::*;
 mod menus;
 pub use crate::menus::*;
 
+use api::NoteKey;
+use api::NoteOffset;
 use api::{MidiCode, Note};
 
 pub trait InputListener
 {
     fn on_loop(&mut self);
     fn on_note(&mut self, channel: u8, note: Note) -> bool;
+    fn off_note(&mut self, channel: u8, note: Note) { }
     
-    fn on_message(&mut self, message: MidiCode) {}
+    fn on_message(&mut self, message: MidiCode) { }
     fn allow_message(&self, message: MidiCode) -> bool { true }
 }
 
@@ -53,6 +56,13 @@ macro_rules! create_dynamic_input_listener
                     $(Self::$n(t) => t.on_note(channel, note)),+
                 };
             }
+            fn off_note(&mut self, channel: u8, note: Note)
+            {
+                match self
+                {
+                    $(Self::$n(t) => t.off_note(channel, note)),+
+                }
+            }
             
             fn on_message(&mut self, message: MidiCode)
             {
@@ -75,15 +85,63 @@ macro_rules! create_dynamic_input_listener
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum TriggerSource
 {
-    Arpeggio,
-    Note,
-    Sequence,
-    Track
+    Arpeggio(u8),
+    Note(u8),
+    Sequence(u8),
+    Track(u8)
+}
+
+pub enum ArpeggioMode
+{
+    Ascending,
+    Decending,
+    Alternating
+}
+pub struct ArpeggioConfig
+{
+    enabled: bool,
+    time: usize,
+    mode: ArpeggioMode,
+    sort_notes: bool,
+    half_notes: bool
+}
+pub struct Vibrato
+{
+    enabled: bool,
+    function: fn(f32) -> f32,
+    angular_velocity: f32,
+    scale: f32
 }
 
 pub struct Configuration
 {
-    micro_tone: bool
+    retrigger_old: bool,
+    retrigger_new: bool,
+    filter_keys: bool,
+    filter: NoteKey,
+    always_delay: bool,
+    micro_tone: bool,
+    forget_notes: bool,
+    duplicate_release: bool,
+    sort_notes: bool,
+    all_channel_mode: bool,
+    alternate_allocations: bool,
+    menu_feedback: bool,
+    clocked_arpeggios: bool,
+    global_vibrato: bool,
+    per_channel_cc: bool,
+    
+    bar_size: usize,
+    on_bar_trigger: bool,
+    sequencer_tempo_time: usize,
+    
+    // may change to 16
+    arpeggios: [ArpeggioConfig; 5],
+    vibratos: [Vibrato; 5],
+    channel_offsets: [NoteOffset; 5],
+    
+    triggers: [TriggerSource; 5],
+    cc_sources: [u8; 5]
 }
 
 // struct A
