@@ -84,7 +84,8 @@ pub enum MenuState
         digits: u8,
         min: usize,
         max: usize,
-        key: u8
+        key: u8,
+        use_last: bool
     },
     TapTime{
         key: u8
@@ -105,7 +106,8 @@ pub trait Menu
     fn on_tap_time(&mut self, value: usize, key: u8) { }
     fn on_key_select(&mut self, value: usize, key: u8) { }
     
-    fn on_message(&mut self, message: MidiCode) {}
+    fn off_note(&mut self, channel: u8, note: Note) { }
+    fn on_message(&mut self, message: MidiCode) { }
     fn allow_message(&self, message: MidiCode) -> bool { true }
     fn on_loop(&mut self) {}
     
@@ -130,6 +132,7 @@ pub struct MenuWrapper<'a, T: Menu>
     state: MenuState,
     digits: [u8; MAX_DIGITS],
     d_count: u8,
+    last_value: usize,
     time: usize,
     pub menu: T,
     
@@ -144,7 +147,7 @@ impl<'a, T: Menu> MenuWrapper<'a, T>
         match state
         {
             MenuState::TapTime { key: _ } => self.time = self.panel.get_time(),
-            MenuState::Number { digits, min, max, key } =>
+            MenuState::Number { digits, min, max, key, use_last } =>
             {
                 self.d_count = 0;
                 self.digits = [0; 5];
@@ -228,7 +231,7 @@ impl<'a, T: Menu> InputListener for MenuWrapper<'a, T>
                     _ => T::on_note(self, channel, note)
                 }
             },
-            MenuState::Number { digits, min, max, key } =>
+            MenuState::Number { digits, min, max, key, use_last } =>
             {
                 
                 false
@@ -262,6 +265,11 @@ impl<'a, T: Menu> InputListener for MenuWrapper<'a, T>
         self.menu.on_loop();
     }
     
+    #[inline]
+    fn off_note(&mut self, channel: u8, note: Note)
+    {
+        self.menu.off_note(channel, note);
+    }
     #[inline]
     fn on_message(&mut self, message: MidiCode)
     {
