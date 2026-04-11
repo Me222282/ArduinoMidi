@@ -112,13 +112,29 @@ pub struct Vibrato
     angular_velocity: f32,
     scale: f32
 }
+pub struct ChannelRedirect
+{
+    enabled: bool,
+    start: u8,
+    end: u8,
+    new_channel: u8
+}
+// channel enabled pre everything, channel redirects are only on note outputs
+pub struct ChannelFilter
+{
+    enabled: bool,
+    note_filter: NoteKey,
+    filter_keys: bool,
+    redirect1: ChannelRedirect,
+    redirect2: ChannelRedirect
+}
 
 pub struct Configuration
 {
     retrigger_old: bool,
     retrigger_new: bool,
-    filter_keys: bool,
-    filter: NoteKey,
+    // filter_keys: bool,
+    // filter: NoteKey,
     always_delay: bool,
     micro_tone: bool,
     forget_notes: bool,
@@ -131,14 +147,18 @@ pub struct Configuration
     global_vibrato: bool,
     per_channel_cc: bool,
     
+    use_custom_allocations: bool,
+    custom_allocations: [(u8, u8); 5],
+    
     bar_size: usize,
     on_bar_trigger: bool,
     sequencer_tempo_time: usize,
+    clocked_sequencer: bool,
     
-    // may change to 16
-    arpeggios: [ArpeggioConfig; 5],
-    vibratos: [Vibrato; 5],
-    channel_offsets: [NoteOffset; 5],
+    channel_filters: [ChannelFilter; 16],
+    arpeggios: [ArpeggioConfig; 16],
+    vibratos: [Vibrato; 16],
+    channel_offsets: [NoteOffset; 16],
     
     triggers: [TriggerSource; 5],
     cc_sources: [u8; 5]
