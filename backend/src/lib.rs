@@ -6,6 +6,7 @@ pub use crate::panel::*;
 mod menus;
 pub use crate::menus::*;
 
+use api::Channel;
 use api::NoteKey;
 use api::NoteOffset;
 use api::{MidiCode, Note};
@@ -29,8 +30,8 @@ use api::{MidiCode, Note};
 pub trait InputListener
 {
     fn on_loop(&mut self);
-    fn on_note(&mut self, channel: u8, note: Note) -> bool;
-    fn off_note(&mut self, channel: u8, note: Note) { }
+    fn on_note(&mut self, channel: Channel, note: Note) -> bool;
+    fn off_note(&mut self, channel: Channel, note: Note) { }
     
     fn on_message(&mut self, message: MidiCode) { }
     fn allow_message(&self, message: MidiCode) -> bool { true }
@@ -66,14 +67,14 @@ macro_rules! create_dynamic_input_listener
                     $(Self::$n(t) => t.on_loop()),+
                 }
             }
-            fn on_note(&mut self, channel: u8, note: Note) -> bool
+            fn on_note(&mut self, channel: Channel, note: Note) -> bool
             {
                 return match self
                 {
                     $(Self::$n(t) => t.on_note(channel, note)),+
                 };
             }
-            fn off_note(&mut self, channel: u8, note: Note)
+            fn off_note(&mut self, channel: Channel, note: Note)
             {
                 match self
                 {
@@ -102,10 +103,10 @@ macro_rules! create_dynamic_input_listener
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum TriggerSource
 {
-    Arpeggio(u8),
-    Note(u8),
-    Sequence(u8),
-    Track(u8)
+    Arpeggio(Channel),
+    Note(Channel),
+    Sequence(Channel),
+    Track(Channel)
 }
 
 pub enum ArpeggioMode
@@ -134,7 +135,7 @@ pub struct ChannelRedirect
     enabled: bool,
     start: u8,
     end: u8,
-    new_channel: u8
+    new_channel: Channel
 }
 // channel enabled pre everything, channel redirects are only on note outputs
 // check for no channels enabled
@@ -168,7 +169,7 @@ pub struct Configuration
     per_channel_cc: bool,
     
     use_custom_allocations: bool,
-    custom_allocations: [(u8, u8); 5],
+    custom_allocations: [(Channel, u8); 5],
     
     bar_size: usize,
     on_bar_trigger: bool,

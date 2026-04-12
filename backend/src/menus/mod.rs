@@ -1,7 +1,7 @@
 pub mod special_ops;
 pub use special_ops::*;
 
-use api::{Gate, MidiCode, Note};
+use api::{Channel, Gate, MidiCode, Note};
 use crate::{InputListener, Panel};
 
 // macro_rules! create_menu
@@ -85,7 +85,7 @@ macro_rules! menu_toggle
     {{
         let nv = !$value;
         $value = nv;
-        $menu.trigger_feedback(nv);
+        $menu.trigger_feedback(nv, Channel::All);
     }};
 }
 #[macro_export]
@@ -95,7 +95,7 @@ macro_rules! menu_toggle_channel
     {{
         let nv = !$value;
         $value = nv;
-        $menu.trigger_feedback_channel(nv, $channel);
+        $menu.trigger_feedback(nv, $channel);
     }};
 }
 
@@ -108,13 +108,16 @@ pub enum MenuState
         min: usize,
         max: usize,
         key: u8,
+        channel: Channel,
         use_last: bool
     },
     TapTime{
-        key: u8
+        key: u8,
+        channel: Channel
     },
     KeySelect{
-        key: u8
+        key: u8,
+        channel: Channel
     }
 }
 
@@ -124,12 +127,12 @@ pub trait Menu
     fn auto_close() -> bool { return true; }
     fn rsl() -> bool { return true; }
     
-    fn on_note(menu: &mut MenuWrapper<Self>, channel: u8, note: Note) -> bool;
-    fn on_number_input(&mut self, value: usize, channel: u8, key: u8) { }
-    fn on_tap_time(&mut self, value: usize, channel: u8, key: u8) { }
-    fn on_key_select(&mut self, value: usize, channel: u8, key: u8) { }
+    fn on_note(menu: &mut MenuWrapper<Self>, channel: Channel, note: Note) -> bool;
+    fn on_number_input(&mut self, value: usize, channel: Channel, key: u8) { }
+    fn on_tap_time(&mut self, value: usize, channel: Channel, key: u8) { }
+    fn on_key_select(&mut self, value: usize, channel: Channel, key: u8) { }
     
-    fn off_note(&self, channel: u8, note: Note) { }
+    fn off_note(&self, channel: Channel, note: Note) { }
     fn on_message(&self, message: MidiCode) { }
     fn allow_message(&self, message: MidiCode) -> bool { true }
     fn on_loop(&self) {}
@@ -169,8 +172,8 @@ impl<'a, T: Menu> MenuWrapper<'a, T>
     {
         match state
         {
-            MenuState::TapTime { key: _ } => self.time = self.panel.get_time(),
-            MenuState::Number { digits, min, max, key, use_last } =>
+            MenuState::TapTime { key: _, channel } => self.time = self.panel.get_time(),
+            MenuState::Number { digits, min, max, key, channel, use_last } =>
             {
                 self.d_count = 0;
                 self.digits = [0; 5];
@@ -181,35 +184,18 @@ impl<'a, T: Menu> MenuWrapper<'a, T>
     }
     
     #[inline]
-    pub fn trigger_feedback(&mut self, value: bool)
+    pub fn trigger_feedback(&mut self, value: bool, channel: Channel)
     {
         let k = match value
         {
             true => NOTEON,
             false => NOTEOFF
         };
-        self.play_note(k, MF_DURATION);
+        self.play_note(k, MF_DURATION, channel);
     }
-    #[inline]
-    pub fn trigger_feedback_channel(&mut self, value: bool, channel: u8)
+    pub fn play_note(&mut self, key: u8, duration: usize, channel: Channel)
     {
-        let k = match value
-        {
-            true => NOTEON,
-            false => NOTEOFF
-        };
-        self.play_note_channel(k, MF_DURATION, channel);
-    }
-    pub fn play_note(&mut self, key: u8, duration: usize)
-    {
-        let gate = self.panel.output_note(crate::SlotSelect::All, Note::new(key, 100));
-        self.feedback = true;
-        self.feedback_length = duration;
-        self.panel.output_gate(gate);
-        self.feedback_start = self.panel.get_time();
-    }
-    pub fn play_note_channel(&mut self, key: u8, duration: usize, channel: u8)
-    {
+        // output_note accepts Channel::All
         let gate = self.panel.output_note(crate::SlotSelect::Channel(channel), Note::new(key, 100));
         self.feedback = true;
         self.feedback_length = duration;
@@ -220,7 +206,7 @@ impl<'a, T: Menu> MenuWrapper<'a, T>
 
 impl<'a, T: Menu> InputListener for MenuWrapper<'a, T>
 {
-    fn on_note(&mut self, channel: u8, note: Note) -> bool
+    fn on_note(&mut self, channel: Channel, note: Note) -> bool
     {
         return match self.state
         {
@@ -236,35 +222,39 @@ impl<'a, T: Menu> InputListener for MenuWrapper<'a, T>
                     Note::B3 =>
                     {
                         self.menu.reset_values();
-                        self.trigger_feedback(true);
+                        self.trigger_feedback(true, Channel::All);
                         false
                     },
                     Note::Bb4 =>
                     {
                         self.menu.load_values();
-                        self.play_note(NOTEOPTION, MF_DURATION);
+                        self.play_note(NOTEOPTION, MF_DURATION, Channel::All);
                         false
                     },
                     Note::B4 =>
                     {
                         self.menu.save_values();
-                        self.play_note(NOTEOPTION, MF_DURATION);
+                        self.play_note(NOTEOPTION, MF_DURATION, Channel::All);
                         false
                     },
                     _ => T::on_note(self, channel, note)
                 }
             },
-            MenuState::Number { digits, min, max, key, use_last } =>
+            MenuState::Number { digits, min, max, key, channel: cf, use_last } =>
+            {
+                if cf != Channel::All && cf != channel
+                {
+                    self.play_note(NOTEFAIL, MF_DURATION, cf);
+                    return false;
+                }
+                false
+            },
+            MenuState::TapTime { key, channel } =>
             {
                 
                 false
             },
-            MenuState::TapTime { key } =>
-            {
-                
-                false
-            },
-            MenuState::KeySelect { key } =>
+            MenuState::KeySelect { key, channel } =>
             {
                 
                 false
@@ -289,7 +279,7 @@ impl<'a, T: Menu> InputListener for MenuWrapper<'a, T>
     }
     
     #[inline]
-    fn off_note(&mut self, channel: u8, note: Note)
+    fn off_note(&mut self, channel: Channel, note: Note)
     {
         self.menu.off_note(channel, note);
     }

@@ -1,4 +1,4 @@
-use api::Note;
+use api::{Channel, Note};
 
 use crate::{ArpeggioMode, Configuration, MF_DURATION, Menu, MenuState, NOTEOPTION, menu_toggle, menu_toggle_channel};
 
@@ -17,7 +17,7 @@ const SET_TEMPO_KEY: u8 = Note::C3;
 
 impl<'a> Menu for SpecialOpsMenu<'a>
 {
-    fn on_note(menu: &mut super::MenuWrapper<Self>, channel: u8, note: Note) -> bool
+    fn on_note(menu: &mut super::MenuWrapper<Self>, channel: Channel, note: Note) -> bool
     {
         let config = &mut menu.panel.configuration;
         
@@ -25,28 +25,28 @@ impl<'a> Menu for SpecialOpsMenu<'a>
         {
             SET_TEMPO_KEY =>
             {
-                menu.set_state(MenuState::Number { digits: 4, min: 10, max: usize::max_value(), key: note.key, use_last: true });
+                menu.set_state(MenuState::Number { digits: 4, min: 10, max: usize::max_value(), key: note.key, channel, use_last: true });
                 menu.menu.state = State::SetTempo;
             },
             Note::Db3 =>
             {
-                menu.set_state(MenuState::TapTime { key: note.key });
+                menu.set_state(MenuState::TapTime { key: note.key, channel });
                 menu.menu.state = State::TapTempo;
             },
             Note::D3 =>
             {
                 config.arpeggios[channel as usize].mode = ArpeggioMode::Ascending;
-                menu.play_note_channel(NOTEOPTION, MF_DURATION, channel);
+                menu.play_note(NOTEOPTION, MF_DURATION, channel);
             },
             Note::E3 =>
             {
                 config.arpeggios[channel as usize].mode = ArpeggioMode::Decending;
-                menu.play_note_channel(NOTEOPTION, MF_DURATION, channel);
+                menu.play_note(NOTEOPTION, MF_DURATION, channel);
             },
             Note::F3 =>
             {
                 config.arpeggios[channel as usize].mode = ArpeggioMode::Alternating;
-                menu.play_note_channel(NOTEOPTION, MF_DURATION, channel);
+                menu.play_note(NOTEOPTION, MF_DURATION, channel);
             },
             Note::G3 => menu_toggle_channel!(menu, channel, config.arpeggios[channel as usize].sort_notes),
             Note::A3 => menu_toggle_channel!(menu, channel, config.arpeggios[channel as usize].half_notes),
@@ -67,7 +67,7 @@ impl<'a> Menu for SpecialOpsMenu<'a>
         return false;
     }
     
-    fn on_number_input(&mut self, value: usize, channel: u8, key: u8)
+    fn on_number_input(&mut self, value: usize, channel: Channel, key: u8)
     {
         match key
         {

@@ -3,13 +3,13 @@
 
 pub enum MidiCode
 {
-    NoteOFF(u8, Note),
-    NoteON(u8, Note),
-    PolyphonicAftertouch(u8, Note),
-    ControlChange(u8, CCType, u8),
-    ProgramChange(u8, u8),
-    ChannelPressure(u8, u8),
-    PitchWheel(u8, u16),
+    NoteOFF(Channel, Note),
+    NoteON(Channel, Note),
+    PolyphonicAftertouch(Channel, Note),
+    ControlChange(Channel, CCType, u8),
+    ProgramChange(Channel, u8),
+    ChannelPressure(Channel, u8),
+    PitchWheel(Channel, u16),
     
     // SystemExclusiveStart,
     // SystemExclusiveEnd,
@@ -117,6 +117,55 @@ pub struct NoteOffset
 {
     octave: i8,
     semi_tone: i8
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[repr(u8)]
+pub enum Channel
+{
+    C1 = 0,
+    C2 = 1,
+    C3 = 2,
+    C4 = 3,
+    C5 = 4,
+    C6 = 5,
+    C7 = 6,
+    C8 = 7,
+    C9 = 8,
+    C10 = 9,
+    C11 = 10,
+    C12 = 11,
+    C13 = 12,
+    C14 = 13,
+    C15 = 14,
+    C16 = 15,
+    All = 0xFF
+}
+impl Channel
+{
+    fn from_u8(value: u8) -> Channel
+    {
+        return match value
+        {
+            0 => Channel::C1,
+            1 => Channel::C2,
+            2 => Channel::C3,
+            3 => Channel::C4,
+            4 => Channel::C5,
+            5 => Channel::C6,
+            6 => Channel::C7,
+            7 => Channel::C8,
+            8 => Channel::C9,
+            9 => Channel::C10,
+            10 => Channel::C11,
+            11 => Channel::C12,
+            12 => Channel::C13,
+            13 => Channel::C14,
+            14 => Channel::C15,
+            15 => Channel::C16,
+            _ => Channel::All
+        }
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -302,7 +351,7 @@ pub struct MidiParser
     data1: bool,
     data2: bool,
     code: u8,
-    channel: u8,
+    channel: Channel,
     value: u8
 }
 
@@ -359,7 +408,7 @@ impl MidiParser
                     0xC | 0xD => self.data2 = false,
                     _ => return None
                 }
-                self.channel = data & 0b00001111;
+                self.channel = Channel::from_u8(data & 0b00001111);
                 self.code = data & 0b11110000;
             }
             

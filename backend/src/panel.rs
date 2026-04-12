@@ -1,12 +1,12 @@
-use api::{CCType, Gate, Note, Externals, PanelState};
+use api::{CCType, Channel, Externals, Gate, Note, PanelState};
 
 use crate::{Configuration, TriggerSource};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum SlotSelect
 {
-    ChannelVoice(u8, u8),
-    Channel(u8),
+    ChannelVoice(Channel, u8),
+    Channel(Channel),
     Voice(u8),
     Index(u8),
     All
@@ -26,7 +26,7 @@ pub struct Panel
     externals: Externals,
     pub state: PanelState,
     pub configuration: Configuration,
-    pub slot_allocations: [(u8, u8); 5],
+    pub slot_allocations: [(Channel, u8); 5],
     pub vel_functions: [VelFunc; 5],
     vibrato_values: [i16; 16],
     pdvs: [u16; 16]
@@ -50,6 +50,16 @@ impl Panel
                     self.set_vel(i, note.velocity);
                     result.on(i as u8);
                 }
+            },
+            SlotSelect::Channel(Channel::All) | 
+            SlotSelect::All =>
+            {
+                for i in 0..5
+                {
+                    self.set_note(i, note.key);
+                    self.set_vel(i, note.velocity);
+                }
+                result = Gate::all_on();
             },
             SlotSelect::Channel(c) =>
             {
@@ -79,21 +89,12 @@ impl Panel
                 let i = i as usize;
                 self.set_note(i, note.key);
                 self.set_vel(i, note.velocity);
-            },
-            SlotSelect::All =>
-            {
-                for i in 0..5
-                {
-                    self.set_note(i, note.key);
-                    self.set_vel(i, note.velocity);
-                }
-                result = Gate::all_on();
             }
         }
         
         return result;
     }
-    pub fn output_modulation(&self, channel: u8, value: u16)
+    pub fn output_modulation(&self, channel: Channel, value: u16)
     {
         for (i, (&com, vf)) in self.slot_allocations.iter().zip(self.vel_functions).enumerate()
         {
@@ -106,7 +107,7 @@ impl Panel
             }
         }
         
-        if !self.state.modulation && channel == 0
+        if !self.state.modulation && channel == Channel::C1
         {
             // 14 bit to 12 bit
             (self.externals.set_mod)(value >> 2)
@@ -195,7 +196,7 @@ impl Panel
             }
         }
     }
-    pub fn set_pitch_bend(&mut self, channel: u8, value: u16)
+    pub fn set_pitch_bend(&mut self, channel: Channel, value: u16)
     {
         unsafe
         {
@@ -216,7 +217,7 @@ impl Panel
             (self.externals.set_pitch_bend)(i, nv);
         }
     }
-    pub fn set_pb_offset(&mut self, channel: u8, value: i16)
+    pub fn set_pb_offset(&mut self, channel: Channel, value: i16)
     {
         unsafe
         {
