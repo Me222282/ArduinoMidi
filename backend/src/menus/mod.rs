@@ -1,5 +1,7 @@
-use api::{Gate, MidiCode, Note};
+pub mod special_ops;
+pub use special_ops::*;
 
+use api::{Gate, MidiCode, Note};
 use crate::{InputListener, Panel};
 
 // macro_rules! create_menu
@@ -76,6 +78,27 @@ use crate::{InputListener, Panel};
 //     }
 // }
 
+#[macro_export]
+macro_rules! menu_toggle
+{
+    ($menu:ident, $value:expr) =>
+    {{
+        let nv = !$value;
+        $value = nv;
+        $menu.trigger_feedback(nv);
+    }};
+}
+#[macro_export]
+macro_rules! menu_toggle_channel
+{
+    ($menu:ident, $channel:ident, $value:expr) =>
+    {{
+        let nv = !$value;
+        $value = nv;
+        $menu.trigger_feedback_channel(nv, $channel);
+    }};
+}
+
 #[derive(Debug, Clone, Copy)]
 pub enum MenuState
 {
@@ -102,18 +125,18 @@ pub trait Menu
     fn rsl() -> bool { return true; }
     
     fn on_note(menu: &mut MenuWrapper<Self>, channel: u8, note: Note) -> bool;
-    fn on_number_input(&mut self, value: usize, key: u8) { }
-    fn on_tap_time(&mut self, value: usize, key: u8) { }
-    fn on_key_select(&mut self, value: usize, key: u8) { }
+    fn on_number_input(&mut self, value: usize, channel: u8, key: u8) { }
+    fn on_tap_time(&mut self, value: usize, channel: u8, key: u8) { }
+    fn on_key_select(&mut self, value: usize, channel: u8, key: u8) { }
     
-    fn off_note(&mut self, channel: u8, note: Note) { }
-    fn on_message(&mut self, message: MidiCode) { }
+    fn off_note(&self, channel: u8, note: Note) { }
+    fn on_message(&self, message: MidiCode) { }
     fn allow_message(&self, message: MidiCode) -> bool { true }
-    fn on_loop(&mut self) {}
+    fn on_loop(&self) {}
     
-    fn reset_values(&mut self);
-    fn save_values(&mut self);
-    fn load_values(&mut self);
+    fn reset_values(&self);
+    fn save_values(&self);
+    fn load_values(&self);
 }
 
 pub const MAX_DIGITS: usize = 5;

@@ -36,6 +36,7 @@ pub trait InputListener
     fn allow_message(&self, message: MidiCode) -> bool { true }
 }
 
+#[macro_export]
 macro_rules! create_dynamic_input_listener
 {
     ($visability:vis $name:ident: $($n:ident => $t:ty),+) =>
@@ -158,6 +159,7 @@ pub struct Configuration
     duplicate_release: bool,
     sort_notes: bool,
     all_channel_mode: bool,
+    all_channel_pd: bool,
     all_channel_wrap: u8,
     alternate_allocations: bool,
     menu_feedback: bool,
