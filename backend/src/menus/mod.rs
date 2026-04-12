@@ -1,7 +1,7 @@
 pub mod special_ops;
 pub use special_ops::*;
 
-use api::{Channel, Gate, MidiCode, Note};
+use api::{Channel, Gate, MidiCode, Note, NoteKey};
 use crate::{InputListener, Panel};
 
 // macro_rules! create_menu
@@ -130,7 +130,7 @@ pub trait Menu
     fn on_note(menu: &mut MenuWrapper<Self>, channel: Channel, note: Note) -> bool;
     fn on_number_input(&mut self, value: usize, channel: Channel, key: u8) { }
     fn on_tap_time(&mut self, value: usize, channel: Channel, key: u8) { }
-    fn on_key_select(&mut self, value: usize, channel: Channel, key: u8) { }
+    fn on_key_select(&mut self, value: NoteKey, channel: Channel, key: u8) { }
     
     fn off_note(&self, channel: Channel, note: Note) { }
     fn on_message(&self, message: MidiCode) { }
@@ -172,12 +172,21 @@ impl<'a, T: Menu> MenuWrapper<'a, T>
     {
         match state
         {
-            MenuState::TapTime { key: _, channel } => self.time = self.panel.get_time(),
+            MenuState::TapTime { key: _, channel } =>
+            {
+                self.time = self.panel.get_time();
+                self.play_note(NOTEOPTION, MF_DURATION_SHORT, channel);
+            },
             MenuState::Number { digits, min, max, key, channel, use_last } =>
             {
                 self.d_count = 0;
                 self.digits = [0; 5];
+                self.play_note(NOTESELECT, MF_DURATION, channel);
             },
+            MenuState::KeySelect { key, channel } =>
+            {
+                self.play_note(NOTESELECT, MF_DURATION, channel);
+            }
             _ => {}
         }
         self.state = state;
