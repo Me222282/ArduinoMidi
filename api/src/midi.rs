@@ -115,8 +115,8 @@ impl PartialEq<u8> for NoteKey
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct NoteOffset
 {
-    octave: i8,
-    semi_tone: i8
+    pub octave: i8,
+    pub semi_tone: i8
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

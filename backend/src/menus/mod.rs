@@ -1,8 +1,9 @@
 pub mod special_ops;
-use core::ops::{RangeBounds, RangeInclusive};
-
 pub use special_ops::*;
+pub mod vibrato;
+pub use vibrato::*;
 
+use core::ops::RangeBounds;
 use api::{Channel, Gate, MidiCode, Note, NoteKey};
 use crate::{InputListener, Panel};
 
