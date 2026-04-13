@@ -1,10 +1,11 @@
 use api::{Channel, Note, NoteKey};
 
-use crate::{ArpeggioMode, Configuration, MF_DURATION, Menu, MenuState, NOTEOPTION, menu_toggle, menu_toggle_channel};
+use crate::{ArpeggioMode, Configuration, MF_DURATION, Menu, MenuState, NOTEOPTION, menu_toggle, menu_toggle_channel, value_or_last};
 
 pub struct SpecialOpsMenu<'a>
 {
-    config: &'a mut Configuration
+    config: &'a mut Configuration,
+    tempo_lv: usize
 }
 
 const SET_TEMPO_KEY: u8 = Note::C3;
@@ -21,7 +22,7 @@ impl<'a> Menu for SpecialOpsMenu<'a>
         
         match note.key
         {
-            SET_TEMPO_KEY => menu.set_state(MenuState::number(4, 10.., note.key, channel, true)),
+            SET_TEMPO_KEY => menu.set_state(MenuState::number(4, 10.., note.key, channel)),
             TAP_TEMPO_KEY => menu.set_state(MenuState::TapTime { key: note.key, channel }),
             Note::D3 =>
             {
@@ -60,11 +61,11 @@ impl<'a> Menu for SpecialOpsMenu<'a>
         return false;
     }
     
-    fn on_number_input(&mut self, value: usize, channel: Channel, key: u8)
+    fn on_number_input(&mut self, value: Option<usize>, channel: Channel, key: u8)
     {
         match key
         {
-            SET_TEMPO_KEY => self.config.arpeggios[channel as usize].time = value,
+            SET_TEMPO_KEY => self.config.arpeggios[channel as usize].time = value_or_last!(value, self.tempo_lv),
             _ => {}
         }
     }

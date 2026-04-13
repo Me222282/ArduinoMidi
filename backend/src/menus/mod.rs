@@ -101,6 +101,16 @@ macro_rules! menu_toggle_channel
         $menu.trigger_feedback(nv, $channel);
     }};
 }
+#[macro_export]
+macro_rules! value_or_last
+{
+    ($op:expr, $last:expr) =>
+    {{
+        let v = $op.unwrap_or($last);
+        $last = v;
+        v
+    }};
+}
 
 #[derive(Debug, Clone, Copy)]
 pub enum MenuState
@@ -111,8 +121,7 @@ pub enum MenuState
         min: usize,
         max: usize,
         key: u8,
-        channel: Channel,
-        use_last: bool
+        channel: Channel
     },
     TapTime{
         key: u8,
@@ -125,7 +134,7 @@ pub enum MenuState
 }
 impl MenuState
 {
-    pub fn number<R: RangeBounds<usize>>(digits: u8, range: R, key: u8, channel: Channel, use_last: bool) -> MenuState
+    pub fn number<R: RangeBounds<usize>>(digits: u8, range: R, key: u8, channel: Channel) -> MenuState
     {
         let min = match range.start_bound()
         {
@@ -139,7 +148,7 @@ impl MenuState
             core::ops::Bound::Excluded(v) => *v - 1,
             core::ops::Bound::Unbounded => usize::MAX,
         };
-        return MenuState::Number { digits, min, max, key, channel, use_last }
+        return MenuState::Number { digits, min, max, key, channel }
     }
 }
 
@@ -150,7 +159,7 @@ pub trait Menu
     fn rsl() -> bool { return true; }
     
     fn on_note(menu: &mut MenuWrapper<Self>, channel: Channel, note: Note) -> bool;
-    fn on_number_input(&mut self, value: usize, channel: Channel, key: u8) { }
+    fn on_number_input(&mut self, value: Option<usize>, channel: Channel, key: u8) { }
     fn on_tap_time(&mut self, value: usize, channel: Channel, key: u8) { }
     fn on_key_select(&mut self, value: NoteKey, channel: Channel, key: u8) { }
     
@@ -180,7 +189,6 @@ pub struct MenuWrapper<'a, T: Menu>
     state: MenuState,
     digits: [u8; MAX_DIGITS],
     d_count: u8,
-    last_value: usize,
     time: usize,
     pub menu: T,
     
@@ -199,7 +207,7 @@ impl<'a, T: Menu> MenuWrapper<'a, T>
                 self.time = self.panel.get_time();
                 self.play_note(NOTEOPTION, MF_DURATION_SHORT, channel);
             },
-            MenuState::Number { digits, min, max, key, channel, use_last } =>
+            MenuState::Number { digits, min, max, key, channel } =>
             {
                 self.d_count = 0;
                 self.digits = [0; 5];
@@ -271,7 +279,7 @@ impl<'a, T: Menu> InputListener for MenuWrapper<'a, T>
                     _ => T::on_note(self, channel, note)
                 }
             },
-            MenuState::Number { digits, min, max, key, channel: cf, use_last } =>
+            MenuState::Number { digits, min, max, key, channel: cf } =>
             {
                 if cf != Channel::All && cf != channel
                 {
