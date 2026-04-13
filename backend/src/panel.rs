@@ -17,7 +17,7 @@ pub enum VelFunc
 {
     Velocity,
     Modulation,
-    CC(CCType),
+    CC(CCType, Channel),
     Trigger(TriggerSource)
 }
 
@@ -28,6 +28,7 @@ pub struct Panel
     pub configuration: Configuration,
     pub slot_allocations: [(Channel, u8); 5],
     pub vel_functions: [VelFunc; 5],
+    cc_enabled: [bool; 5],
     vibrato_values: [i16; 16],
     pdvs: [u16; 16]
 }
@@ -113,7 +114,7 @@ impl Panel
             (self.externals.set_mod)(value >> 2)
         }
     }
-    pub fn output_control_change(&self, slots: SlotSelect, cc: CCType, value: u8)
+    pub fn output_control_change(&self, slots: SlotSelect, cc: CCType, channel: Channel, value: u8)
     {
         match slots
         {
@@ -123,7 +124,7 @@ impl Panel
                 {
                     if com != (c, v) { continue; }
                     
-                    if vf == VelFunc::CC(cc)
+                    if vf == VelFunc::CC(cc, channel)
                     {
                         // 7 bit to 8 bit
                         (self.externals.set_vel)(i, value << 1);
@@ -136,7 +137,7 @@ impl Panel
                 {
                     if com.0 != c { continue; }
                     
-                    if vf == VelFunc::CC(cc)
+                    if vf == VelFunc::CC(cc, channel)
                     {
                         // 7 bit to 8 bit
                         (self.externals.set_vel)(i, value << 1);
@@ -149,7 +150,7 @@ impl Panel
                 {
                     if com.1 != v { continue; }
                     
-                    if vf == VelFunc::CC(cc)
+                    if vf == VelFunc::CC(cc, channel)
                     {
                         // 7 bit to 8 bit
                         (self.externals.set_vel)(i, value << 1);
@@ -161,7 +162,7 @@ impl Panel
                 let i = i as usize;
                 unsafe
                 {
-                    if self.vel_functions.get_unchecked(i) == &VelFunc::CC(cc)
+                    if self.vel_functions.get_unchecked(i) == &VelFunc::CC(cc, channel)
                     {
                         // 7 bit to 8 bit
                         (self.externals.set_vel)(i, value << 1);
@@ -172,7 +173,7 @@ impl Panel
             {
                 for (i, vf) in (0..5).zip(self.vel_functions)
                 {
-                    if vf == VelFunc::CC(cc)
+                    if vf == VelFunc::CC(cc, channel)
                     {
                         // 7 bit to 8 bit
                         (self.externals.set_vel)(i, value << 1);
@@ -319,6 +320,85 @@ impl Panel
         {
             // 7 bit to 12 bit
             (self.externals.set_mod)((value as u16) << 5)
+        }
+    }
+    
+    pub fn toggle_trigger(&mut self, slot: usize) -> bool
+    {
+        let vs = &mut self.vel_functions[slot];
+        if let VelFunc::Trigger(_) = vs
+        {
+            if self.cc_enabled[slot]
+            {
+                let cc = self.configuration.cc_sources[5];
+                self.vel_functions[slot] = VelFunc::CC(cc.0, cc.1);
+            }
+            else if self.state.modulation
+            {
+                self.vel_functions[slot] = VelFunc::Modulation;
+            }
+            else
+            {
+                self.vel_functions[slot] = VelFunc::Velocity;
+            }
+            return false;
+        }
+        
+        *vs = VelFunc::Trigger(self.configuration.triggers[5]);
+        return true;
+    }
+    // set source without channel
+    pub fn set_trigger(&mut self, slot: usize, mut source: TriggerSource)
+    {
+        let ts = &mut self.configuration.triggers[slot];
+        source.set_channel(ts.get_channel());
+        
+        *ts = source;
+        if let VelFunc::Trigger(s) = &mut self.vel_functions[slot]
+        {
+            *s = source;
+        }
+    }
+    pub fn set_trigger_channel(&mut self, slot: usize, channel: Channel)
+    {
+        let trig = &mut self.configuration.triggers[slot];
+        trig.set_channel(channel);
+        if let VelFunc::Trigger(s) = &mut self.vel_functions[slot]
+        {
+            *s = *trig;
+        }
+    }
+    pub fn toggle_cc(&mut self, slot: usize) -> bool
+    {
+        let enabled = !self.cc_enabled[slot];
+        self.cc_enabled[slot] = enabled;
+        if enabled
+        {
+            if let VelFunc::Trigger(_) = self.vel_functions[slot]
+            {
+                return enabled;
+            }
+            let cc = self.configuration.cc_sources[5];
+            self.vel_functions[slot] = VelFunc::CC(cc.0, cc.1);
+        }
+        else if self.state.modulation
+        {
+            self.vel_functions[slot] = VelFunc::Modulation;
+        }
+        else
+        {
+            self.vel_functions[slot] = VelFunc::Velocity;
+        }
+        
+        return enabled;
+    }
+    pub fn set_cc(&mut self, slot: usize, source: CCType, channel: Channel)
+    {
+        self.configuration.cc_sources[slot] = (source, channel);
+        if let VelFunc::CC(s, c) = &mut self.vel_functions[slot]
+        {
+            *s = source;
+            *c = channel;
         }
     }
 }

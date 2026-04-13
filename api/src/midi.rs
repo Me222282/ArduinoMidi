@@ -119,7 +119,7 @@ pub struct NoteOffset
     pub semi_tone: i8
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 #[repr(u8)]
 pub enum Channel
 {
@@ -143,7 +143,7 @@ pub enum Channel
 }
 impl Channel
 {
-    fn from_u8(value: u8) -> Channel
+    pub fn from_u8(value: u8) -> Channel
     {
         return match value
         {

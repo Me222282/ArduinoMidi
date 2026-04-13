@@ -2,6 +2,8 @@ pub mod special_ops;
 pub use special_ops::*;
 pub mod vibrato;
 pub use vibrato::*;
+pub mod program_ports;
+pub use program_ports::*;
 
 use core::ops::RangeBounds;
 use api::{Channel, Gate, MidiCode, Note, NoteKey};

@@ -6,6 +6,7 @@ pub use crate::panel::*;
 mod menus;
 pub use crate::menus::*;
 
+use api::CCType;
 use api::Channel;
 use api::NoteKey;
 use api::NoteOffset;
@@ -108,6 +109,29 @@ pub enum TriggerSource
     Sequence(Channel),
     Track(Channel)
 }
+impl TriggerSource
+{
+    pub fn set_channel(&mut self, channel: Channel)
+    {
+        match self
+        {
+            TriggerSource::Arpeggio(cv) => *cv = channel,
+            TriggerSource::Note(cv) => *cv = channel,
+            TriggerSource::Sequence(cv) => *cv = channel,
+            TriggerSource::Track(cv) => *cv = channel
+        }
+    }
+    pub fn get_channel(self) -> Channel
+    {
+        return match self
+        {
+            TriggerSource::Arpeggio(channel) => channel,
+            TriggerSource::Note(channel) => channel,
+            TriggerSource::Sequence(channel) => channel,
+            TriggerSource::Track(channel) => channel
+        };
+    }
+}
 
 pub enum ArpeggioMode
 {
@@ -167,6 +191,7 @@ pub struct Configuration
     clocked_arpeggios: bool,
     global_vibrato: bool,
     per_channel_cc: bool,
+    pulse_length: usize,
     
     use_custom_allocations: bool,
     custom_allocations: [(Channel, u8); 5],
@@ -182,7 +207,7 @@ pub struct Configuration
     channel_offsets: [NoteOffset; 16],
     
     triggers: [TriggerSource; 5],
-    cc_sources: [u8; 5]
+    cc_sources: [(CCType, Channel); 5]
 }
 
 // struct A
