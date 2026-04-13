@@ -1,4 +1,6 @@
 pub mod special_ops;
+use core::ops::{RangeBounds, RangeInclusive};
+
 pub use special_ops::*;
 
 use api::{Channel, Gate, MidiCode, Note, NoteKey};
@@ -118,6 +120,25 @@ pub enum MenuState
     KeySelect{
         key: u8,
         channel: Channel
+    }
+}
+impl MenuState
+{
+    pub fn number<R: RangeBounds<usize>>(digits: u8, range: R, key: u8, channel: Channel, use_last: bool) -> MenuState
+    {
+        let min = match range.start_bound()
+        {
+            core::ops::Bound::Included(v) => *v,
+            core::ops::Bound::Excluded(v) => *v + 1,
+            core::ops::Bound::Unbounded => usize::MIN,
+        };
+        let max = match range.end_bound()
+        {
+            core::ops::Bound::Included(v) => *v,
+            core::ops::Bound::Excluded(v) => *v - 1,
+            core::ops::Bound::Unbounded => usize::MAX,
+        };
+        return MenuState::Number { digits, min, max, key, channel, use_last }
     }
 }
 

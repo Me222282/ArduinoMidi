@@ -21,7 +21,7 @@ impl<'a> Menu for SpecialOpsMenu<'a>
         
         match note.key
         {
-            SET_TEMPO_KEY => menu.set_state(MenuState::Number { digits: 4, min: 10, max: usize::max_value(), key: note.key, channel, use_last: true }),
+            SET_TEMPO_KEY => menu.set_state(MenuState::number(4, 10.., note.key, channel, true)),
             TAP_TEMPO_KEY => menu.set_state(MenuState::TapTime { key: note.key, channel }),
             Note::D3 =>
             {
