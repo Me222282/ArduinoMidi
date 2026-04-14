@@ -114,7 +114,7 @@ macro_rules! value_or_last
     }};
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum MenuState
 {
     Listening,
@@ -200,6 +200,23 @@ pub struct MenuWrapper<'a, T: Menu>
 }
 impl<'a, T: Menu> MenuWrapper<'a, T>
 {
+    pub fn on_reset_switch(&mut self) -> bool
+    {
+        if self.state == MenuState::Listening
+        {
+            if T::auto_close()
+            {
+                return true;
+            }
+            
+            return false;
+        }
+        
+        self.state = MenuState::Listening;
+        self.play_note(NOTEFAIL, MF_DURATION, Channel::All);
+        return false;
+    }
+    
     pub fn set_state(&mut self, state: MenuState)
     {
         match state
