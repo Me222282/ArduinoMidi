@@ -3,6 +3,9 @@
 mod midi;
 pub use crate::midi::*;
 
+mod data;
+pub use crate::data::*;
+
 pub enum InputMode
 {
     TakeFirst,
@@ -33,10 +36,7 @@ pub struct Externals
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct Gate
-{
-    value: u8
-}
+pub struct Gate(pub(crate) u8);
 
 impl Gate
 {
@@ -50,36 +50,36 @@ impl Gate
     }
     pub fn on(self, bit: u8) -> Gate
     {
-        return Gate { value: self.value | 1 << bit };
+        return Gate(self.0 | 1 << bit);
     }
     pub fn off(self, bit: u8) -> Gate
     {
-        return Gate { value: self.value & !(1 << bit) };
+        return Gate(self.0 & !(1 << bit));
     }
     pub fn get(&self, bit: u8) -> bool
     {
-        return (self.value & 1 << bit) > 0;
+        return (self.0 & 1 << bit) > 0;
     }
     
     pub const fn zero() -> Gate
     {
-        return Gate { value: 0 };
+        return Gate(0);
     }
     pub const fn all_on() -> Gate
     {
-        return Gate { value: 0b00011111 };
+        return Gate(0b00011111);
     }
     pub const fn new(value: u8) -> Gate
     {
-        return Gate { value };
+        return Gate(value);
     }
     
     pub const fn invert(self) -> Gate
     {
-        return Gate { value: !self.value };
+        return Gate(!self.0);
     }
     pub const fn mask(self, mask: Gate) -> Gate
     {
-        return Gate { value: self.value & mask.value };
+        return Gate(self.0 & mask.0);
     }
 }
