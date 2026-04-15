@@ -2,6 +2,7 @@
 
 use crate::{Channel, Note};
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum MidiCode
 {
     NoteOFF(Channel, Note),
@@ -28,6 +29,7 @@ pub enum MidiCode
     Reset
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum QFData
 {
     FramesLSN(u8),
@@ -71,6 +73,7 @@ impl QFData
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum QF7
 {
     FPS24,

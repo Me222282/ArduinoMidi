@@ -330,7 +330,7 @@ impl Panel
         {
             if self.cc_enabled[slot]
             {
-                let cc = self.configuration.cc_sources[5];
+                let cc = self.configuration.cc_sources[slot];
                 self.vel_functions[slot] = VelFunc::CC(cc.0, cc.1);
             }
             else if self.state.modulation
@@ -344,7 +344,7 @@ impl Panel
             return false;
         }
         
-        *vs = VelFunc::Trigger(self.configuration.triggers[5]);
+        *vs = VelFunc::Trigger(self.configuration.triggers[slot]);
         return true;
     }
     // set source without channel
@@ -378,7 +378,7 @@ impl Panel
             {
                 return enabled;
             }
-            let cc = self.configuration.cc_sources[5];
+            let cc = self.configuration.cc_sources[slot];
             self.vel_functions[slot] = VelFunc::CC(cc.0, cc.1);
         }
         else if self.state.modulation

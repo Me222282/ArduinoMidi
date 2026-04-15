@@ -1,10 +1,9 @@
 use api::{Channel, Note, NoteKey};
 
-use crate::{ArpeggioMode, Configuration, MF_DURATION, Menu, MenuState, NOTEOPTION, menu_toggle, menu_toggle_channel, value_or_last};
+use crate::{ArpeggioMode, Panel, MF_DURATION, Menu, MenuState, NOTEOPTION, menu_toggle, menu_toggle_channel, value_or_last};
 
-pub struct SpecialOpsMenu<'a>
+pub struct SpecialOpsMenu
 {
-    config: &'a mut Configuration,
     tempo_lv: usize
 }
 
@@ -12,18 +11,19 @@ const SET_TEMPO_KEY: u8 = Note::C3;
 const TAP_TEMPO_KEY: u8 = Note::Db3;
 const FILTER_SELECT_KEY: u8 = Note::Eb4;
 
-impl<'a> Menu for SpecialOpsMenu<'a>
+impl Menu for SpecialOpsMenu
 {
-    fn on_note(menu: &mut super::MenuWrapper<Self>, channel: Channel, note: Note) -> bool
+    fn on_note(mut menu: super::MenuInst<Self>, channel: Channel, note: Note) -> MenuState
     {
         let config = &mut menu.panel.configuration;
         
         // TODO: factory reset key
         
+        let mut state = MenuState::Listening;
         match note.key
         {
-            SET_TEMPO_KEY => menu.set_state(MenuState::number(4, 10.., note.key, channel)),
-            TAP_TEMPO_KEY => menu.set_state(MenuState::TapTime { key: note.key, channel }),
+            SET_TEMPO_KEY => state = MenuState::number(4, 10.., note.key, channel),
+            TAP_TEMPO_KEY => state = MenuState::TapTime { key: note.key, channel },
             Note::D3 =>
             {
                 config.arpeggios[channel as usize].mode = ArpeggioMode::Ascending;
@@ -45,7 +45,7 @@ impl<'a> Menu for SpecialOpsMenu<'a>
             Note::C4 => menu_toggle!(menu, config.retrigger_old),
             Note::Db4 => menu_toggle_channel!(menu, channel, config.channel_filters[channel as usize].filter_keys),
             Note::D4 => menu_toggle!(menu, config.retrigger_new),
-            FILTER_SELECT_KEY => menu.set_state(MenuState::KeySelect { key: note.key, channel }),
+            FILTER_SELECT_KEY => state = MenuState::KeySelect { key: note.key, channel },
             Note::E4 => menu_toggle!(menu, config.always_delay),
             Note::F4 => menu_toggle!(menu, config.micro_tone),
             Note::Gb4 => menu_toggle!(menu, config.forget_notes),
@@ -58,30 +58,30 @@ impl<'a> Menu for SpecialOpsMenu<'a>
             _ => {}
         }
         
-        return false;
+        return state;
     }
     
-    fn on_number_input(&mut self, value: Option<usize>, channel: Channel, key: u8)
+    fn on_number_input(&mut self, panel: &mut Panel, value: Option<usize>, channel: Channel, key: u8)
     {
         match key
         {
-            SET_TEMPO_KEY => self.config.arpeggios[channel as usize].time = value_or_last!(value, self.tempo_lv),
+            SET_TEMPO_KEY => panel.configuration.arpeggios[channel as usize].time = value_or_last!(value, self.tempo_lv),
             _ => {}
         }
     }
-    fn on_tap_time(&mut self, value: usize, channel: Channel, key: u8)
+    fn on_tap_time(&mut self, panel: &mut Panel, value: usize, channel: Channel, key: u8)
     {
         match key
         {
-            TAP_TEMPO_KEY => self.config.arpeggios[channel as usize].time = value,
+            TAP_TEMPO_KEY => panel.configuration.arpeggios[channel as usize].time = value,
             _ => {}
         }
     }
-    fn on_key_select(&mut self, value: NoteKey, channel: Channel, key: u8)
+    fn on_key_select(&mut self, panel: &mut Panel, value: NoteKey, channel: Channel, key: u8)
     {
         match key
         {
-            FILTER_SELECT_KEY => self.config.channel_filters[channel as usize].note_filter = value,
+            FILTER_SELECT_KEY => panel.configuration.channel_filters[channel as usize].note_filter = value,
             _ => {}
         }
     }

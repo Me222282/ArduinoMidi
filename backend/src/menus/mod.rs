@@ -132,7 +132,8 @@ pub enum MenuState
     KeySelect{
         key: u8,
         channel: Channel
-    }
+    },
+    Exit
 }
 impl MenuState
 {
@@ -154,16 +155,40 @@ impl MenuState
     }
 }
 
+pub struct MenuInst<'a, T: Menu>
+{
+    pub panel: &'a mut Panel,
+    mw: &'a mut MenuWrapper<T>
+}
+impl<'a, T: Menu> MenuInst<'a, T>
+{
+    fn new(panel: &'a mut Panel, mw: &'a mut MenuWrapper<T>) -> Self
+    {
+        return MenuInst { panel, mw };
+    }
+    
+    #[inline]
+    pub fn trigger_feedback(&mut self, value: bool, channel: Channel)
+    {
+        self.mw.trigger_feedback(self.panel, value, channel);
+    }
+    #[inline]
+    pub fn play_note(&mut self, key: u8, duration: usize, channel: Channel)
+    {
+        self.mw.play_note(self.panel, key, duration, channel);
+    }
+}
+
 pub trait Menu
     where Self: Sized
 {
     fn auto_close() -> bool { return true; }
     fn rsl() -> bool { return true; }
     
-    fn on_note(menu: &mut MenuWrapper<Self>, channel: Channel, note: Note) -> bool;
-    fn on_number_input(&mut self, value: Option<usize>, channel: Channel, key: u8) { }
-    fn on_tap_time(&mut self, value: usize, channel: Channel, key: u8) { }
-    fn on_key_select(&mut self, value: NoteKey, channel: Channel, key: u8) { }
+    fn on_note(menu: MenuInst<Self>, channel: Channel, note: Note) -> MenuState;
+    fn on_number_input(&mut self, panel: &mut Panel, value: Option<usize>, channel: Channel, key: u8) { }
+    fn on_tap_time(&mut self, panel: &mut Panel, value: usize, channel: Channel, key: u8) { }
+    fn on_key_select(&mut self, panel: &mut Panel, value: NoteKey, channel: Channel, key: u8) { }
     
     fn off_note(&self, channel: Channel, note: Note) { }
     fn on_message(&self, message: MidiCode) { }
@@ -185,9 +210,9 @@ pub const NOTEOPTION: u8 = Note::G4;
 pub const MF_DURATION: usize = 125;
 pub const MF_DURATION_SHORT: usize = 75;
 
-pub struct MenuWrapper<'a, T: Menu>
+pub struct MenuWrapper<T: Menu>
 {
-    pub panel: &'a mut Panel,
+    // pub panel: &'a mut Panel,
     state: MenuState,
     digits: [u8; MAX_DIGITS],
     d_count: u8,
@@ -198,9 +223,9 @@ pub struct MenuWrapper<'a, T: Menu>
     feedback_start: usize,
     feedback_length: usize
 }
-impl<'a, T: Menu> MenuWrapper<'a, T>
+impl<T: Menu> MenuWrapper<T>
 {
-    pub fn on_reset_switch(&mut self) -> bool
+    pub fn on_reset_switch(&mut self, panel: &Panel) -> bool
     {
         if self.state == MenuState::Listening
         {
@@ -213,58 +238,64 @@ impl<'a, T: Menu> MenuWrapper<'a, T>
         }
         
         self.state = MenuState::Listening;
-        self.play_note(NOTEFAIL, MF_DURATION, Channel::All);
+        self.play_note(panel, NOTEFAIL, MF_DURATION, Channel::All);
         return false;
     }
     
-    pub fn set_state(&mut self, state: MenuState)
+    fn set_state(&mut self, panel: &Panel, state: MenuState) -> bool
     {
+        if state == MenuState::Exit
+        {
+            return true;
+        }
+        
         match state
         {
             MenuState::TapTime { key: _, channel } =>
             {
-                self.time = self.panel.get_time();
-                self.play_note(NOTEOPTION, MF_DURATION_SHORT, channel);
+                self.time = panel.get_time();
+                self.play_note(panel, NOTEOPTION, MF_DURATION_SHORT, channel);
             },
             MenuState::Number { digits, min, max, key, channel } =>
             {
                 self.d_count = 0;
                 self.digits = [0; 5];
-                self.play_note(NOTESELECT, MF_DURATION, channel);
+                self.play_note(panel, NOTESELECT, MF_DURATION, channel);
             },
             MenuState::KeySelect { key, channel } =>
             {
-                self.play_note(NOTESELECT, MF_DURATION, channel);
+                self.play_note(panel, NOTESELECT, MF_DURATION, channel);
             }
             _ => {}
         }
         self.state = state;
+        return false;
     }
     
     #[inline]
-    pub fn trigger_feedback(&mut self, value: bool, channel: Channel)
+    pub fn trigger_feedback(&mut self, panel: &Panel, value: bool, channel: Channel)
     {
         let k = match value
         {
             true => NOTEON,
             false => NOTEOFF
         };
-        self.play_note(k, MF_DURATION, channel);
+        self.play_note(panel, k, MF_DURATION, channel);
     }
-    pub fn play_note(&mut self, key: u8, duration: usize, channel: Channel)
+    pub fn play_note(&mut self, panel: &Panel, key: u8, duration: usize, channel: Channel)
     {
         // output_note accepts Channel::All
-        let gate = self.panel.output_note(crate::SlotSelect::Channel(channel), Note::new(key, 100));
+        let gate = panel.output_note(crate::SlotSelect::Channel(channel), Note::new(key, 100));
         self.feedback = true;
         self.feedback_length = duration;
-        self.panel.output_gate(gate);
-        self.feedback_start = self.panel.get_time();
+        panel.output_gate(gate);
+        self.feedback_start = panel.get_time();
     }
 }
 
-impl<'a, T: Menu> InputListener for MenuWrapper<'a, T>
+impl<T: Menu> InputListener for MenuWrapper<T>
 {
-    fn on_note(&mut self, channel: Channel, note: Note) -> bool
+    fn on_note(&mut self, panel: &mut Panel, channel: Channel, note: Note) -> bool
     {
         return match self.state
         {
@@ -272,7 +303,8 @@ impl<'a, T: Menu> InputListener for MenuWrapper<'a, T>
             {
                 if !T::rsl()
                 {
-                    return T::on_note(self, channel, note);
+                    let ns = T::on_note(MenuInst::new(panel, self), channel, note);
+                    return self.set_state(panel, ns);
                 }
                 
                 match note.key
@@ -280,29 +312,33 @@ impl<'a, T: Menu> InputListener for MenuWrapper<'a, T>
                     Note::B3 =>
                     {
                         self.menu.reset_values();
-                        self.trigger_feedback(true, Channel::All);
+                        self.trigger_feedback(panel, true, Channel::All);
                         false
                     },
                     Note::Bb4 =>
                     {
                         self.menu.load_values();
-                        self.play_note(NOTEOPTION, MF_DURATION, Channel::All);
+                        self.play_note(panel, NOTEOPTION, MF_DURATION, Channel::All);
                         false
                     },
                     Note::B4 =>
                     {
                         self.menu.save_values();
-                        self.play_note(NOTEOPTION, MF_DURATION, Channel::All);
+                        self.play_note(panel, NOTEOPTION, MF_DURATION, Channel::All);
                         false
                     },
-                    _ => T::on_note(self, channel, note)
+                    _ =>
+                    {
+                        let ns = T::on_note(MenuInst::new(panel, self), channel, note);
+                        self.set_state(panel, ns)
+                    }
                 }
             },
             MenuState::Number { digits, min, max, key, channel: cf } =>
             {
                 if cf != Channel::All && cf != channel
                 {
-                    self.play_note(NOTEFAIL, MF_DURATION, cf);
+                    self.play_note(panel, NOTEFAIL, MF_DURATION, cf);
                     return false;
                 }
                 false
@@ -317,19 +353,20 @@ impl<'a, T: Menu> InputListener for MenuWrapper<'a, T>
                 
                 false
             },
+            MenuState::Exit => true
         }
     }
     
     #[inline]
-    fn on_loop(&mut self)
+    fn on_loop(&mut self, panel: &mut Panel)
     {
         if self.feedback
         {
-            let t = self.panel.get_time();
+            let t = panel.get_time();
             if t - self.feedback_start >= self.feedback_length
             {
                 self.feedback = false;
-                self.panel.output_gate(Gate::zero());
+                panel.output_gate(Gate::zero());
             }
         }
         

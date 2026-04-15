@@ -6,6 +6,9 @@ pub use crate::panel::*;
 mod menus;
 pub use crate::menus::*;
 
+pub mod prog;
+// pub use crate::main::*;
+
 use api::CCType;
 use api::Channel;
 use api::NoteKey;
@@ -30,8 +33,8 @@ use api::{MidiCode, Note};
 
 pub trait InputListener
 {
-    fn on_loop(&mut self);
-    fn on_note(&mut self, channel: Channel, note: Note) -> bool;
+    fn on_loop(&mut self, panel: &mut Panel);
+    fn on_note(&mut self, panel: &mut Panel, channel: Channel, note: Note) -> bool;
     fn off_note(&mut self, channel: Channel, note: Note) { }
     
     fn on_message(&mut self, message: MidiCode) { }
@@ -45,6 +48,7 @@ macro_rules! create_dynamic_input_listener
     {
         $visability enum $name
         {
+            None,
             $($n($t)),+
         }
         
@@ -59,26 +63,29 @@ macro_rules! create_dynamic_input_listener
             }
         )+
         
-        impl InputListener for $name
+        impl crate::InputListener for $name
         {
-            fn on_loop(&mut self)
+            fn on_loop(&mut self, panel: &mut Panel)
             {
                 match self
                 {
-                    $(Self::$n(t) => t.on_loop()),+
+                    Self::None => {},
+                    $(Self::$n(t) => t.on_loop(panel)),+
                 }
             }
-            fn on_note(&mut self, channel: Channel, note: Note) -> bool
+            fn on_note(&mut self, panel: &mut Panel, channel: Channel, note: Note) -> bool
             {
                 return match self
                 {
-                    $(Self::$n(t) => t.on_note(channel, note)),+
+                    Self::None => false,
+                    $(Self::$n(t) => t.on_note(panel, channel, note)),+
                 };
             }
             fn off_note(&mut self, channel: Channel, note: Note)
             {
                 match self
                 {
+                    Self::None => {},
                     $(Self::$n(t) => t.off_note(channel, note)),+
                 }
             }
@@ -87,6 +94,7 @@ macro_rules! create_dynamic_input_listener
             {
                 match self
                 {
+                    Self::None => {},
                     $(Self::$n(t) => t.on_message(message)),+
                 }
             }
@@ -94,6 +102,7 @@ macro_rules! create_dynamic_input_listener
             {
                 return match self
                 {
+                    Self::None => true,
                     $(Self::$n(t) => t.allow_message(message)),+
                 };
             }
