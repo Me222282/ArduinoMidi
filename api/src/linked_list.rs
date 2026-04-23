@@ -15,17 +15,18 @@ impl<T> Node<T>
         return Node { previous: None, next: None, value }
     }
 }
-pub struct RefNode<'a, T>(pub(crate) NonNull<Node<T>>, PhantomData<&'a T>);
-impl<'a, T> RefNode<'a, T>
-{
-    pub fn as_ref(&'a self) -> &'a T
-    {
-        unsafe
-        {
-            return &self.0.as_ref().value;
-        }
-    }
-}
+
+pub struct RefNode<T>(NonNull<Node<T>>);
+// impl<'a, T> RefNode<'a, T>
+// {
+//     pub fn as_ref(&'a self) -> &'a T
+//     {
+//         unsafe
+//         {
+//             return &self.inner.as_ref().value;
+//         }
+//     }
+// }
 pub struct LinkedList<T, A: Allocator = Global>
 {
     start: Option<NonNull<Node<T>>>,
@@ -68,7 +69,7 @@ impl<'a, T, A: Allocator> Drop for LinkedList<T, A>
 
 impl<'a, T, A: Allocator> LinkedList<T, A>
 {
-    pub fn append(&'a mut self, value: T) -> RefNode<'a, T>
+    pub fn append(&'a mut self, value: T) -> RefNode<T>
     {
         let node = Box::new_in(Node::new(value), &self.alloc);
         let node_ptr = NonNull::from(Box::leak(node));
@@ -89,9 +90,9 @@ impl<'a, T, A: Allocator> LinkedList<T, A>
         }
         self.end = Some(node_ptr);
         self.len += 1;
-        return RefNode(node_ptr, PhantomData);
+        return RefNode(node_ptr);
     }
-    pub fn remove(&'a mut self, rn: RefNode<'a, T>)
+    pub fn remove(&'a mut self, rn: RefNode<T>)
     {
         let node_ptr = rn.0;
         unsafe
@@ -133,12 +134,12 @@ impl<'a, T, A: Allocator> LinkedList<T, A>
         return IterBackward { current: self.start, len: self.len, phantom: PhantomData };
     }
     #[inline]
-    pub fn iter_forward_ref(&'a self) -> impl Iterator<Item = RefNode<'a, T>>
+    pub fn iter_forward_ref(&'a self) -> impl Iterator<Item = RefNode<T>>
     {
         return IterForwardRef { current: self.start, len: self.len, phantom: PhantomData };
     }
     #[inline]
-    pub fn iter_backward_ref(&'a self) -> impl Iterator<Item = RefNode<'a, T>>
+    pub fn iter_backward_ref(&'a self) -> impl Iterator<Item = RefNode<T>>
     {
         return IterBackwardRef { current: self.start, len: self.len, phantom: PhantomData };
     }
@@ -149,23 +150,42 @@ impl<'a, T, A: Allocator> LinkedList<T, A>
         return self.len;
     }
     #[inline]
-    pub fn first(&'a self) -> Option<RefNode<'a, T>>
+    pub fn first(&'a self) -> Option<RefNode<T>>
     {
-        return self.start.map(|s| RefNode(s, PhantomData));
+        return self.start.map(|s| RefNode(s));
     }
     #[inline]
-    pub fn last(&'a self) -> Option<RefNode<'a, T>>
+    pub fn last(&'a self) -> Option<RefNode<T>>
     {
-        return self.end.map(|l| RefNode(l, PhantomData));
+        return self.end.map(|l| RefNode(l));
+    }
+    
+    #[inline]
+    pub fn get_mut(&'a mut self, ref_node: &'a mut RefNode<T>) -> &'a mut T
+    {
+        unsafe
+        {
+            return &mut ref_node.0.as_mut().value;
+        }
+    }
+    #[inline]
+    pub fn get_ref(&'a self, ref_node: &'a RefNode<T>) -> &'a T
+    {
+        unsafe
+        {
+            return &ref_node.0.as_ref().value;
+        }
     }
 }
 
 impl<'a, T: PartialOrd, A: Allocator> LinkedList<T, A>
 {
-    pub fn insert(&'a mut self, value: T) -> RefNode<'a, T>
+    pub fn insert(&'a mut self, value: T) -> RefNode<T>
     {
         // the first node which is greater than the inserting
-        let ins = self.iter_forward_ref().skip_while(|v| v.as_ref() < &value).nth(0);
+        let ins = unsafe {
+            self.iter_forward_ref().skip_while(|v| v.0.as_ref().value < value).nth(0)
+        };
         
         match ins
         {
@@ -195,7 +215,7 @@ impl<'a, T: PartialOrd, A: Allocator> LinkedList<T, A>
                     }
                     
                     self.len += 1;
-                    return RefNode(node_ptr, PhantomData);
+                    return RefNode(node_ptr);
                 }
             },
             None =>
@@ -293,7 +313,7 @@ struct IterForwardRef<'a, T>
 }
 impl<'a, T> Iterator for IterForwardRef<'a, T>
 {
-    type Item = RefNode<'a, T>;
+    type Item = RefNode<T>;
 
     fn next(&mut self) -> Option<Self::Item>
     {
@@ -305,7 +325,7 @@ impl<'a, T> Iterator for IterForwardRef<'a, T>
                 {
                     self.current = (*c.as_ptr()).next;
                     self.len -= 1;
-                    Some(RefNode(c, PhantomData))
+                    Some(RefNode(c))
                 }
             },
             None => None
@@ -331,7 +351,7 @@ struct IterBackwardRef<'a, T>
 }
 impl<'a, T> Iterator for IterBackwardRef<'a, T>
 {
-    type Item = RefNode<'a, T>;
+    type Item = RefNode<T>;
 
     fn next(&mut self) -> Option<Self::Item>
     {
@@ -343,7 +363,7 @@ impl<'a, T> Iterator for IterBackwardRef<'a, T>
                 {
                     self.current = (*c.as_ptr()).previous;
                     self.len -= 1;
-                    Some(RefNode(c, PhantomData))
+                    Some(RefNode(c))
                 }
             },
             None => None

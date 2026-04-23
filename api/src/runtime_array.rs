@@ -1,37 +1,27 @@
 use core::ops::{Index, IndexMut};
 
 pub struct RA<T, const CAP: usize>
-    where [(); CAP * core::mem::size_of::<T>()]: Sized
 {
-    inner: [u8; CAP * core::mem::size_of::<T>()],
+    inner: [T; CAP],
     len: usize
 }
 
 impl<T, const CAP: usize> AsRef<[T]> for RA<T, CAP>
-    where [(); CAP * core::mem::size_of::<T>()]: Sized
 {
     fn as_ref(&self) -> &[T]
     {
-        unsafe
-        {
-            return core::mem::transmute::<_, &[T]>(&self.inner[0..self.len]);
-        }
+        return &self.inner[0..self.len];
     }
 }
 impl<T, const CAP: usize> AsMut<[T]> for RA<T, CAP>
-    where [(); CAP * core::mem::size_of::<T>()]: Sized
 {
     fn as_mut(&mut self) -> &mut [T]
     {
-        unsafe
-        {
-            return core::mem::transmute::<_, &mut [T]>(&mut self.inner[0..self.len]);
-        }
+        return &mut self.inner[0..self.len];
     }
 }
 
 impl<T, const CAP: usize> IndexMut<usize> for RA<T, CAP>
-    where [(); CAP * core::mem::size_of::<T>()]: Sized
 {
     fn index_mut(&mut self, index: usize) -> &mut Self::Output
     {
@@ -40,7 +30,6 @@ impl<T, const CAP: usize> IndexMut<usize> for RA<T, CAP>
 }
 
 impl<T, const CAP: usize> Index<usize> for RA<T, CAP>
-    where [(); CAP * core::mem::size_of::<T>()]: Sized
 {
     type Output = T;
 
@@ -51,15 +40,15 @@ impl<T, const CAP: usize> Index<usize> for RA<T, CAP>
 }
 
 impl<T, const CAP: usize> RA<T, CAP>
-    where [(); CAP * core::mem::size_of::<T>()]: Sized
+    where [u8; CAP * core::mem::size_of::<T>()]: Sized
 {
     pub fn from_iter(iter: impl Iterator<Item = T>) -> Self
     {
-        let mut inner = [0u8; CAP * core::mem::size_of::<T>()];
-        let slice = unsafe { core::mem::transmute::<_, &mut [T; CAP]>(&mut inner) };
+        let init = [0u8; CAP * core::mem::size_of::<T>()];
+        let mut inner = unsafe { core::mem::transmute_copy::<_, [T; CAP]>(&init) };
         
         let mut count = 0;
-        for (s, d) in iter.zip(slice)
+        for (s, d) in iter.zip(&mut inner)
         {
             *d = s;
             count += 1;
@@ -80,11 +69,7 @@ impl<T: Copy, const CAP: usize> RA<T, CAP>
 {
     pub fn new(value: T, size: usize) -> Self
     {
-        let mut inner = [0u8; CAP * core::mem::size_of::<T>()];
-        let slice = unsafe { core::mem::transmute::<_, &mut [T; CAP]>(&mut inner) };
-        *slice = [value; CAP];
-        
-        return Self { inner, len: size };
+        return Self { inner: [value; CAP], len: size };
     }
 }
 
@@ -93,7 +78,8 @@ impl<T: Default, const CAP: usize> Default for RA<T, CAP>
 {
     fn default() -> Self
     {
-        let inner = [0u8; CAP * core::mem::size_of::<T>()];
+        let init = [0u8; CAP * core::mem::size_of::<T>()];
+        let inner = unsafe { core::mem::transmute_copy::<_, [T; CAP]>(&init) };
         return Self { inner, len: 0 };
     }
 }
