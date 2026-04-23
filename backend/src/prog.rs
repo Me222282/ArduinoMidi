@@ -1,8 +1,9 @@
 use api::{MidiCode, Channel, Note};
 
-use crate::{Panel, InputListener, MenuWrapper, ProgramPortsMenu, SpecialOpsMenu, VibratoMenu, create_dynamic_input_listener};
+use crate::{InputListener, MenuWrapper, NoteManager, Panel, ProgramPortsMenu, SpecialOpsMenu, VibratoMenu, create_dynamic_input_listener};
 
 create_dynamic_input_listener!(pub Listeners:
+    N => NoteManager,
     A => MenuWrapper<SpecialOpsMenu>,
     B => MenuWrapper<ProgramPortsMenu>,
     C => MenuWrapper<VibratoMenu>);

@@ -33,8 +33,8 @@ fn main() -> ! {
     let config = esp_hal::Config::default().with_cpu_clock(CpuClock::max());
     let _peripherals = esp_hal::init(config);
     
-    esp_alloc::heap_allocator!(#[esp_hal::ram(reclaimed)] size: 73744);
-
+    esp_alloc::heap_allocator!(#[esp_hal::ram(reclaimed)] size: 65536);
+    
     loop {
         let delay_start = Instant::now();
         while delay_start.elapsed() < Duration::from_millis(500) {}

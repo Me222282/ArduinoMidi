@@ -6,6 +6,9 @@ pub use crate::panel::*;
 mod menus;
 pub use crate::menus::*;
 
+mod notes;
+pub use crate::notes::*;
+
 pub mod prog;
 // pub use crate::main::*;
 
@@ -14,6 +17,8 @@ use api::Channel;
 use api::NoteKey;
 use api::NoteOffset;
 use api::{MidiCode, Note};
+
+extern crate alloc;
 
 // ==========PIPELINE==========
 // Channel Filter
