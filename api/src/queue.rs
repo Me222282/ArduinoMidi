@@ -12,6 +12,19 @@ impl<T: Copy, const SIZE: usize> Queue<T, SIZE>
     {
         return Self { inner: [init; SIZE], wr: 0, rd: 0, len: 0 };
     }
+    pub fn from_iter(iter: impl Iterator<Item = T>, init: T) -> Self
+    {
+        let mut inner = [init; SIZE];
+        
+        let mut count = 0;
+        for (s, d) in iter.zip(&mut inner)
+        {
+            *d = s;
+            count += 1;
+        }
+        
+        return Self { inner, wr: count % 5, rd: 0, len: count };
+    }
     
     pub fn push(&mut self, value: T)
     {
@@ -19,7 +32,7 @@ impl<T: Copy, const SIZE: usize> Queue<T, SIZE>
         self.len += 1;
         
         self.inner[self.wr] = value;
-        self.wr += 1;
+        self.wr = (self.wr + 1) % 5;
     }
     pub fn pull(&mut self) -> Option<T>
     {
@@ -27,7 +40,7 @@ impl<T: Copy, const SIZE: usize> Queue<T, SIZE>
         self.len -= 1;
         
         let result = self.inner[self.rd];
-        self.rd += 1;
+        self.rd = (self.rd + 1) % 5;
         return Some(result);
     }
     pub fn clear(&mut self)
