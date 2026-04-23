@@ -194,7 +194,6 @@ pub struct Configuration
     sort_notes: bool,
     all_channel_mode: bool,
     all_channel_pd: bool,
-    all_channel_wrap: u8,
     alternate_allocations: bool,
     menu_feedback: bool,
     clocked_arpeggios: bool,

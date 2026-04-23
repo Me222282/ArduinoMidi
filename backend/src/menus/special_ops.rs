@@ -29,6 +29,7 @@ impl Menu for SpecialOpsMenu
                 config.arpeggios[channel as usize].mode = ArpeggioMode::Ascending;
                 menu.play_note(NOTEOPTION, MF_DURATION, channel);
             },
+            Note::Eb3 => menu_toggle!(menu, config.clocked_arpeggios),
             Note::E3 =>
             {
                 config.arpeggios[channel as usize].mode = ArpeggioMode::Decending;
