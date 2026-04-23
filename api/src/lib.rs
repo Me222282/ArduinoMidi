@@ -1,10 +1,20 @@
 #![no_std]
+#![feature(allocator_api)]
+#![feature(generic_const_exprs)]
 
 mod midi;
 pub use crate::midi::*;
 
 mod data;
 pub use crate::data::*;
+
+mod linked_list;
+pub use crate::linked_list::*;
+
+mod runtime_array;
+pub use crate::runtime_array::*;
+
+extern crate alloc;
 
 pub enum InputMode
 {
