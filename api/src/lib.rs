@@ -1,5 +1,6 @@
 #![no_std]
 #![feature(allocator_api)]
+#![allow(incomplete_features)]
 #![feature(generic_const_exprs)]
 
 mod midi;
@@ -13,6 +14,9 @@ pub use crate::linked_list::*;
 
 mod runtime_array;
 pub use crate::runtime_array::*;
+
+mod queue;
+pub use crate::queue::*;
 
 extern crate alloc;
 
