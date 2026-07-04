@@ -367,6 +367,11 @@ impl Panel
     {
         (self.externals.set_gate)(value);
     }
+    #[inline]
+    pub fn delay(&self, value: u32)
+    {
+        (self.externals.delay)(value);
+    }
     
     #[inline]
     fn set_note(&self, slot: usize, key: u8)
