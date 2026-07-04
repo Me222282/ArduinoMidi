@@ -347,11 +347,6 @@ impl Panel
     {
         (self.externals.set_gate)(value);
     }
-    #[inline]
-    pub fn get_time(&self) -> usize
-    {
-        return (self.externals.get_time)();
-    }
     
     #[inline]
     fn set_note(&self, slot: usize, key: u8)
