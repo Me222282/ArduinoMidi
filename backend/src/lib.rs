@@ -9,8 +9,11 @@ pub use crate::menus::*;
 mod notes;
 pub use crate::notes::*;
 
+mod operators;
+pub use crate::operators::*;
+
 pub mod prog;
-// pub use crate::main::*;
+// pub use crate::prog::*;
 
 use api::CCType;
 use api::Channel;

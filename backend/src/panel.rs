@@ -30,7 +30,7 @@ pub struct Panel
     // pub vel_functions: [VelFunc; 5],
     vibrato_values: [i16; 16],
     pdvs: [u16; 16],
-    config: OutputConfig
+    pub config: OutputConfig
 }
 
 impl Panel
