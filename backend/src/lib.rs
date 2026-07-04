@@ -37,6 +37,8 @@ extern crate alloc;
 // Slot Allocation
 // Output
 
+pub const RETRIG_TIME: u32 = 4;
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum TriggerSource
 {

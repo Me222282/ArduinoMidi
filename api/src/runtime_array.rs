@@ -40,6 +40,18 @@ impl<T, const CAP: usize> Index<usize> for RA<T, CAP>
 }
 
 impl<T, const CAP: usize> RA<T, CAP>
+{
+    pub fn iter(&self) -> impl Iterator<Item = &T>
+    {
+        return self.inner[0..self.len].iter();
+    }
+    pub fn iter_mut(&mut self) -> impl Iterator<Item = &mut T>
+    {
+        return self.inner[0..self.len].iter_mut();
+    }
+}
+
+impl<T, const CAP: usize> RA<T, CAP>
     where [u8; CAP * core::mem::size_of::<T>()]: Sized
 {
     pub fn from_iter(iter: impl Iterator<Item = T>) -> Self

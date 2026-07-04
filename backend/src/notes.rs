@@ -2,6 +2,14 @@ use api::{Channel, InputMode, LinkedList, Note, PanelState, Queue, RA, RefNode};
 
 use crate::NoteConfig;
 
+pub enum NoteOutput
+{
+    None,
+    Off(u8),
+    New(u8),
+    Retrig(u8, Note)
+}
+
 pub struct NoteCollection
 {
     notes: LinkedList<(Note, i8)>,
@@ -13,7 +21,12 @@ pub struct NoteCollection
 
 impl NoteCollection
 {
-    pub fn push_note(&mut self, config: &NoteConfig, panel: &PanelState, note: Note)
+    pub fn is_channel(&self, channel: Channel) -> bool
+    {
+        return self.channel == channel;
+    }
+    
+    pub fn push_note(&mut self, config: &NoteConfig, panel: &PanelState, note: Note) -> NoteOutput
     {
         let hole = self.find_next_index(config, panel, note.key);
         if let Some(i) = hole
@@ -21,7 +34,7 @@ impl NoteCollection
             let rn = self.notes.append((note, i as i8));
             self.locations[i] = Some(rn);
             self.old_notes[i] = 0xFF;
-            return;
+            return NoteOutput::New(i as u8);
         }
         
         // take a used slot
@@ -32,7 +45,7 @@ impl NoteCollection
             Some(mut t) =>
             {
                 let take_ref = self.notes.get_mut(&mut t);
-                let hole = 0;
+                let hole = take_ref.1;
                 take_ref.1 = -1;
                 
                 let rn = self.notes.append((note, hole));
@@ -44,6 +57,8 @@ impl NoteCollection
                     // remove taken notes to forget
                     self.notes.remove(t);
                 }
+                
+                return NoteOutput::Retrig(hole as u8, note);
             },
             None =>
             {
@@ -51,12 +66,12 @@ impl NoteCollection
                 {
                     self.notes.append((note, -1));
                 }
-                return;
+                return NoteOutput::None;
             }
         }
     }
     
-    pub fn remove_note(&mut self, config: &NoteConfig, panel: &PanelState, key: u8)
+    pub fn remove_note(&mut self, config: &NoteConfig, panel: &PanelState, key: u8) -> NoteOutput
     {
         // only remove 1 note - important for arpeggios
         let remove_op = self.notes.iter_forward_ref().find(|rn| self.notes.get_ref(rn).0.key == key);
@@ -65,13 +80,13 @@ impl NoteCollection
         {
             Some(v) => remove = v,
             // could not find note
-            None => return
+            None => return NoteOutput::None
         }
         
         let hole = self.notes.get_ref(&remove).1;
         self.notes.remove(remove);
         // not a note being displayed
-        if hole < 0 { return; }
+        if hole < 0 { return NoteOutput::None; }
         
         // fill hole if can
         let replace = self.get_next_note(panel);
@@ -79,8 +94,11 @@ impl NoteCollection
         {
             Some(mut r) =>
             {
-                self.notes.get_mut(&mut r).1 = hole;
+                let ni = self.notes.get_mut(&mut r);
+                ni.1 = hole;
+                let note = ni.0;
                 self.locations[hole as usize] = Some(r);
+                return NoteOutput::Retrig(hole as u8, note);
             },
             // no more
             None =>
@@ -94,7 +112,7 @@ impl NoteCollection
                 }
                 // no more note
                 // gateChannelNote(chI, hole, false);
-                return;
+                return NoteOutput::Off(hole as u8);
             }
         }
     }

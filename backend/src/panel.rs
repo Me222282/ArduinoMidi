@@ -30,6 +30,7 @@ pub struct Panel
     // pub vel_functions: [VelFunc; 5],
     vibrato_values: [i16; 16],
     pdvs: [u16; 16],
+    gate: Gate,
     pub config: OutputConfig
 }
 
@@ -317,56 +318,103 @@ impl Panel
         }
     }
     
-    // pub fn output_gate(&self, slots: SlotSelect)
-    // {
-    //     let mut value = Gate::zero();
-        
-    //     match slots
-    //     {
-    //         SlotSelect::ChannelVoice(c, v) =>
-    //         {
-    //             for (i, &com) in self.slot_allocations.iter().enumerate()
-    //             {
-    //                 if com != (c, v) { continue; }
-                    
-    //                 value.on(i as u8);
-    //             }
-    //         },
-    //         SlotSelect::Channel(c) =>
-    //         {
-    //             for (i, &com) in self.slot_allocations.iter().enumerate()
-    //             {
-    //                 if com.0 != c { continue; }
-                    
-    //                 value.on(i as u8);
-    //             }
-    //         },
-    //         SlotSelect::Voice(v) =>
-    //         {
-    //             for (i, &com) in self.slot_allocations.iter().enumerate()
-    //             {
-    //                 if com.1 != v { continue; }
-                    
-    //                 value.on(i as u8);
-    //             }
-    //         },
-    //         SlotSelect::Index(i) =>
-    //         {
-    //             value.on(i);
-    //         },
-    //         SlotSelect::All =>
-    //         {
-    //             value = Gate::all_on();
-    //         }
-    //     }
-        
-    //     (self.externals.set_gate)(value);
-    // }
-    #[inline]
-    pub fn output_gate(&self, value: Gate)
+    pub fn output_gate_on(&mut self, slots: SlotSelect)
     {
+        let mut value = self.gate;
+        
+        match slots
+        {
+            SlotSelect::ChannelVoice(c, v) =>
+            {
+                for (i, &com) in self.slot_allocations.iter().enumerate()
+                {
+                    if com != (c, v) { continue; }
+                    
+                    value.on(i as u8);
+                }
+            },
+            SlotSelect::Channel(c) =>
+            {
+                for (i, &com) in self.slot_allocations.iter().enumerate()
+                {
+                    if com.0 != c { continue; }
+                    
+                    value.on(i as u8);
+                }
+            },
+            SlotSelect::Voice(v) =>
+            {
+                for (i, &com) in self.slot_allocations.iter().enumerate()
+                {
+                    if com.1 != v { continue; }
+                    
+                    value.on(i as u8);
+                }
+            },
+            SlotSelect::Index(i) =>
+            {
+                value.on(i);
+            },
+            SlotSelect::All =>
+            {
+                value = Gate::all_on();
+            }
+        }
+        
+        self.gate = value;
         (self.externals.set_gate)(value);
     }
+    pub fn output_gate_off(&mut self, slots: SlotSelect)
+    {
+        let mut value = self.gate;
+        
+        match slots
+        {
+            SlotSelect::ChannelVoice(c, v) =>
+            {
+                for (i, &com) in self.slot_allocations.iter().enumerate()
+                {
+                    if com != (c, v) { continue; }
+                    
+                    value.off(i as u8);
+                }
+            },
+            SlotSelect::Channel(c) =>
+            {
+                for (i, &com) in self.slot_allocations.iter().enumerate()
+                {
+                    if com.0 != c { continue; }
+                    
+                    value.off(i as u8);
+                }
+            },
+            SlotSelect::Voice(v) =>
+            {
+                for (i, &com) in self.slot_allocations.iter().enumerate()
+                {
+                    if com.1 != v { continue; }
+                    
+                    value.off(i as u8);
+                }
+            },
+            SlotSelect::Index(i) =>
+            {
+                value.off(i);
+            },
+            SlotSelect::All =>
+            {
+                value = Gate::zero();
+            }
+        }
+        
+        self.gate = value;
+        (self.externals.set_gate)(value);
+    }
+    // #[inline]
+    // pub fn output_gate(&self, value: Gate)
+    // {
+    //     (self.externals.set_gate)(value);
+    // }
     #[inline]
     pub fn delay(&self, value: u32)
     {
