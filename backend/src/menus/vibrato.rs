@@ -2,7 +2,7 @@ use core::f32::consts::PI;
 
 use api::{Channel, Note};
 
-use crate::{Panel, MF_DURATION, Menu, MenuState, NOTEOPTION, menu_toggle, menu_toggle_channel, value_or_last};
+use crate::{Configuration, Menu, MenuFeedback, MenuState, menu_toggle, menu_toggle_channel, value_or_last};
 
 pub struct VibratoMenu
 {
@@ -24,74 +24,72 @@ const SCALE_SET: f32 = 1.0 / 16384.0;
 
 impl Menu for VibratoMenu
 {
-    fn on_note(mut menu: super::MenuInst<Self>, channel: Channel, note: Note) -> MenuState
+    fn on_note(&mut self, config: &mut Configuration, channel: Channel, note: Note) -> (MenuState, Option<MenuFeedback>)
     {
-        let config = &mut menu.panel.configuration;
-        
         let mut state = MenuState::Listening;
-        match note.key
+        let fb = match note.key
         {
-            Note::C4 => menu_toggle_channel!(menu, channel, config.vibratos[channel as usize].enabled),
+            Note::C4 => menu_toggle_channel!(menu, channel, config.other.vibratos[channel as usize].enabled),
             Note::D4 =>
             {
                 // config.vibratos[channel as usize].function = ;
-                menu.play_note(NOTEOPTION, MF_DURATION, channel);
+                Some(MenuFeedback::note_option(channel))
             },
             Note::E4 =>
             {
                 // config.vibratos[channel as usize].function = ;
-                menu.play_note(NOTEOPTION, MF_DURATION, channel);
+                Some(MenuFeedback::note_option(channel))
             },
-            SET_RATE_KEY => state = MenuState::number(3, 1.., note.key, channel),
-            SET_MRATE_KEY => state = MenuState::number(5, 1.., note.key, channel),
-            SET_SCALE_KEY => state = MenuState::number(4, ..=2048, note.key, channel),
-            Note::C5 => menu_toggle!(menu, config.global_vibrato),
-            MINUS_ST_KEY => state = MenuState::number(2, ..=24, note.key, channel),
-            PLUS_ST_KEY => state = MenuState::number(2, ..=24, note.key, channel),
+            SET_RATE_KEY => {state = MenuState::number(3, 1.., note.key, channel); None},
+            SET_MRATE_KEY => {state = MenuState::number(5, 1.., note.key, channel); None},
+            SET_SCALE_KEY => {state = MenuState::number(4, ..=2048, note.key, channel); None},
+            Note::C5 => menu_toggle!(menu, config.other.global_vibrato),
+            MINUS_ST_KEY => {state = MenuState::number(2, ..=24, note.key, channel); None},
+            PLUS_ST_KEY => {state = MenuState::number(2, ..=24, note.key, channel); None},
             Note::B5 =>
             {
-                config.channel_offsets[channel as usize].octave = -3;
-                menu.play_note(NOTEOPTION, MF_DURATION, channel);
+                config.other.channel_offsets[channel as usize].octave = -3;
+                Some(MenuFeedback::note_option(channel))
             },
             Note::C6 =>
             {
-                config.channel_offsets[channel as usize].octave = -2;
-                menu.play_note(NOTEOPTION, MF_DURATION, channel);
+                config.other.channel_offsets[channel as usize].octave = -2;
+                Some(MenuFeedback::note_option(channel))
             },
             Note::Db6 =>
             {
-                config.channel_offsets[channel as usize].octave = -1;
-                menu.play_note(NOTEOPTION, MF_DURATION, channel);
+                config.other.channel_offsets[channel as usize].octave = -1;
+                Some(MenuFeedback::note_option(channel))
             },
             Note::D6 =>
             {
-                config.channel_offsets[channel as usize].octave = 0;
-                menu.play_note(NOTEOPTION, MF_DURATION, channel);
+                config.other.channel_offsets[channel as usize].octave = 0;
+                Some(MenuFeedback::note_option(channel))
             },
             Note::Eb6 =>
             {
-                config.channel_offsets[channel as usize].octave = 1;
-                menu.play_note(NOTEOPTION, MF_DURATION, channel);
+                config.other.channel_offsets[channel as usize].octave = 1;
+                Some(MenuFeedback::note_option(channel))
             },
             Note::E6 =>
             {
-                config.channel_offsets[channel as usize].octave = 2;
-                menu.play_note(NOTEOPTION, MF_DURATION, channel);
+                config.other.channel_offsets[channel as usize].octave = 2;
+                Some(MenuFeedback::note_option(channel))
             },
             Note::F6 =>
             {
-                config.channel_offsets[channel as usize].octave = 3;
-                menu.play_note(NOTEOPTION, MF_DURATION, channel);
+                config.other.channel_offsets[channel as usize].octave = 3;
+                Some(MenuFeedback::note_option(channel))
             },
-            _ => {}
-        }
+            _ => None
+        };
         
-        return state;
+        return (state, fb);
     }
     
-    fn on_number_input(&mut self, panel: &mut Panel, value: Option<usize>, channel: Channel, key: u8)
+    fn on_number_input(&mut self, config: &mut Configuration, value: Option<usize>, channel: Channel, key: u8)
     {
-        let ci = match panel.configuration.global_vibrato
+        let ci = match config.other.global_vibrato
         {
             true => 0,
             false => channel as usize,
@@ -99,11 +97,11 @@ impl Menu for VibratoMenu
         
         match key
         {
-            SET_RATE_KEY => panel.configuration.vibratos[ci].angular_velocity = value_or_last!(value, self.rate_lv) as f32 * W_SET,
-            SET_MRATE_KEY => panel.configuration.vibratos[ci].angular_velocity = value_or_last!(value, self.mrate_lv) as f32 * MW_SET,
-            SET_SCALE_KEY => panel.configuration.vibratos[channel as usize].scale = value_or_last!(value, self.scale_lv) as f32 * SCALE_SET,
-            MINUS_ST_KEY => panel.configuration.channel_offsets[channel as usize].semi_tone = -(value_or_last!(value, self.st_lv) as i8),
-            PLUS_ST_KEY => panel.configuration.channel_offsets[channel as usize].semi_tone = value_or_last!(value, self.st_lv) as i8,
+            SET_RATE_KEY => config.other.vibratos[ci].angular_velocity = value_or_last!(value, self.rate_lv) as f32 * W_SET,
+            SET_MRATE_KEY => config.other.vibratos[ci].angular_velocity = value_or_last!(value, self.mrate_lv) as f32 * MW_SET,
+            SET_SCALE_KEY => config.other.vibratos[channel as usize].scale = value_or_last!(value, self.scale_lv) as f32 * SCALE_SET,
+            MINUS_ST_KEY => config.other.channel_offsets[channel as usize].semi_tone = -(value_or_last!(value, self.st_lv) as i8),
+            PLUS_ST_KEY => config.other.channel_offsets[channel as usize].semi_tone = value_or_last!(value, self.st_lv) as i8,
             _ => {}
         }
     }

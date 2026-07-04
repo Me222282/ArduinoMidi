@@ -1,33 +1,39 @@
 use api::{MidiCode, Channel, Note};
 
-use crate::{InputListener, MenuWrapper, NoteManager, Panel, ProgramPortsMenu, SpecialOpsMenu, VibratoMenu, create_dynamic_input_listener};
+use crate::{MenuFeedback, MenuWrapper, Panel, ProgramPortsMenu, SpecialOpsMenu, VibratoMenu, create_dynamic_menus};
 
-create_dynamic_input_listener!(pub Listeners:
-    N => NoteManager,
+create_dynamic_menus!(pub Menus:
     A => MenuWrapper<SpecialOpsMenu>,
     B => MenuWrapper<ProgramPortsMenu>,
     C => MenuWrapper<VibratoMenu>);
 
-pub fn on_midi_message(listener: &mut Listeners, panel: &mut Panel, message: MidiCode)
+pub struct Program
 {
-    if !listener.allow_message(message)
-    {
-        return;
-    }
+    menu: Menus,
+    panel: Panel,
     
-    match message
-    {
-        MidiCode::NoteOFF(channel, note) => listener.off_note(channel, note),
-        MidiCode::NoteON(channel, note) =>
-        {
-            // exit
-            if listener.on_note(panel, channel, note)
-            {
-                *listener = Listeners::None;
-            }
-        },
-        MidiCode::ControlChange(channel, cctype, _) => todo!(),
-        MidiCode::PitchWheel(channel, _) => todo!(),
-        _ => listener.on_message(message)
-    }
 }
+    
+// pub fn on_midi_message(listener: &mut Menus, panel: &mut Panel, message: MidiCode)
+// {
+//     if !listener.allow_message(message)
+//     {
+//         return;
+//     }
+    
+//     match message
+//     {
+//         MidiCode::NoteOFF(channel, note) => listener.off_note(channel, note),
+//         MidiCode::NoteON(channel, note) =>
+//         {
+//             // exit
+//             if listener.on_note(panel, channel, note)
+//             {
+//                 *listener = Men::None;
+//             }
+//         },
+//         MidiCode::ControlChange(channel, cctype, _) => todo!(),
+//         MidiCode::PitchWheel(channel, _) => todo!(),
+//         _ => listener.on_message(message)
+//     }
+// }

@@ -16,7 +16,6 @@ use api::CCType;
 use api::Channel;
 use api::NoteKey;
 use api::NoteOffset;
-use api::{MidiCode, Note};
 
 extern crate alloc;
 
@@ -32,88 +31,6 @@ extern crate alloc;
 // Note Voice Processor
 // Slot Allocation
 // Output
-
-// Mutable statics can be used but are unsafe
-// this is ok as the program cannot use multiple threads
-
-pub trait InputListener
-{
-    fn on_loop(&mut self, panel: &mut Panel);
-    fn on_note(&mut self, panel: &mut Panel, channel: Channel, note: Note) -> bool;
-    fn off_note(&mut self, channel: Channel, note: Note) { }
-    
-    fn on_message(&mut self, message: MidiCode) { }
-    fn allow_message(&self, message: MidiCode) -> bool { true }
-}
-
-#[macro_export]
-macro_rules! create_dynamic_input_listener
-{
-    ($visability:vis $name:ident: $($n:ident => $t:ty),+) =>
-    {
-        $visability enum $name
-        {
-            None,
-            $($n($t)),+
-        }
-        
-        $(
-            impl From<$t> for $name
-            {
-                #[inline]
-                fn from(value: $t) -> Self
-                {
-                    return Self::$n(value);
-                }
-            }
-        )+
-        
-        impl crate::InputListener for $name
-        {
-            fn on_loop(&mut self, panel: &mut Panel)
-            {
-                match self
-                {
-                    Self::None => {},
-                    $(Self::$n(t) => t.on_loop(panel)),+
-                }
-            }
-            fn on_note(&mut self, panel: &mut Panel, channel: Channel, note: Note) -> bool
-            {
-                return match self
-                {
-                    Self::None => false,
-                    $(Self::$n(t) => t.on_note(panel, channel, note)),+
-                };
-            }
-            fn off_note(&mut self, channel: Channel, note: Note)
-            {
-                match self
-                {
-                    Self::None => {},
-                    $(Self::$n(t) => t.off_note(channel, note)),+
-                }
-            }
-            
-            fn on_message(&mut self, message: MidiCode)
-            {
-                match self
-                {
-                    Self::None => {},
-                    $(Self::$n(t) => t.on_message(message)),+
-                }
-            }
-            fn allow_message(&self, message: MidiCode) -> bool
-            {
-                return match self
-                {
-                    Self::None => true,
-                    $(Self::$n(t) => t.allow_message(message)),+
-                };
-            }
-        }
-    };
-}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum TriggerSource
@@ -144,6 +61,11 @@ impl TriggerSource
             TriggerSource::Sequence(channel) => channel,
             TriggerSource::Track(channel) => channel
         };
+    }
+    pub fn set_source(&mut self, mut source: TriggerSource)
+    {
+        source.set_channel(self.get_channel());
+        *self = source;
     }
 }
 
@@ -186,19 +108,27 @@ pub struct ChannelFilter
     redirect2: ChannelRedirect
 }
 
-pub struct Configuration
+pub struct Configuration<'a>
+{
+    pub other: &'a mut OtherConfig,
+    pub note: &'a mut NoteConfig,
+    pub sequen: &'a mut SequencerConfig,
+    pub output: &'a mut OutputConfig
+}
+
+pub struct OtherConfig
 {
     retrigger_old: bool,
     retrigger_new: bool,
     // filter_keys: bool,
     // filter: NoteKey,
     always_delay: bool,
-    micro_tone: bool,
-    forget_notes: bool,
-    duplicate_release: bool,
-    sort_notes: bool,
+    // micro_tone: bool,
+    // forget_notes: bool,
+    // duplicate_release: bool,
+    // sort_notes: bool,
     all_channel_mode: bool,
-    all_channel_pd: bool,
+    all_channel_pb: bool,
     alternate_allocations: bool,
     menu_feedback: bool,
     clocked_arpeggios: bool,
@@ -206,54 +136,38 @@ pub struct Configuration
     per_channel_cc: bool,
     pulse_length: usize,
     
-    use_custom_allocations: bool,
-    custom_allocations: [(Channel, u8); 5],
-    
-    bar_size: usize,
-    on_bar_trigger: bool,
-    sequencer_tempo_time: usize,
-    clocked_sequencer: bool,
+    // use_custom_allocations: bool,
+    // custom_allocations: [(Channel, u8); 5],
     
     channel_filters: [ChannelFilter; 16],
     arpeggios: [ArpeggioConfig; 16],
     vibratos: [Vibrato; 16],
-    channel_offsets: [NoteOffset; 16],
+    channel_offsets: [NoteOffset; 16]
+}
+
+pub struct NoteConfig
+{
+    forget_notes: bool,
+    duplicate_release: bool,
+    sort_notes: bool,
+}
+
+pub struct SequencerConfig
+{
+    bar_size: usize,
+    on_bar_trigger: bool,
+    sequencer_tempo_time: usize,
+    clocked_sequencer: bool,
+}
+
+pub struct OutputConfig
+{
+    use_custom_allocations: bool,
+    custom_allocations: [(Channel, u8); 5],
     
+    cc_enabled: [bool; 5],
+    trig_enabled: [bool; 5],
+    micro_tone: bool,
     triggers: [TriggerSource; 5],
     cc_sources: [(CCType, Channel); 5]
 }
-
-// struct A
-// {
-    
-// }
-// impl InputListener for A
-// {
-//     fn on_loop(&mut self)
-//     {
-//         todo!()
-//     }
-
-//     fn on_note(&mut self, channel: u8, note: Note) -> bool
-//     {
-//         todo!()
-//     }
-// }
-// struct B
-// {
-    
-// }
-// impl InputListener for B
-// {
-//     fn on_loop(&mut self)
-//     {
-//         todo!()
-//     }
-
-//     fn on_note(&mut self, channel: u8, note: Note) -> bool
-//     {
-//         todo!()
-//     }
-// }
-
-// create_dynamic_input_listener!(pub DIL: A => A, B => B);

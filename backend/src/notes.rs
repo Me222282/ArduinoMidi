@@ -1,6 +1,6 @@
-use api::{Channel, InputMode, LinkedList, Note, Queue, RA, RefNode};
+use api::{Channel, InputMode, LinkedList, Note, PanelState, Queue, RA, RefNode};
 
-use crate::{InputListener, Panel};
+use crate::NoteConfig;
 
 pub struct NoteCollection
 {
@@ -13,9 +13,9 @@ pub struct NoteCollection
 
 impl NoteCollection
 {
-    pub fn push_note(&mut self, panel: &Panel, note: Note)
+    pub fn push_note(&mut self, config: &NoteConfig, panel: &PanelState, note: Note)
     {
-        let hole = self.find_next_index(panel, note.key);
+        let hole = self.find_next_index(config, panel, note.key);
         if let Some(i) = hole
         {
             let rn = self.notes.append((note, i as i8));
@@ -25,7 +25,7 @@ impl NoteCollection
         }
         
         // take a used slot
-        let take = self.get_losable_note(panel, note.key);
+        let take = self.get_losable_note(config, panel, note.key);
         // add to list after slot chosen
         match take
         {
@@ -39,7 +39,7 @@ impl NoteCollection
                 self.locations[hole as usize] = Some(rn);
                 // was already a note so no need for old_notes to change
                 
-                if panel.configuration.forget_notes
+                if config.forget_notes
                 {
                     // remove taken notes to forget
                     self.notes.remove(t);
@@ -47,7 +47,7 @@ impl NoteCollection
             },
             None =>
             {
-                if !panel.configuration.forget_notes
+                if !config.forget_notes
                 {
                     self.notes.append((note, -1));
                 }
@@ -56,7 +56,7 @@ impl NoteCollection
         }
     }
     
-    pub fn remove_note(&mut self, panel: &Panel, key: u8)
+    pub fn remove_note(&mut self, config: &NoteConfig, panel: &PanelState, key: u8)
     {
         // only remove 1 note - important for arpeggios
         let remove_op = self.notes.iter_forward_ref().find(|rn| self.notes.get_ref(rn).0.key == key);
@@ -87,7 +87,7 @@ impl NoteCollection
             {
                 self.locations[hole as usize] = None;
                 self.old_notes[hole as usize] = key;
-                if !panel.state.stack
+                if !panel.stack
                 {
                     // loop mode slot history
                     self.history.push(hole as usize);
@@ -99,7 +99,7 @@ impl NoteCollection
         }
     }
     
-    fn get_next_note(&self, panel: &Panel) -> Option<RefNode<(Note, i8)>>
+    fn get_next_note(&self, panel: &PanelState) -> Option<RefNode<(Note, i8)>>
     {
         // all notes in use
         if self.notes.len() < self.locations.len()
@@ -107,7 +107,7 @@ impl NoteCollection
             return None;
         }
         
-        match panel.state.input
+        match panel.input
         {
             InputMode::TakeFirst =>
             {
@@ -147,9 +147,9 @@ impl NoteCollection
         return None;
     }
     
-    fn find_next_index(&mut self, panel: &Panel, key: u8) -> Option<usize>
+    fn find_next_index(&mut self, config: &NoteConfig, panel: &PanelState, key: u8) -> Option<usize>
     {
-        if !panel.configuration.duplicate_release
+        if !config.duplicate_release
         {
             // find key if already one of the open slots
             for (i, x) in self.old_notes.as_ref().iter().enumerate()
@@ -160,7 +160,7 @@ impl NoteCollection
             }
         }
         
-        if !panel.state.stack
+        if !panel.stack
         {
             return self.history.pull();
         }
@@ -176,9 +176,9 @@ impl NoteCollection
         return None;
     }
     
-    fn losable_u_note(&self, panel: &Panel) -> Option<RefNode<(Note, i8)>>
+    fn losable_u_note(&self, panel: &PanelState) -> Option<RefNode<(Note, i8)>>
     {
-        match panel.state.input
+        match panel.input
         {
             InputMode::TakeFirst =>
             {
@@ -218,9 +218,9 @@ impl NoteCollection
         }
     }
     
-    fn losable_o_note(&self, panel: &Panel, key: u8) -> Option<RefNode<(Note, i8)>>
+    fn losable_o_note(&self, panel: &PanelState, key: u8) -> Option<RefNode<(Note, i8)>>
     {
-        match panel.state.input
+        match panel.input
         {
             InputMode::TakeFirst =>
             {
@@ -341,32 +341,12 @@ impl NoteCollection
         }
     }
     
-    fn get_losable_note(&self, panel: &Panel, key: u8) -> Option<RefNode<(Note, i8)>>
+    fn get_losable_note(&self, config: &NoteConfig, panel: &PanelState, key: u8) -> Option<RefNode<(Note, i8)>>
     {
-        if panel.configuration.sort_notes
+        if config.sort_notes
         {
             return self.losable_o_note(panel, key);
         }
         return self.losable_u_note(panel);
-    }
-}
-
-pub struct NoteManager
-{
-    channels: RA<NoteCollection, 5>
-}
-
-impl InputListener for NoteManager
-{
-    fn on_loop(&mut self, panel: &mut Panel)
-    {
-        
-    }
-
-    fn on_note(&mut self, panel: &mut Panel, channel: Channel, note: Note) -> bool
-    {
-        // let 
-        
-        return false;
     }
 }

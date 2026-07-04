@@ -1,6 +1,6 @@
 use api::{CCType, Channel, Note};
 
-use crate::{MF_DURATION, Menu, MenuState, NOTEOPTION, Panel, TriggerSource, menu_toggle, value_or_last};
+use crate::{Configuration, Menu, MenuFeedback, MenuState, TriggerSource, menu_toggle, menu_toggle_channel, value_or_last};
 
 pub struct ProgramPortsMenu
 {
@@ -19,92 +19,66 @@ const CC5_KEY: u8 = Note::G5;
 
 impl Menu for ProgramPortsMenu
 {
-    fn on_note(mut menu: super::MenuInst<Self>, channel: Channel, note: Note) -> MenuState
+    fn on_note(&mut self, config: &mut Configuration, channel: Channel, note: Note) -> (MenuState, Option<MenuFeedback>)
     {
-        let config = &mut menu.panel.configuration;
-        
         let mut state = MenuState::Listening;
-        match note.key
+        let fb = match note.key
         {
-            Note::C3 if channel <= Channel::C5 =>
-            {
-                let enabled = menu.panel.toggle_trigger(channel as usize);
-                menu.trigger_feedback(enabled, channel);
-            },
+            Note::C3 if channel <= Channel::C5 => menu_toggle_channel!(menu, channel, config.output.trig_enabled[channel as usize]),
             Note::D3 if channel <= Channel::C5 =>
             {
-                menu.panel.set_trigger(channel as usize, TriggerSource::Arpeggio(Channel::All));
-                menu.play_note(NOTEOPTION, MF_DURATION, channel);
+                config.output.triggers[channel as usize].set_source(TriggerSource::Arpeggio(Channel::All));
+                Some(MenuFeedback::note_option(channel))
             },
             Note::Eb3 if channel <= Channel::C5 =>
             {
-                menu.panel.set_trigger(channel as usize, TriggerSource::Note(Channel::All));
-                menu.play_note(NOTEOPTION, MF_DURATION, channel);
+                config.output.triggers[channel as usize].set_source(TriggerSource::Note(Channel::All));
+                Some(MenuFeedback::note_option(channel))
             },
             Note::E3 if channel <= Channel::C5 =>
             {
-                menu.panel.set_trigger(channel as usize, TriggerSource::Sequence(Channel::All));
-                menu.play_note(NOTEOPTION, MF_DURATION, channel);
+                config.output.triggers[channel as usize].set_source(TriggerSource::Sequence(Channel::All));
+                Some(MenuFeedback::note_option(channel))
             },
             Note::F3 if channel <= Channel::C5 =>
             {
-                menu.panel.set_trigger(channel as usize, TriggerSource::Track(Channel::All));
-                menu.play_note(NOTEOPTION, MF_DURATION, channel);
+                config.output.triggers[channel as usize].set_source(TriggerSource::Track(Channel::All));
+                Some(MenuFeedback::note_option(channel))
             },
-            CHANNEL_KEY if channel <= Channel::C5 => state = MenuState::number(2, 1..16, note.key, channel),
-            PULSE_LENGTH_KEY => state = MenuState::number(4, 1.., note.key, Channel::All),
-            Note::C4 =>
-            {
-                let enabled = menu.panel.toggle_cc(0);
-                menu.trigger_feedback(enabled, Channel::All);
-            },
-            Note::D4 =>
-            {
-                let enabled = menu.panel.toggle_cc(1);
-                menu.trigger_feedback(enabled, Channel::All);
-            },
-            Note::E4 =>
-            {
-                let enabled = menu.panel.toggle_cc(2);
-                menu.trigger_feedback(enabled, Channel::All);
-            },
-            Note::F4 =>
-            {
-                let enabled = menu.panel.toggle_cc(3);
-                menu.trigger_feedback(enabled, Channel::All);
-            },
-            Note::G4 =>
-            {
-                let enabled = menu.panel.toggle_cc(4);
-                menu.trigger_feedback(enabled, Channel::All);
-            },
-            Note::A4 => menu_toggle!(menu, config.per_channel_cc),
-            CC1_KEY if channel <= Channel::C5 => state = MenuState::number(3, ..127, note.key, channel),
-            CC2_KEY if channel <= Channel::C5 => state = MenuState::number(3, ..127, note.key, channel),
-            CC3_KEY if channel <= Channel::C5 => state = MenuState::number(3, ..127, note.key, channel),
-            CC4_KEY if channel <= Channel::C5 => state = MenuState::number(3, ..127, note.key, channel),
-            CC5_KEY if channel <= Channel::C5 => state = MenuState::number(3, ..127, note.key, channel),
-            _ => {}
-        }
+            CHANNEL_KEY if channel <= Channel::C5 => {state = MenuState::number(2, 1..16, note.key, channel); None},
+            PULSE_LENGTH_KEY => {state = MenuState::number(4, 1.., note.key, Channel::All); None},
+            Note::C4 => menu_toggle!(menu, config.output.cc_enabled[0]),
+            Note::D4 => menu_toggle!(menu, config.output.cc_enabled[1]),
+            Note::E4 => menu_toggle!(menu, config.output.cc_enabled[2]),
+            Note::F4 => menu_toggle!(menu, config.output.cc_enabled[3]),
+            Note::G4 => menu_toggle!(menu, config.output.cc_enabled[4]),
+            Note::A4 => menu_toggle!(menu, config.other.per_channel_cc),
+            CC1_KEY if channel <= Channel::C5 => {state = MenuState::number(3, ..127, note.key, channel); None},
+            CC2_KEY if channel <= Channel::C5 => {state = MenuState::number(3, ..127, note.key, channel); None},
+            CC3_KEY if channel <= Channel::C5 => {state = MenuState::number(3, ..127, note.key, channel); None},
+            CC4_KEY if channel <= Channel::C5 => {state = MenuState::number(3, ..127, note.key, channel); None},
+            CC5_KEY if channel <= Channel::C5 => {state = MenuState::number(3, ..127, note.key, channel); None},
+            _ => None
+        };
         
-        return state;
+        return (state, fb);
     }
     
-    fn on_number_input(&mut self, panel: &mut Panel, value: Option<usize>, channel: Channel, key: u8)
+    fn on_number_input(&mut self, config: &mut Configuration, value: Option<usize>, channel: Channel, key: u8)
     {
         match key
         {
             CHANNEL_KEY =>
             {
                 let c = value_or_last!(value, self.channel_lv);
-                panel.set_trigger_channel(channel as usize, Channel::from_u8(c as u8));
+                config.output.triggers[channel as usize].set_channel(Channel::from_u8(c as u8));
             },
-            PULSE_LENGTH_KEY => panel.configuration.pulse_length = value_or_last!(value, self.pulse_length_lv),
-            CC1_KEY => panel.set_cc(0, CCType::u8(value_or_last!(value, self.cc_source_lv) as u8), channel),
-            CC2_KEY => panel.set_cc(1, CCType::u8(value_or_last!(value, self.cc_source_lv) as u8), channel),
-            CC3_KEY => panel.set_cc(2, CCType::u8(value_or_last!(value, self.cc_source_lv) as u8), channel),
-            CC4_KEY => panel.set_cc(3, CCType::u8(value_or_last!(value, self.cc_source_lv) as u8), channel),
-            CC5_KEY => panel.set_cc(4, CCType::u8(value_or_last!(value, self.cc_source_lv) as u8), channel),
+            PULSE_LENGTH_KEY => config.other.pulse_length = value_or_last!(value, self.pulse_length_lv),
+            CC1_KEY => config.output.cc_sources[0] = (CCType::u8(value_or_last!(value, self.cc_source_lv) as u8), channel),
+            CC2_KEY => config.output.cc_sources[1] = (CCType::u8(value_or_last!(value, self.cc_source_lv) as u8), channel),
+            CC3_KEY => config.output.cc_sources[2] = (CCType::u8(value_or_last!(value, self.cc_source_lv) as u8), channel),
+            CC4_KEY => config.output.cc_sources[3] = (CCType::u8(value_or_last!(value, self.cc_source_lv) as u8), channel),
+            CC5_KEY => config.output.cc_sources[4] = (CCType::u8(value_or_last!(value, self.cc_source_lv) as u8), channel),
             _ => {}
         }
     }

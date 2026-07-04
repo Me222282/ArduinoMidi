@@ -1,6 +1,6 @@
 use api::{Channel, Note, NoteKey};
 
-use crate::{ArpeggioMode, Panel, MF_DURATION, Menu, MenuState, NOTEOPTION, menu_toggle, menu_toggle_channel, value_or_last};
+use crate::{ArpeggioMode, Configuration, Menu, MenuFeedback, MenuState, menu_toggle, menu_toggle_channel, value_or_last};
 
 pub struct SpecialOpsMenu
 {
@@ -13,76 +13,74 @@ const FILTER_SELECT_KEY: u8 = Note::Eb4;
 
 impl Menu for SpecialOpsMenu
 {
-    fn on_note(mut menu: super::MenuInst<Self>, channel: Channel, note: Note) -> MenuState
+    fn on_note(&mut self, config: &mut Configuration, channel: Channel, note: Note) -> (MenuState, Option<MenuFeedback>)
     {
-        let config = &mut menu.panel.configuration;
-        
         // TODO: factory reset key
         
         let mut state = MenuState::Listening;
-        match note.key
+        let fb = match note.key
         {
-            SET_TEMPO_KEY => state = MenuState::number(4, 10.., note.key, channel),
-            TAP_TEMPO_KEY => state = MenuState::TapTime { key: note.key, channel },
+            SET_TEMPO_KEY => {state = MenuState::number(4, 10.., note.key, channel); None},
+            TAP_TEMPO_KEY => {state = MenuState::TapTime { key: note.key, channel }; None},
             Note::D3 =>
             {
-                config.arpeggios[channel as usize].mode = ArpeggioMode::Ascending;
-                menu.play_note(NOTEOPTION, MF_DURATION, channel);
+                config.other.arpeggios[channel as usize].mode = ArpeggioMode::Ascending;
+                Some(MenuFeedback::note_option(channel))
             },
-            Note::Eb3 => menu_toggle!(menu, config.clocked_arpeggios),
+            Note::Eb3 => menu_toggle!(menu, config.other.clocked_arpeggios),
             Note::E3 =>
             {
-                config.arpeggios[channel as usize].mode = ArpeggioMode::Decending;
-                menu.play_note(NOTEOPTION, MF_DURATION, channel);
+                config.other.arpeggios[channel as usize].mode = ArpeggioMode::Decending;
+                Some(MenuFeedback::note_option(channel))
             },
             Note::F3 =>
             {
-                config.arpeggios[channel as usize].mode = ArpeggioMode::Alternating;
-                menu.play_note(NOTEOPTION, MF_DURATION, channel);
+                config.other.arpeggios[channel as usize].mode = ArpeggioMode::Alternating;
+                Some(MenuFeedback::note_option(channel))
             },
-            Note::G3 => menu_toggle_channel!(menu, channel, config.arpeggios[channel as usize].sort_notes),
-            Note::A3 => menu_toggle_channel!(menu, channel, config.arpeggios[channel as usize].half_notes),
+            Note::G3 => menu_toggle_channel!(menu, channel, config.other.arpeggios[channel as usize].sort_notes),
+            Note::A3 => menu_toggle_channel!(menu, channel, config.other.arpeggios[channel as usize].half_notes),
             
-            Note::C4 => menu_toggle!(menu, config.retrigger_old),
-            Note::Db4 => menu_toggle_channel!(menu, channel, config.channel_filters[channel as usize].filter_keys),
-            Note::D4 => menu_toggle!(menu, config.retrigger_new),
-            FILTER_SELECT_KEY => state = MenuState::KeySelect { key: note.key, channel },
-            Note::E4 => menu_toggle!(menu, config.always_delay),
-            Note::F4 => menu_toggle!(menu, config.micro_tone),
-            Note::Gb4 => menu_toggle!(menu, config.forget_notes),
-            Note::G4 => menu_toggle_channel!(menu, channel, config.arpeggios[channel as usize].enabled),
-            Note::Ab4 => menu_toggle!(menu, config.duplicate_release),
-            Note::A4 => menu_toggle!(menu, config.sort_notes),
-            Note::C5 => menu_toggle!(menu, config.all_channel_mode),
-            Note::Db5 => menu_toggle!(menu, config.alternate_allocations),
-            Note::D5 => menu_toggle!(menu, config.menu_feedback),
-            _ => {}
-        }
+            Note::C4 => menu_toggle!(menu, config.other.retrigger_old),
+            Note::Db4 => menu_toggle_channel!(menu, channel, config.other.channel_filters[channel as usize].filter_keys),
+            Note::D4 => menu_toggle!(menu, config.other.retrigger_new),
+            FILTER_SELECT_KEY => {state = MenuState::KeySelect { key: note.key, channel }; None},
+            Note::E4 => menu_toggle!(menu, config.other.always_delay),
+            Note::F4 => menu_toggle!(menu, config.output.micro_tone),
+            Note::Gb4 => menu_toggle!(menu, config.note.forget_notes),
+            Note::G4 => menu_toggle_channel!(menu, channel, config.other.arpeggios[channel as usize].enabled),
+            Note::Ab4 => menu_toggle!(menu, config.note.duplicate_release),
+            Note::A4 => menu_toggle!(menu, config.note.sort_notes),
+            Note::C5 => menu_toggle!(menu, config.other.all_channel_mode),
+            Note::Db5 => menu_toggle!(menu, config.other.alternate_allocations),
+            Note::D5 => menu_toggle!(menu, config.other.menu_feedback),
+            _ => None
+        };
         
-        return state;
+        return (state, fb);
     }
     
-    fn on_number_input(&mut self, panel: &mut Panel, value: Option<usize>, channel: Channel, key: u8)
+    fn on_number_input(&mut self, config: &mut Configuration, value: Option<usize>, channel: Channel, key: u8)
     {
         match key
         {
-            SET_TEMPO_KEY => panel.configuration.arpeggios[channel as usize].time = value_or_last!(value, self.tempo_lv),
+            SET_TEMPO_KEY => config.other.arpeggios[channel as usize].time = value_or_last!(value, self.tempo_lv),
             _ => {}
         }
     }
-    fn on_tap_time(&mut self, panel: &mut Panel, value: usize, channel: Channel, key: u8)
+    fn on_tap_time(&mut self, config: &mut Configuration, value: usize, channel: Channel, key: u8)
     {
         match key
         {
-            TAP_TEMPO_KEY => panel.configuration.arpeggios[channel as usize].time = value,
+            TAP_TEMPO_KEY => config.other.arpeggios[channel as usize].time = value,
             _ => {}
         }
     }
-    fn on_key_select(&mut self, panel: &mut Panel, value: NoteKey, channel: Channel, key: u8)
+    fn on_key_select(&mut self, config: &mut Configuration, value: NoteKey, channel: Channel, key: u8)
     {
         match key
         {
-            FILTER_SELECT_KEY => panel.configuration.channel_filters[channel as usize].note_filter = value,
+            FILTER_SELECT_KEY => config.other.channel_filters[channel as usize].note_filter = value,
             _ => {}
         }
     }
