@@ -275,23 +275,43 @@ impl Panel
             (self.externals.set_pitch_bend)(i, nv);
         }
     }
-    pub fn set_pb_offset(&mut self, channel: Channel, value: i16)
+    // pub fn set_pb_offset(&mut self, channel: Channel, value: i16)
+    // {
+    //     unsafe
+    //     {
+    //         *self.vibrato_values.get_unchecked_mut(channel as usize) = value;
+    //     }
+    //     let pb_value = unsafe {
+    //         *self.pdvs.get_unchecked(channel as usize)
+    //     };
+        
+    //     // 14 bit to 12 bit
+    //     let nv = (pb_value >> 2) as isize + value as isize;
+    //     let nv = nv.clamp(0, 0xFFF) as u16;
+        
+    //     for (i, &com) in self.slot_allocations.iter().enumerate()
+    //     {
+    //         if com.0 != channel { continue; }
+            
+    //         (self.externals.set_pitch_bend)(i, nv);
+    //     }
+    // }
+    pub fn set_pf_offsets(&mut self, values: &[i16; 16])
     {
-        unsafe
-        {
-            *self.vibrato_values.get_unchecked_mut(channel as usize) = value;
-        }
-        let pb_value = unsafe {
-            *self.pdvs.get_unchecked(channel as usize)
-        };
+        self.vibrato_values.copy_from_slice(values);
         
-        // 14 bit to 12 bit
-        let nv = (pb_value >> 2) as isize + value as isize;
-        let nv = nv.clamp(0, 0xFFF) as u16;
-        
-        for (i, &com) in self.slot_allocations.iter().enumerate()
+        for (i, &(channel, _)) in self.slot_allocations.iter().enumerate()
         {
-            if com.0 != channel { continue; }
+            let pb_value = unsafe {
+                *self.pdvs.get_unchecked(channel as usize)
+            };
+            let offset = unsafe {
+                *values.get_unchecked(channel as usize)
+            };
+            
+            // 14 bit to 12 bit
+            let nv = (pb_value >> 2) as isize + offset as isize;
+            let nv = nv.clamp(0, 0xFFF) as u16;
             
             (self.externals.set_pitch_bend)(i, nv);
         }

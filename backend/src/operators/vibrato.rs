@@ -1,6 +1,6 @@
 use api::{CCType, Channel};
 
-use crate::{AttenuationSource, Panel, VibratoConfig};
+use crate::{AttenuationSource, VibratoConfig};
 
 pub struct VibratoOp
 {
@@ -10,7 +10,7 @@ pub struct VibratoOp
 
 impl VibratoOp
 {   
-    pub fn on_loop(&mut self, time: usize, panel: &mut Panel)
+    pub fn on_loop(&mut self, time: usize, pb_offsets: &mut [i16; 16])
     {
         let time = time as f32;
         
@@ -27,7 +27,7 @@ impl VibratoOp
                 };
                 
                 let nv = offset * atten as f32 * v.scale;
-                panel.set_pb_offset(Channel::from_u8(i as u8), nv as i16);
+                pb_offsets[i] = nv as i16;
             }
             return;
         }
@@ -43,7 +43,7 @@ impl VibratoOp
             };
             
             let nv = offset * atten as f32 * v.scale;
-            panel.set_pb_offset(Channel::from_u8(i as u8), nv as i16);
+            pb_offsets[i] = nv as i16;
         }
     }
     

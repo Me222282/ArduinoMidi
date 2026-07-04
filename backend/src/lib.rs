@@ -24,6 +24,7 @@ extern crate alloc;
 
 // ==========PIPELINE==========
 // Channel Filter
+// CC Outputs
 // Menu
 // Sequencer
 // Arpeggio
@@ -31,6 +32,7 @@ extern crate alloc;
 // Channel Offset
 // KeyNote Filter
 // All Channel Mode
+// Vibrato + Pitch Bend + Mod Wheel
 // Note Voice Processor
 // Slot Allocation
 // Output

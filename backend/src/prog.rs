@@ -59,6 +59,9 @@ impl Program
     {
         // let config = self.get_config();
         
-        self.vibrato.on_loop(time, &mut self.panel);
+        // Vibrato
+        let mut pb_offsets = [0x0000; 16];
+        self.vibrato.on_loop(time, &mut pb_offsets);
+        self.panel.set_pf_offsets(&pb_offsets);
     }
 }
