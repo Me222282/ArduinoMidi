@@ -29,7 +29,7 @@ impl Menu for VibratoMenu
         let mut state = MenuState::Listening;
         let fb = match note.key
         {
-            Note::C4 => menu_toggle_channel!(menu, channel, config.other.vibratos[channel as usize].enabled),
+            Note::C4 => menu_toggle_channel!(menu, channel, config.vibrato.vibratos[channel as usize].enabled),
             Note::D4 =>
             {
                 // config.vibratos[channel as usize].function = ;
@@ -43,7 +43,7 @@ impl Menu for VibratoMenu
             SET_RATE_KEY => {state = MenuState::number(3, 1.., note.key, channel); None},
             SET_MRATE_KEY => {state = MenuState::number(5, 1.., note.key, channel); None},
             SET_SCALE_KEY => {state = MenuState::number(4, ..=2048, note.key, channel); None},
-            Note::C5 => menu_toggle!(menu, config.other.global_vibrato),
+            Note::C5 => menu_toggle!(menu, config.vibrato.global_vibrato),
             MINUS_ST_KEY => {state = MenuState::number(2, ..=24, note.key, channel); None},
             PLUS_ST_KEY => {state = MenuState::number(2, ..=24, note.key, channel); None},
             Note::B5 =>
@@ -89,7 +89,7 @@ impl Menu for VibratoMenu
     
     fn on_number_input(&mut self, config: &mut Configuration, value: Option<usize>, channel: Channel, key: u8)
     {
-        let ci = match config.other.global_vibrato
+        let ci = match config.vibrato.global_vibrato
         {
             true => 0,
             false => channel as usize,
@@ -97,9 +97,9 @@ impl Menu for VibratoMenu
         
         match key
         {
-            SET_RATE_KEY => config.other.vibratos[ci].angular_velocity = value_or_last!(value, self.rate_lv) as f32 * W_SET,
-            SET_MRATE_KEY => config.other.vibratos[ci].angular_velocity = value_or_last!(value, self.mrate_lv) as f32 * MW_SET,
-            SET_SCALE_KEY => config.other.vibratos[channel as usize].scale = value_or_last!(value, self.scale_lv) as f32 * SCALE_SET,
+            SET_RATE_KEY => config.vibrato.vibratos[ci].angular_velocity = value_or_last!(value, self.rate_lv) as f32 * W_SET,
+            SET_MRATE_KEY => config.vibrato.vibratos[ci].angular_velocity = value_or_last!(value, self.mrate_lv) as f32 * MW_SET,
+            SET_SCALE_KEY => config.vibrato.vibratos[channel as usize].scale = value_or_last!(value, self.scale_lv) as f32 * SCALE_SET,
             MINUS_ST_KEY => config.other.channel_offsets[channel as usize].semi_tone = -(value_or_last!(value, self.st_lv) as i8),
             PLUS_ST_KEY => config.other.channel_offsets[channel as usize].semi_tone = value_or_last!(value, self.st_lv) as i8,
             _ => {}

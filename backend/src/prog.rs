@@ -1,6 +1,6 @@
-use api::{MidiCode, Channel, Note};
+use api::{Channel, MidiCode, Note, RA};
 
-use crate::{Configuration, MenuFeedback, MenuWrapper, NoteCollection, NoteConfig, OtherConfig, Panel, ProgramPortsMenu, SequencerConfig, SpecialOpsMenu, VibratoMenu, create_dynamic_menus, vibrato_loop};
+use crate::{Configuration, MenuFeedback, MenuWrapper, NoteCollection, NoteConfig, OtherConfig, Panel, ProgramPortsMenu, SequencerConfig, SpecialOpsMenu, VibratoMenu, VibratoOp, create_dynamic_menus};
 
 create_dynamic_menus!(pub Menus:
     A => MenuWrapper<SpecialOpsMenu>,
@@ -13,8 +13,9 @@ pub struct Program
     panel: Panel,
     other_config: OtherConfig,
     note_config: NoteConfig,
-    note_manager: NoteCollection,
-    sequen_config: SequencerConfig
+    note_manager: RA<NoteCollection, 5>,
+    sequen_config: SequencerConfig,
+    vibrato: VibratoOp
 }
 
 impl Program
@@ -26,7 +27,8 @@ impl Program
             other: &mut self.other_config,
             note: &mut self.note_config,
             sequen: &mut self.sequen_config,
-            output: &mut self.panel.config
+            output: &mut self.panel.config,
+            vibrato: &mut self.vibrato.config
         };
     }
     
@@ -57,6 +59,6 @@ impl Program
     {
         // let config = self.get_config();
         
-        vibrato_loop(time, &mut self.panel, &self.other_config);
+        self.vibrato.on_loop(time, &mut self.panel);
     }
 }

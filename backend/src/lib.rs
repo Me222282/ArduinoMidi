@@ -86,12 +86,20 @@ pub struct ArpeggioConfig
     sort_notes: bool,
     half_notes: bool
 }
+#[derive(Debug, PartialEq, Eq)]
+pub enum AttenuationSource
+{
+    None,
+    Modulation,
+    CC(CCType)
+}
 pub struct Vibrato
 {
     enabled: bool,
     function: fn(f32) -> f32,
     angular_velocity: f32,
-    scale: f32
+    scale: f32,
+    attenuation: AttenuationSource
 }
 pub struct ChannelRedirect
 {
@@ -116,7 +124,8 @@ pub struct Configuration<'a>
     pub other: &'a mut OtherConfig,
     pub note: &'a mut NoteConfig,
     pub sequen: &'a mut SequencerConfig,
-    pub output: &'a mut OutputConfig
+    pub output: &'a mut OutputConfig,
+    pub vibrato: &'a mut VibratoConfig
 }
 
 pub struct OtherConfig
@@ -135,7 +144,7 @@ pub struct OtherConfig
     alternate_allocations: bool,
     menu_feedback: bool,
     clocked_arpeggios: bool,
-    global_vibrato: bool,
+    // global_vibrato: bool,
     per_channel_cc: bool,
     pulse_length: usize,
     
@@ -144,8 +153,14 @@ pub struct OtherConfig
     
     channel_filters: [ChannelFilter; 16],
     arpeggios: [ArpeggioConfig; 16],
-    vibratos: [Vibrato; 16],
+    // vibratos: [Vibrato; 16],
     channel_offsets: [NoteOffset; 16]
+}
+
+pub struct VibratoConfig
+{
+    global_vibrato: bool,
+    vibratos: [Vibrato; 16]
 }
 
 pub struct NoteConfig
