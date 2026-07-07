@@ -1,6 +1,6 @@
 use api::{CCType, Channel, Externals, Gate, Note, PanelState};
 
-use crate::{OutputConfig, TriggerSource};
+use crate::{FreqCorrection, OutputConfig, TriggerSource, VibratoConfig, VibratoOp};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum SlotSelect
@@ -31,6 +31,7 @@ pub struct Panel
     vibrato_values: [i16; 16],
     pdvs: [u16; 16],
     gate: Gate,
+    notes: [u8; 5],
     pub config: OutputConfig
 }
 
@@ -255,7 +256,18 @@ impl Panel
             }
         }
     }
-    pub fn set_pitch_bend(&mut self, channel: Channel, value: u16)
+    
+    #[inline]
+    fn calculate_pb(&self, vibrato: &mut VibratoOp, pb: isize, offset: isize, channel: Channel, slot: usize) -> u16
+    {
+        let key = (self.externals.get_note)(slot);
+        let offset = vibrato.frequency_correction(key, channel, offset);
+        
+        // 14 bit to 12 bit
+        let nv = (pb >> 2) + offset;
+        return nv.clamp(0, 0xFFF) as u16;
+    }
+    pub fn set_pitch_bend(&mut self, vibrato: &mut VibratoOp, channel: Channel, value: u16)
     {
         unsafe
         {
@@ -265,14 +277,11 @@ impl Panel
             *self.vibrato_values.get_unchecked(channel as usize)
         };
         
-        // 14 bit to 12 bit
-        let nv = (value >> 2) as isize + offset as isize;
-        let nv = nv.clamp(0, 0xFFF) as u16;
-        
         for (i, &com) in self.slot_allocations.iter().enumerate()
         {
             if com.0 != channel { continue; }
             
+            let nv = self.calculate_pb(vibrato, value as isize, offset as isize, channel, i);
             (self.externals.set_pitch_bend)(i, nv);
         }
     }
@@ -297,7 +306,7 @@ impl Panel
     //         (self.externals.set_pitch_bend)(i, nv);
     //     }
     // }
-    pub fn set_pf_offsets(&mut self, values: &[i16; 16])
+    pub fn set_pf_offsets(&mut self, vibrato: &mut VibratoOp, values: &[i16; 16])
     {
         self.vibrato_values.copy_from_slice(values);
         
@@ -310,10 +319,7 @@ impl Panel
                 *values.get_unchecked(channel as usize)
             };
             
-            // 14 bit to 12 bit
-            let nv = (pb_value >> 2) as isize + offset as isize;
-            let nv = nv.clamp(0, 0xFFF) as u16;
-            
+            let nv = self.calculate_pb(vibrato, pb_value as isize, offset as isize, channel, i);
             (self.externals.set_pitch_bend)(i, nv);
         }
     }
@@ -424,11 +430,13 @@ impl Panel
     #[inline]
     fn set_note(&self, slot: usize, key: u8)
     {
-        match self.config.micro_tone
+        let key = match self.config.micro_tone
         {
-            true => (self.externals.set_note)(slot, key),
-            false => (self.externals.set_note)(slot, key << 1)
-        }
+            true => key,
+            false => key << 1
+        };
+        
+        (self.externals.set_note)(slot, key);
     }
     fn set_vel(&self, slot: usize, value: u8)
     {

@@ -1,6 +1,6 @@
 use api::{Channel, MidiCode, Note, RA};
 
-use crate::{Configuration, MenuFeedback, MenuWrapper, NoteCollection, NoteConfig, NoteOutput, OtherConfig, Panel, ProgramPortsMenu, RETRIG_TIME, SequencerConfig, SlotSelect, SpecialOpsMenu, VibratoMenu, VibratoOp, create_dynamic_menus, process_note};
+use crate::{Configuration, FreqCorrection, MenuFeedback, MenuWrapper, NoteCollection, NoteConfig, NoteOutput, OtherConfig, Panel, ProgramPortsMenu, RETRIG_TIME, SequencerConfig, SlotSelect, SpecialOpsMenu, VibratoMenu, VibratoOp, create_dynamic_menus, process_note};
 
 create_dynamic_menus!(pub Menus:
     A => MenuWrapper<SpecialOpsMenu>,
@@ -10,7 +10,7 @@ create_dynamic_menus!(pub Menus:
 pub struct Program
 {
     menu: Menus,
-    panel: Panel,
+    pub panel: Panel,
     other_config: OtherConfig,
     note_config: NoteConfig,
     note_manager: RA<NoteCollection, 5>,
@@ -63,7 +63,7 @@ impl Program
         // Vibrato
         let mut pb_offsets = [0x0000; 16];
         self.vibrato.on_loop(time, &mut pb_offsets);
-        self.panel.set_pf_offsets(&pb_offsets);
+        self.panel.set_pf_offsets(&mut self.vibrato, &pb_offsets);
     }
     
     fn get_note_collection(note_manager: &mut RA<NoteCollection, 5>, channel: Channel) -> Option<&mut NoteCollection>

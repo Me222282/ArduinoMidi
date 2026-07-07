@@ -1,4 +1,5 @@
 #![no_std]
+#![feature(core_intrinsics)]
 
 mod panel;
 pub use crate::panel::*;
@@ -97,13 +98,21 @@ pub enum AttenuationSource
     Modulation,
     CC(CCType)
 }
+#[derive(Debug, Clone, Copy)]
+pub enum FreqCorrection
+{
+    None,
+    Half,
+    Full
+}
 pub struct Vibrato
 {
     enabled: bool,
     function: fn(f32) -> f32,
     angular_velocity: f32,
     scale: f32,
-    attenuation: AttenuationSource
+    attenuation: AttenuationSource,
+    freq_correction: FreqCorrection
 }
 pub struct ChannelRedirect
 {

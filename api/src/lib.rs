@@ -46,7 +46,9 @@ pub struct Externals
     pub set_pitch_bend: fn(usize, u16),
     pub set_mod: fn(u16),
     
-    pub delay: fn(u32)
+    pub delay: fn(u32),
+    pub get_note: fn(usize) -> u8,
+    pub log: fn(f32) -> f32
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

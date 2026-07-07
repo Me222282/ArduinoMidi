@@ -29,6 +29,7 @@ name = "backend"
 version = "0.1.0"
 dependencies = [
  "api",
+ "trig-const",
 ]
 
 [[package]]
@@ -1089,6 +1090,12 @@ checksum = "a2abe9b86193656635d2411dc43050282ca48aa31c2451210f4202550afb7526"
 dependencies = [
  "winnow",
 ]
+
+[[package]]
+name = "trig-const"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ffec2fe2ed1e10dac46d8530afb395cae635fa02ef03d7fff1c211e94f9059fc"
 
 [[package]]
 name = "unicode-ident"

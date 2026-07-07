@@ -5,3 +5,4 @@ edition = "2024"
 
 [dependencies]
 api = { path = "../api" }
+trig-const = "0.4.0"
