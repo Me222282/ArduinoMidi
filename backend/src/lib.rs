@@ -83,7 +83,7 @@ pub enum ArpeggioMode
     Decending,
     Alternating
 }
-pub struct ArpeggioConfig
+pub struct Arpeggio
 {
     enabled: bool,
     time: u32,
@@ -156,7 +156,7 @@ pub struct OtherConfig
     all_channel_pb: bool,
     alternate_allocations: bool,
     menu_feedback: bool,
-    clocked_arpeggios: bool,
+    // clocked_arpeggios: bool,
     // global_vibrato: bool,
     per_channel_cc: bool,
     pulse_length: usize,
@@ -165,7 +165,7 @@ pub struct OtherConfig
     // custom_allocations: [(Channel, u8); 5],
     
     channel_filters: [ChannelFilter; 16],
-    arpeggios: [ArpeggioConfig; 16],
+    // arpeggios: [Arpeggio; 16],
     // vibratos: [Vibrato; 16],
     channel_offsets: [NoteOffset; 16]
 }
@@ -174,6 +174,12 @@ pub struct VibratoConfig
 {
     global_vibrato: bool,
     vibratos: [Vibrato; 16]
+}
+
+pub struct ArpeggioConfig
+{
+    clocked_arpeggios: bool,
+    arpeggios: [Arpeggio; 16],
 }
 
 pub struct NoteConfig

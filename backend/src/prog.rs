@@ -112,8 +112,6 @@ impl Program
     }
     pub fn on_loop(&mut self, time: u32)
     {
-        // let config = self.get_config();
-        
         // Menu feedback
         if self.is_mf && time > self.mf_end_time
         {

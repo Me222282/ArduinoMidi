@@ -1,6 +1,10 @@
 mod vibrato;
-use api::{Channel, Note};
 pub use vibrato::*;
+
+mod arpeggio;
+pub use arpeggio::*;
+
+use api::{Channel, Note};
 
 use crate::{ChannelRedirect, OtherConfig};
 
