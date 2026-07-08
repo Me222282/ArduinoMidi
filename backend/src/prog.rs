@@ -58,6 +58,10 @@ impl Program
     
     pub fn on_midi_message(&mut self, message: MidiCode, time: u32)
     {
+        // ignore all messages from disabled channels
+        let channel = message.get_channel();
+        if channel != Channel::All && !self.other_config.channel_filters[channel as usize].enabled { return; }
+        
         if !self.menu.allow_message(message) { return; }
         
         match message

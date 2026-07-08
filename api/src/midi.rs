@@ -29,6 +29,24 @@ pub enum MidiCode
     Reset
 }
 
+impl MidiCode
+{
+    pub fn get_channel(self) -> Channel
+    {
+        return match self
+        {
+            MidiCode::NoteOFF(channel, _) => channel,
+            MidiCode::NoteON(channel, _) => channel,
+            MidiCode::PolyphonicAftertouch(channel, _) => channel,
+            MidiCode::ControlChange(channel, _cctype, _) => channel,
+            MidiCode::ProgramChange(channel, _) => channel,
+            MidiCode::ChannelPressure(channel, _) => channel,
+            MidiCode::PitchWheel(channel, _) => channel,
+            _ => Channel::All
+        };
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum QFData
 {

@@ -71,7 +71,7 @@ impl NoteCollection
         }
     }
     
-    pub fn remove_note(&mut self, config: &NoteConfig, panel: &PanelState, key: u8) -> NoteOutput
+    pub fn remove_note(&mut self, _config: &NoteConfig, panel: &PanelState, key: u8) -> NoteOutput
     {
         // only remove 1 note - important for arpeggios
         let remove_op = self.notes.iter_forward_ref().find(|rn| self.notes.get_ref(rn).0.key == key);

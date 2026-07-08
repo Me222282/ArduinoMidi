@@ -89,7 +89,6 @@ pub trait Menu
     where Self: Sized
 {
     fn auto_close() -> bool { return true; }
-    fn rsl() -> bool { return true; }
     
     fn on_note(&mut self, config: &mut Configuration, channel: Channel, note: Note) -> (MenuState, Option<MenuFeedback>);
     fn on_number_input(&mut self, config: &mut Configuration, value: Option<usize>, channel: Channel, key: u8) { }

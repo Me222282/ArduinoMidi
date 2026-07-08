@@ -184,18 +184,12 @@ impl<T: Menu> MenuWrapTrait for MenuWrapper<T>
         {
             MenuState::Listening =>
             {
-                if !T::rsl()
-                {
-                    let ns = self.menu.on_note(config, channel, note);
-                    return self.set_state(ns.1, time, ns.0);
-                }
-                
                 match note.key
                 {
                     Note::B3 =>
                     {
                         self.menu.reset_values();
-                        (false, Some(MenuFeedback::boolean(true, Channel::All)))
+                        (false, Some(MenuFeedback::note_on(Channel::All)))
                     },
                     Note::Bb4 =>
                     {
@@ -327,12 +321,7 @@ impl<T: Menu> MenuWrapTrait for MenuWrapper<T>
     {
         if self.state == MenuState::Listening
         {
-            if T::auto_close()
-            {
-                return (true, None);
-            }
-            
-            return (false, None);
+            return (T::auto_close(), None);
         }
         
         self.state = MenuState::Listening;
