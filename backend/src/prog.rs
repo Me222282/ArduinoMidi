@@ -82,7 +82,7 @@ impl Program
                 }
                 else
                 {
-                    self.output.push_note(channel, note);
+                    self.arpeggio.on_note(&mut self.output, channel, note);
                 }
             },
             MidiCode::NoteOFF(channel, note) =>
@@ -102,7 +102,7 @@ impl Program
                 }
                 else
                 {
-                    self.output.remove_note(channel, note);
+                    self.arpeggio.off_note(&mut self.output, channel, note);
                 }
             },
             MidiCode::ControlChange(channel, cctype, value) => todo!(),
@@ -113,11 +113,9 @@ impl Program
     
     pub fn on_loop(&mut self, time: u32)
     {
-        // Menu feedback
         self.output.on_loop(time);
-        
-        // Vibrato
-        self.vibrato.on_loop(time, &mut self.output);
+        self.vibrato.on_loop(time, &mut self.output);   
+        self.arpeggio.on_loop(time, &mut self.output);
     }
     
     pub fn on_reset_switch(&mut self, time: u32)
