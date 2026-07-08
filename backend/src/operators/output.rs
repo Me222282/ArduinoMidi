@@ -1,11 +1,11 @@
-use api::{Channel, Gate, Note, RA};
+use api::{Channel, Gate, Note, SA};
 
 use crate::{MenuFeedback, NoteCollection, NoteConfig, NoteOutput, OutputConfig, Panel, RETRIG_TIME, SlotSelect, get_only_note, process_note};
 
 pub struct Output
 {
     pub panel: Panel,
-    pub note_manager: RA<NoteCollection, 5>,
+    pub note_manager: SA<NoteCollection, 5>,
     pub config: OutputConfig,
     pub note_config: NoteConfig,
     
@@ -44,7 +44,7 @@ impl Output
         return get_only_note(&self.note_manager);
     }
     
-    fn get_note_collection(note_manager: &mut RA<NoteCollection, 5>, channel: Channel) -> Option<&mut NoteCollection>
+    fn get_note_collection(note_manager: &mut SA<NoteCollection, 5>, channel: Channel) -> Option<&mut NoteCollection>
     {
         for nc in note_manager.iter_mut()
         {

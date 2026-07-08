@@ -1,4 +1,4 @@
-use api::{Channel, InputMode, LinkedList, Note, PanelState, Queue, RA, RefNode};
+use api::{Channel, InputMode, LinkedList, Note, PanelState, Queue, SA, RefNode};
 
 use crate::NoteConfig;
 
@@ -13,8 +13,8 @@ pub enum NoteOutput
 pub struct NoteCollection
 {
     notes: LinkedList<(Note, i8)>,
-    locations: RA<Option<RefNode<(Note, i8)>>, 5>,
-    old_notes: RA<u8, 5>,
+    locations: SA<Option<RefNode<(Note, i8)>>, 5>,
+    old_notes: SA<u8, 5>,
     history: Queue<usize, 5>,
     channel: Channel
 }
@@ -369,7 +369,7 @@ impl NoteCollection
     }
 }
 
-pub(crate) fn get_only_note(manager: &RA<NoteCollection, 5>) -> Option<Note>
+pub(crate) fn get_only_note(manager: &SA<NoteCollection, 5>) -> Option<Note>
 {
     let mut note = Note::new(0, 0);
     let mut set_note = false;

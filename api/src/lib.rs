@@ -12,8 +12,8 @@ pub use crate::data::*;
 mod linked_list;
 pub use crate::linked_list::*;
 
-mod runtime_array;
-pub use crate::runtime_array::*;
+mod stack_array;
+pub use crate::stack_array::*;
 
 mod queue;
 pub use crate::queue::*;
