@@ -132,6 +132,11 @@ impl Program
                     Note::D1 => self.menu = Menus::C(MenuWrapper::new(self.menu_storage.get_vibrato())),
                     _ => {}
                 }
+                // entered menu
+                if !self.menu.is_none()
+                {
+                    self.menu_feedback(MenuFeedback::note_select(Channel::All), time);
+                }
             }
         }
         // in menu
