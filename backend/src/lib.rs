@@ -160,7 +160,7 @@ pub struct OtherConfig
     // menu_feedback: bool,
     // clocked_arpeggios: bool,
     // global_vibrato: bool,
-    per_channel_cc: bool,
+    // per_channel_cc: bool,
     pulse_length: usize,
     
     // use_custom_allocations: bool,
@@ -179,6 +179,7 @@ pub struct OutputConfig
     always_delay: bool,
     all_channel_mode: bool,
     all_channel_pb: bool,
+    all_channel_cc: bool,
     menu_feedback: bool,
     
     channel_filters: [ChannelFilter; 16],
@@ -217,6 +218,7 @@ pub struct PanelConfig
     use_custom_allocations: bool,
     custom_allocations: [(Channel, u8); 5],
     
+    per_channel_cc: bool,
     cc_enabled: [bool; 5],
     trig_enabled: [bool; 5],
     micro_tone: bool,

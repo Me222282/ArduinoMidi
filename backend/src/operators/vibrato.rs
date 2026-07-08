@@ -2,7 +2,7 @@ use core::intrinsics;
 
 use api::{CCType, Channel, Note};
 
-use crate::{AttenuationSource, FreqCorrection, Output, VibratoConfig};
+use crate::{AttenuationSource, FreqCorrection, Panel, VibratoConfig};
 
 struct VCorrData
 {
@@ -44,7 +44,7 @@ pub struct VibratoOp
 
 impl VibratoOp
 {   
-    pub fn on_loop(&mut self, time: u32, output: &mut Output)
+    pub fn on_loop(&mut self, time: u32, panel: &mut Panel)
     {
         let time = time as f32;
         let mut pb_offsets: [i16; 16] = [0; 16];
@@ -85,7 +85,7 @@ impl VibratoOp
             }
         }
         
-        output.panel.set_pb_offsets(self, &pb_offsets);
+        panel.set_pb_offsets(self, &pb_offsets);
     }
     
     pub fn on_cc(&mut self, cc: CCType, channel: Channel, value: u8)

@@ -151,6 +151,8 @@ impl ArpInstance
         }
         self.current = new_current;
         
+        // output.panel.output_trigger(crate::TriggerSource::Arpeggio(channel), true);
+        
         // swap outputs
         match &self.current
         {

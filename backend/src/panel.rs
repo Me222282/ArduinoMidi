@@ -78,13 +78,23 @@ impl Panel
                 !self.state.modulation;
         }
     }
-    fn is_vf_cc(&self, slot: usize, cc: CCType, channel: Channel) -> bool
+    fn get_vf_cc_channel(&self, slot: usize, cc: CCType) -> Option<Channel>
     {
         unsafe
         {
-            return !self.config.trig_enabled.get_unchecked(slot) &&
-                *self.config.cc_enabled.get_unchecked(slot) &&
-                self.config.cc_sources.get_unchecked(slot) == &(cc, channel);
+            if *self.config.trig_enabled.get_unchecked(slot) ||
+                !self.config.cc_enabled.get_unchecked(slot)
+            {
+                return None;
+            }
+            
+            let src = *self.config.cc_sources.get_unchecked(slot);
+            if src.0 != cc
+            {
+                return None;
+            }
+            
+            return Some(src.1);
         }
     }
     fn is_vf_trigger(&self, slot: usize, source: TriggerSource) -> bool
@@ -175,69 +185,33 @@ impl Panel
             (self.externals.set_mod)(value >> 2)
         }
     }
-    pub fn output_control_change(&self, slots: SlotSelect, cc: CCType, channel: Channel, value: u8)
+    pub fn output_control_change(&self, cc: CCType, channel: Channel, value: u8)
     {
-        match slots
+        if self.config.per_channel_cc
         {
-            SlotSelect::ChannelVoice(c, v) =>
+            // counts the number of slots with this channel
+            let mut i = 0;
+            for (slot, &com) in self.slot_allocations.iter().enumerate()
             {
-                for (i, &com) in self.slot_allocations.iter().enumerate()
-                {
-                    if com != (c, v) { continue; }
-                    
-                    if self.is_vf_cc(i, cc, channel)
-                    {
-                        // 7 bit to 8 bit
-                        (self.externals.set_vel)(i, value << 1);
-                    }
-                }
-            },
-            SlotSelect::Channel(Channel::All) | 
-            SlotSelect::All =>
-            {
-                for i in 0..5
-                {
-                    if self.is_vf_cc(i, cc, channel)
-                    {
-                        // 7 bit to 8 bit
-                        (self.externals.set_vel)(i, value << 1);
-                    }
-                }
-            },
-            SlotSelect::Channel(c) =>
-            {
-                for (i, &com) in self.slot_allocations.iter().enumerate()
-                {
-                    if com.0 != c { continue; }
-                    
-                    if self.is_vf_cc(i, cc, channel)
-                    {
-                        // 7 bit to 8 bit
-                        (self.externals.set_vel)(i, value << 1);
-                    }
-                }
-            },
-            SlotSelect::Voice(v) =>
-            {
-                for (i, &com) in self.slot_allocations.iter().enumerate()
-                {
-                    if com.1 != v { continue; }
-                    
-                    if self.is_vf_cc(i, cc, channel)
-                    {
-                        // 7 bit to 8 bit
-                        (self.externals.set_vel)(i, value << 1);
-                    }
-                }
-            },
-            SlotSelect::Index(i) =>
-            {
-                let i = i as usize;
-                if self.is_vf_cc(i, cc, channel)
+                if com.0 != channel { continue; }
+                
+                if self.get_vf_cc_channel(i, cc).is_some()
                 {
                     // 7 bit to 8 bit
-                    (self.externals.set_vel)(i, value << 1);
+                    (self.externals.set_vel)(slot, value << 1);
                 }
+                
+                i += 1;
+            }
+            return;
+        }
+        
+        for i in 0..5
+        {
+            if self.get_vf_cc_channel(i, cc) == Some(channel)
+            {
+                // 7 bit to 8 bit
+                (self.externals.set_vel)(i, value << 1);
             }
         }
     }

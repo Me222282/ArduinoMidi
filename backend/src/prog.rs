@@ -15,7 +15,6 @@ pub struct Program
     other_config: OtherConfig,
     
     sequen_config: SequencerConfig,
-    vibrato: VibratoOp,
     arpeggio: Arpeggiator,
     pub output: Output
 }
@@ -72,7 +71,7 @@ impl Program
                         sequen: &mut self.sequen_config,
                         output: &mut self.output.config,
                         panel: &mut self.output.panel.config,
-                        vibrato: &mut self.vibrato.config,
+                        vibrato: &mut self.output.vibrato.config,
                         arpeggio: &mut self.arpeggio.config
                     };
                     let exit = self.menu.on_note(&mut config, time, channel, note);
@@ -95,7 +94,7 @@ impl Program
                         sequen: &mut self.sequen_config,
                         output: &mut self.output.config,
                         panel: &mut self.output.panel.config,
-                        vibrato: &mut self.vibrato.config,
+                        vibrato: &mut self.output.vibrato.config,
                         arpeggio: &mut self.arpeggio.config
                     };
                     self.menu.off_note(&mut config, channel, note);
@@ -105,7 +104,7 @@ impl Program
                     self.arpeggio.off_note(&mut self.output, channel, note);
                 }
             },
-            MidiCode::ControlChange(channel, cctype, value) => todo!(),
+            MidiCode::ControlChange(channel, cctype, value) => self.output.on_cc(channel, cctype, value),
             MidiCode::PitchWheel(channel, value) => todo!(),
             
             // everything else should go to menu
@@ -121,13 +120,12 @@ impl Program
     pub fn on_loop(&mut self, time: u32)
     {
         self.output.on_loop(time);
-        self.vibrato.on_loop(time, &mut self.output);   
         self.arpeggio.on_loop(time, &mut self.output);
     }
     
     pub fn on_reset_switch(&mut self, time: u32)
     {
-        self.vibrato.on_reset_switch();
+        // self.vibrato.on_reset_switch();
         
         if self.menu.is_none()
         {

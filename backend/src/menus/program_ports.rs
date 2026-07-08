@@ -53,7 +53,7 @@ impl Menu for ProgramPortsMenu
             Note::E4 => menu_toggle!(menu, config.panel.cc_enabled[2]),
             Note::F4 => menu_toggle!(menu, config.panel.cc_enabled[3]),
             Note::G4 => menu_toggle!(menu, config.panel.cc_enabled[4]),
-            Note::A4 => menu_toggle!(menu, config.other.per_channel_cc),
+            Note::A4 => menu_toggle!(menu, config.panel.per_channel_cc),
             CC1_KEY if channel <= Channel::C5 => {state = MenuState::number(3, ..127, note.key, channel); None},
             CC2_KEY if channel <= Channel::C5 => {state = MenuState::number(3, ..127, note.key, channel); None},
             CC3_KEY if channel <= Channel::C5 => {state = MenuState::number(3, ..127, note.key, channel); None},

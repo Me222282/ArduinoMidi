@@ -1,6 +1,6 @@
-use api::{Channel, Gate, Note, SA};
+use api::{CCType, Channel, Gate, Note, SA};
 
-use crate::{MenuFeedback, NoteCollection, NoteConfig, NoteOutput, OutputConfig, Panel, RETRIG_TIME, SlotSelect, get_only_note, process_note};
+use crate::{MenuFeedback, NoteCollection, NoteConfig, NoteOutput, OutputConfig, Panel, RETRIG_TIME, SlotSelect, VibratoOp, get_only_note, process_note};
 
 pub struct Output
 {
@@ -8,11 +8,14 @@ pub struct Output
     pub note_manager: SA<NoteCollection, 5>,
     pub config: OutputConfig,
     pub note_config: NoteConfig,
+    pub vibrato: VibratoOp,
     
     is_mf: bool,
     mf_end_time: u32,
     mf_channel: Channel,
     active_channels: u8,
+    
+    mod_values: [u16; 16]
 }
 
 impl Output
@@ -36,6 +39,8 @@ impl Output
             self.panel.output_gate_off(SlotSelect::Channel(self.mf_channel));
             self.is_mf = false;
         }
+        
+        self.vibrato.on_loop(time, &mut self.panel);
     }
     
     #[inline]
@@ -121,7 +126,7 @@ impl Output
         self.manage_note_output(note_output, channel, note);
     }
     
-    pub fn remove_note(&mut self, mut channel: Channel, mut note: Note)
+    pub fn remove_note(&mut self, channel: Channel, note: Note)
     {
         match process_note(channel, note, &self.config)
         {
@@ -144,5 +149,51 @@ impl Output
         
         let note_output = nc.remove_note(&self.note_config, &self.panel.state, note.key);
         self.manage_note_output(note_output, channel, note);
+    }
+    
+    pub fn set_modulation(&mut self, channel: Channel, value: u16)
+    {
+        if channel == Channel::All
+        {
+            for i in 0u8..16u8
+            {
+                self.set_modulation(Channel::from_u8(i), value);
+            }
+            return;
+        }
+        
+        self.mod_values[channel as usize] = value;
+        self.panel.output_modulation(channel, value);
+        
+        self.vibrato.on_modulation(channel, value);
+    }
+    
+    pub fn on_cc(&mut self, mut channel: Channel, cc: CCType, value: u8)
+    {
+        if self.config.all_channel_cc
+        {
+            channel = Channel::from_u8(channel as u8 % self.active_channels);
+        }
+        
+        self.panel.output_control_change(cc, channel, value);
+        
+        match cc
+        {
+            CCType::ALL_NOTES_OFF =>
+            {
+                // TODO
+            },
+            CCType::MODULATION_WHEEL_MSB =>
+            {
+                let m = self.mod_values[channel as usize];
+                self.set_modulation(channel, (m & 0x007F) | ((value as u16) << 7));
+            },
+            CCType::MODULATION_WHEEL_LSB =>
+            {
+                let m = self.mod_values[channel as usize];
+                self.set_modulation(channel, (m & 0x3F80) | value as u16);
+            },
+            _ => {}
+        }
     }
 }
