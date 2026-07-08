@@ -44,7 +44,7 @@ impl Menu for SpecialOpsMenu
             Note::C4 => menu_toggle!(menu, config.other.retrigger_old),
             Note::Db4 => menu_toggle_channel!(menu, channel, config.other.channel_filters[channel as usize].filter_keys),
             Note::D4 => menu_toggle!(menu, config.other.retrigger_new),
-            FILTER_SELECT_KEY => {state = MenuState::KeySelect { key: note.key, channel }; None},
+            FILTER_SELECT_KEY => {state = MenuState::KeySelect { key: FILTER_SELECT_KEY, channel }; None},
             Note::E4 => menu_toggle!(menu, config.other.always_delay),
             Note::F4 => menu_toggle!(menu, config.output.micro_tone),
             Note::Gb4 => menu_toggle!(menu, config.note.forget_notes),

@@ -1,4 +1,4 @@
-use api::{Channel, MidiCode, Note};
+use api::{Channel, MidiCode, Note, NoteKey};
 
 use crate::{Configuration, Menu, MenuFeedback, MenuState};
 
@@ -124,6 +124,7 @@ pub struct MenuWrapper<T: Menu>
     digits: [u8; MAX_DIGITS],
     d_count: u8,
     tap_time: u32,
+    key_select: NoteKey,
     pub menu: T
 }
 impl<T: Menu> MenuWrapper<T>
@@ -214,7 +215,7 @@ impl<T: Menu> MenuWrapTrait for MenuWrapper<T>
                             // out of bounds
                             if value < min || value > max
                             {
-                                return (false, Some(MenuFeedback::note_fail(channel)));
+                                return (false, Some(MenuFeedback::note_fail(cf)));
                             }
                             
                             Some(value)
@@ -222,7 +223,7 @@ impl<T: Menu> MenuWrapTrait for MenuWrapper<T>
                     };
                     
                     self.menu.on_number_input(config, value, channel, key);
-                    return (false, Some(MenuFeedback::note_select(channel)));
+                    return (false, Some(MenuFeedback::note_select(cf)));
                 }
                 
                 // add digit
@@ -247,18 +248,44 @@ impl<T: Menu> MenuWrapTrait for MenuWrapper<T>
                 };
                 self.digits[self.d_count as usize] = digit;
                 self.d_count += 1;
-                (false, Some(MenuFeedback::number(note.key, channel)))
+                (false, Some(MenuFeedback::number(note.key, cf)))
             },
-            MenuState::TapTime { key, channel } =>
+            MenuState::TapTime { key, channel: cf } =>
             {
+                if cf != Channel::All && cf != channel
+                {
+                    return (false, Some(MenuFeedback::note_fail(cf)));
+                }
+                
                 self.menu.on_tap_time(config, time - self.tap_time, channel, key);
                 self.state = MenuState::Listening;
-                (false, Some(MenuFeedback::note_option_short(channel)))
+                (false, Some(MenuFeedback::note_option_short(cf)))
             },
-            MenuState::KeySelect { key, channel } =>
+            MenuState::KeySelect { key, channel: cf } =>
             {
+                if cf != Channel::All && cf != channel
+                {
+                    return (false, Some(MenuFeedback::note_fail(cf)));
+                }
                 
-                (false, None)
+                // exit key select
+                if note.key == key
+                {
+                    self.menu.on_key_select(config, self.key_select, channel, key);
+                    self.state = MenuState::Listening;
+                    return (false, Some(MenuFeedback::note_select(cf)));
+                }
+                
+                let key_scale = note.key - Note::C1;
+                if key_scale < 12
+                {
+                    // won't fail due to check that key is in range
+                    self.key_select = unsafe { NoteKey::from_key(note.key) };
+                    return (false, Some(MenuFeedback::number(note.key, cf)));
+                }
+                
+                // error
+                (false, Some(MenuFeedback::note_fail(cf)))
             },
             MenuState::Exit => (true, None)
         }

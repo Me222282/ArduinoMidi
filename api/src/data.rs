@@ -25,6 +25,11 @@ impl NoteKey
         let v = (self as u8 + 12 - key) % 12;
         return !(v == 1 || v == 3 || v == 6 || v == 8 || v == 10);
     }
+    
+    pub const unsafe fn from_key(key: u8) -> NoteKey
+    {
+        return unsafe { core::mem::transmute(key) };
+    }
 }
 impl PartialEq<u8> for NoteKey
 {
