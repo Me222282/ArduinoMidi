@@ -107,6 +107,13 @@ impl Program
             },
             MidiCode::ControlChange(channel, cctype, value) => todo!(),
             MidiCode::PitchWheel(channel, value) => todo!(),
+            
+            // everything else should go to menu
+            MidiCode::TimingClock =>
+            {
+                self.arpeggio.on_clock(&mut self.output);
+                self.menu.on_message(message);
+            }
             _ => self.menu.on_message(message)
         }
     }

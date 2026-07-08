@@ -16,7 +16,8 @@ pub struct Arpeggiator
 {
     insts: [ArpInstance; 16],
     pub config: ArpeggioConfig,
-    last_time: u32
+    last_time: u32,
+    clock_count: usize
 }
 
 impl ArpInstance
@@ -69,6 +70,7 @@ impl ArpInstance
             }
             return;
         }
+        // move out of self - so can be removed from linked list if needed
         let current = match core::mem::replace(&mut self.current, None)
         {
             Some(v) => v,
@@ -158,7 +160,10 @@ impl ArpInstance
             },
             None => {}
         };
-        output.remove_note_post(channel, old);
+        if !config.half_notes
+        {
+            output.remove_note_post(channel, old);
+        }
     }
 }
 
@@ -229,6 +234,37 @@ impl Arpeggiator
             // turn off at half time
             if config.half_notes && (arp.current_time + arp.current_time) > config.time
             {
+                let note = *arp.notes.get_ref(cn);
+                output.remove_note_post(Channel::from_u8(i as u8), note);
+            }
+        }
+    }
+    
+    pub fn on_clock(&mut self, output: &mut Output)
+    {
+        let acc = self.clock_count;
+        self.clock_count += 1;
+        
+        if acc % 6 == 0
+        {
+            for (i, (arp, config)) in self.insts.iter_mut().zip(&self.config.arpeggios).enumerate()
+            {
+                if arp.current.is_none() { continue; }
+                arp.trigger_next(config, output, Channel::from_u8(i as u8));
+            }
+            return;
+        }
+        // half time
+        if acc % 3 == 0
+        {
+            for (i, (arp, config)) in self.insts.iter_mut().zip(&self.config.arpeggios).enumerate()
+            {
+                if !config.half_notes { continue; }
+                let cn = match &arp.current
+                {
+                    Some(v) => v,
+                    None => continue
+                };
                 let note = *arp.notes.get_ref(cn);
                 output.remove_note_post(Channel::from_u8(i as u8), note);
             }
