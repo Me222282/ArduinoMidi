@@ -1,6 +1,6 @@
 use api::{Channel, Gate, MidiCode, Note, RA};
 
-use crate::{Configuration, MenuFeedback, MenuStorage, MenuWrapTrait, MenuWrapper, NoteCollection, NoteConfig, NoteOutput, OtherConfig, Panel, ProgramPortsMenu, RETRIG_TIME, SequencerConfig, SlotSelect, SpecialOpsMenu, VibratoMenu, VibratoOp, create_dynamic_menus, get_only_note, process_note};
+use crate::{Arpeggiator, Configuration, MenuFeedback, MenuStorage, MenuWrapTrait, MenuWrapper, NoteCollection, NoteConfig, NoteOutput, OtherConfig, Panel, ProgramPortsMenu, RETRIG_TIME, SequencerConfig, SlotSelect, SpecialOpsMenu, VibratoMenu, VibratoOp, create_dynamic_menus, get_only_note, process_note};
 
 create_dynamic_menus!(pub Menus:
     A => MenuWrapper<SpecialOpsMenu>,
@@ -17,6 +17,7 @@ pub struct Program
     note_manager: RA<NoteCollection, 5>,
     sequen_config: SequencerConfig,
     vibrato: VibratoOp,
+    arpeggio: Arpeggiator,
     active_channels: u8,
     
     is_mf: bool,
@@ -75,7 +76,8 @@ impl Program
                         note: &mut self.note_config,
                         sequen: &mut self.sequen_config,
                         output: &mut self.panel.config,
-                        vibrato: &mut self.vibrato.config
+                        vibrato: &mut self.vibrato.config,
+                        arpeggio: &mut self.arpeggio.config
                     };
                     let exit = self.menu.on_note(&mut config, time, channel, note);
                     if let Some(fb) = exit.1 { self.menu_feedback(fb, time); }
@@ -96,7 +98,8 @@ impl Program
                         note: &mut self.note_config,
                         sequen: &mut self.sequen_config,
                         output: &mut self.panel.config,
-                        vibrato: &mut self.vibrato.config
+                        vibrato: &mut self.vibrato.config,
+                        arpeggio: &mut self.arpeggio.config
                     };
                     self.menu.off_note(&mut config, channel, note);
                 }

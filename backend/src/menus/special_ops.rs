@@ -25,22 +25,22 @@ impl Menu for SpecialOpsMenu
             TAP_TEMPO_KEY => {state = MenuState::TapTime { key: TAP_TEMPO_KEY, channel }; None},
             Note::D3 =>
             {
-                config.other.arpeggios[channel as usize].mode = ArpeggioMode::Ascending;
+                config.arpeggio.arpeggios[channel as usize].mode = ArpeggioMode::Ascending;
                 Some(MenuFeedback::note_option(channel))
             },
-            Note::Eb3 => menu_toggle!(menu, config.other.clocked_arpeggios),
+            Note::Eb3 => menu_toggle!(menu, config.arpeggio.clocked_arpeggios),
             Note::E3 =>
             {
-                config.other.arpeggios[channel as usize].mode = ArpeggioMode::Decending;
+                config.arpeggio.arpeggios[channel as usize].mode = ArpeggioMode::Decending;
                 Some(MenuFeedback::note_option(channel))
             },
             Note::F3 =>
             {
-                config.other.arpeggios[channel as usize].mode = ArpeggioMode::Alternating;
+                config.arpeggio.arpeggios[channel as usize].mode = ArpeggioMode::Alternating;
                 Some(MenuFeedback::note_option(channel))
             },
-            Note::G3 => menu_toggle_channel!(menu, channel, config.other.arpeggios[channel as usize].sort_notes),
-            Note::A3 => menu_toggle_channel!(menu, channel, config.other.arpeggios[channel as usize].half_notes),
+            Note::G3 => menu_toggle_channel!(menu, channel, config.arpeggio.arpeggios[channel as usize].sort_notes),
+            Note::A3 => menu_toggle_channel!(menu, channel, config.arpeggio.arpeggios[channel as usize].half_notes),
             
             Note::C4 => menu_toggle!(menu, config.other.retrigger_old),
             Note::Db4 => menu_toggle_channel!(menu, channel, config.other.channel_filters[channel as usize].filter_keys),
@@ -49,7 +49,7 @@ impl Menu for SpecialOpsMenu
             Note::E4 => menu_toggle!(menu, config.other.always_delay),
             Note::F4 => menu_toggle!(menu, config.output.micro_tone),
             Note::Gb4 => menu_toggle!(menu, config.note.forget_notes),
-            Note::G4 => menu_toggle_channel!(menu, channel, config.other.arpeggios[channel as usize].enabled),
+            Note::G4 => menu_toggle_channel!(menu, channel, config.arpeggio.arpeggios[channel as usize].enabled),
             Note::Ab4 => menu_toggle!(menu, config.note.duplicate_release),
             Note::A4 => menu_toggle!(menu, config.note.sort_notes),
             Note::C5 => menu_toggle!(menu, config.other.all_channel_mode),
@@ -65,7 +65,7 @@ impl Menu for SpecialOpsMenu
     {
         match key
         {
-            SET_TEMPO_KEY => config.other.arpeggios[channel as usize].time = value_or_last!(value, self.tempo_lv) as u32,
+            SET_TEMPO_KEY => config.arpeggio.arpeggios[channel as usize].time = value_or_last!(value, self.tempo_lv) as u32,
             _ => {}
         }
     }
@@ -73,7 +73,7 @@ impl Menu for SpecialOpsMenu
     {
         match key
         {
-            TAP_TEMPO_KEY => config.other.arpeggios[channel as usize].time = value,
+            TAP_TEMPO_KEY => config.arpeggio.arpeggios[channel as usize].time = value,
             _ => {}
         }
     }

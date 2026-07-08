@@ -138,7 +138,8 @@ pub struct Configuration<'a>
     pub note: &'a mut NoteConfig,
     pub sequen: &'a mut SequencerConfig,
     pub output: &'a mut OutputConfig,
-    pub vibrato: &'a mut VibratoConfig
+    pub vibrato: &'a mut VibratoConfig,
+    pub arpeggio: &'a mut ArpeggioConfig,
 }
 
 pub struct OtherConfig
