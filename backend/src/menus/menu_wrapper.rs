@@ -125,10 +125,26 @@ pub struct MenuWrapper<T: Menu>
     d_count: u8,
     tap_time: u32,
     key_select: NoteKey,
-    pub menu: T
+    menu: T
 }
 impl<T: Menu> MenuWrapper<T>
 {
+    pub fn new(menu: T) -> Self
+    {
+        return Self {
+            state: MenuState::Listening,
+            digits: [0; MAX_DIGITS],
+            d_count: 0,
+            tap_time: 0,
+            key_select: NoteKey::C,
+            menu
+        };
+    }
+    pub fn into_menu(self) -> T
+    {
+        return self.menu;
+    }
+    
     fn set_state(&mut self, mut fb: Option<MenuFeedback>, time: u32, state: MenuState) -> (bool, Option<MenuFeedback>)
     {
         if state == MenuState::Exit

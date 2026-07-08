@@ -368,3 +368,27 @@ impl NoteCollection
         return self.losable_u_note(panel);
     }
 }
+
+pub(crate) fn get_only_note(manager: &RA<NoteCollection, 5>) -> Option<Note>
+{
+    let mut note = Note::new(0, 0);
+    let mut set_note = false;
+    
+    for nc in manager.iter()
+    {
+        for ptrs in nc.locations.iter()
+        {
+            if let Some(rn) = ptrs
+            {
+                // fuond more than 1 note
+                if set_note { return None; }
+                note = nc.notes.get_ref(rn).0;
+                set_note = true;
+            }
+        }
+    }
+    
+    // didnt find any notes
+    if !set_note { return None; }
+    return Some(note);
+}
