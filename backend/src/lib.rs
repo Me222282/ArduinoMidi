@@ -28,10 +28,10 @@ extern crate alloc;
 // CC Outputs
 // Menu
 // Sequencer
-// Arpeggio
 // Channel Redirect
 // Channel Offset
 // KeyNote Filter
+// Arpeggio
 // All Channel Mode
 // Vibrato + Pitch Bend + Mod Wheel
 // Note Voice Processor

@@ -223,6 +223,22 @@ impl<'a, T, A: Allocator> LinkedList<T, A>
             return &ref_node.0.as_ref().value;
         }
     }
+    #[inline]
+    pub fn get_next(&'a self, ref_node: &'a RefNode<T>) -> Option<RefNode<T>>
+    {
+        unsafe
+        {
+            return ref_node.0.as_ref().next.map(|v| RefNode(v));
+        }
+    }
+    #[inline]
+    pub fn get_previous(&'a self, ref_node: &'a RefNode<T>) -> Option<RefNode<T>>
+    {
+        unsafe
+        {
+            return ref_node.0.as_ref().previous.map(|v| RefNode(v));
+        }
+    }
 }
 
 impl<'a, T: PartialOrd, A: Allocator> LinkedList<T, A>

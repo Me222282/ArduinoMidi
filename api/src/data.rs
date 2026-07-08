@@ -101,6 +101,20 @@ pub struct Note
     pub key: u8,
     pub velocity: u8
 }
+impl PartialOrd for Note
+{
+    fn partial_cmp(&self, other: &Self) -> Option<core::cmp::Ordering>
+    {
+        return self.key.partial_cmp(&other.key);
+    }
+}
+impl Ord for Note
+{
+    fn cmp(&self, other: &Self) -> core::cmp::Ordering
+    {
+        return self.key.cmp(&other.key);
+    }
+}
 impl Note
 {
     pub const fn new(key: u8, vel: u8) -> Note

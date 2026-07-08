@@ -119,7 +119,6 @@ fn get_value(digits: &[u8; 5], start: u8) -> usize
 
 pub struct MenuWrapper<T: Menu>
 {
-    // pub panel: &'a mut Panel,
     state: MenuState,
     digits: [u8; MAX_DIGITS],
     d_count: u8,
