@@ -93,7 +93,7 @@ pub trait Menu
     
     fn on_note(&mut self, config: &mut Configuration, channel: Channel, note: Note) -> (MenuState, Option<MenuFeedback>);
     fn on_number_input(&mut self, config: &mut Configuration, value: Option<usize>, channel: Channel, key: u8) { }
-    fn on_tap_time(&mut self, config: &mut Configuration, value: usize, channel: Channel, key: u8) { }
+    fn on_tap_time(&mut self, config: &mut Configuration, value: u32, channel: Channel, key: u8) { }
     fn on_key_select(&mut self, config: &mut Configuration, value: NoteKey, channel: Channel, key: u8) { }
     
     fn off_note(&self, channel: Channel, note: Note) { }

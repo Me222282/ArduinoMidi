@@ -21,7 +21,7 @@ impl Menu for SpecialOpsMenu
         let fb = match note.key
         {
             SET_TEMPO_KEY => {state = MenuState::number(4, 10.., note.key, channel); None},
-            TAP_TEMPO_KEY => {state = MenuState::TapTime { key: note.key, channel }; None},
+            TAP_TEMPO_KEY => {state = MenuState::TapTime { key: TAP_TEMPO_KEY, channel }; None},
             Note::D3 =>
             {
                 config.other.arpeggios[channel as usize].mode = ArpeggioMode::Ascending;
@@ -64,11 +64,11 @@ impl Menu for SpecialOpsMenu
     {
         match key
         {
-            SET_TEMPO_KEY => config.other.arpeggios[channel as usize].time = value_or_last!(value, self.tempo_lv),
+            SET_TEMPO_KEY => config.other.arpeggios[channel as usize].time = value_or_last!(value, self.tempo_lv) as u32,
             _ => {}
         }
     }
-    fn on_tap_time(&mut self, config: &mut Configuration, value: usize, channel: Channel, key: u8)
+    fn on_tap_time(&mut self, config: &mut Configuration, value: u32, channel: Channel, key: u8)
     {
         match key
         {

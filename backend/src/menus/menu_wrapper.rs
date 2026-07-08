@@ -123,7 +123,7 @@ pub struct MenuWrapper<T: Menu>
     state: MenuState,
     digits: [u8; MAX_DIGITS],
     d_count: u8,
-    time: u32,
+    tap_time: u32,
     pub menu: T
 }
 impl<T: Menu> MenuWrapper<T>
@@ -139,7 +139,7 @@ impl<T: Menu> MenuWrapper<T>
         {
             MenuState::TapTime { key: _, channel } =>
             {
-                self.time = time;
+                self.tap_time = time;
                 fb = Some(MenuFeedback::note_option_short(channel));
             },
             MenuState::Number { digits: _, min: _min, max: _max, key: _key, channel } =>
@@ -251,8 +251,9 @@ impl<T: Menu> MenuWrapTrait for MenuWrapper<T>
             },
             MenuState::TapTime { key, channel } =>
             {
-                
-                (false, None)
+                self.menu.on_tap_time(config, time - self.tap_time, channel, key);
+                self.state = MenuState::Listening;
+                (false, Some(MenuFeedback::note_option_short(channel)))
             },
             MenuState::KeySelect { key, channel } =>
             {

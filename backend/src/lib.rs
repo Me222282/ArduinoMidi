@@ -86,7 +86,7 @@ pub enum ArpeggioMode
 pub struct ArpeggioConfig
 {
     enabled: bool,
-    time: usize,
+    time: u32,
     mode: ArpeggioMode,
     sort_notes: bool,
     half_notes: bool
