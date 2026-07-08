@@ -324,9 +324,14 @@ impl Panel
         }
     }
     
+    #[inline]
     pub fn output_gate_on(&mut self, slots: SlotSelect)
     {
-        let mut value = self.gate;
+        self.output_gate_on_base(slots, self.gate);
+    }
+    pub fn output_gate_on_base(&mut self, slots: SlotSelect, base: Gate)
+    {
+        let mut value = base;
         
         match slots
         {
@@ -371,9 +376,14 @@ impl Panel
         self.gate = value;
         (self.externals.set_gate)(value);
     }
+    #[inline]
     pub fn output_gate_off(&mut self, slots: SlotSelect)
     {
-        let mut value = self.gate;
+        self.output_gate_off_base(slots, self.gate);
+    }
+    pub fn output_gate_off_base(&mut self, slots: SlotSelect, base: Gate)
+    {
+        let mut value = base;
         
         match slots
         {

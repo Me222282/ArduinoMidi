@@ -1,4 +1,4 @@
-use api::{Channel, MidiCode, Note, RA};
+use api::{Channel, Gate, MidiCode, Note, RA};
 
 use crate::{Configuration, MenuFeedback, MenuWrapTrait, MenuWrapper, NoteCollection, NoteConfig, NoteOutput, OtherConfig, Panel, ProgramPortsMenu, RETRIG_TIME, SequencerConfig, SlotSelect, SpecialOpsMenu, VibratoMenu, VibratoOp, create_dynamic_menus, process_note};
 
@@ -107,10 +107,10 @@ impl Program
     
     fn menu_feedback(&mut self, fb: MenuFeedback, time: u32)
     {
-        if self.is_mf { return; }
+        if !self.other_config.menu_feedback { return; }
         
         self.panel.output_note(SlotSelect::Channel(fb.channel), Note::new(fb.key, 0xFF));
-        self.panel.output_gate_on(SlotSelect::Channel(fb.channel));
+        self.panel.output_gate_on_base(SlotSelect::Channel(fb.channel), Gate::zero());
         
         self.mf_end_time = time + fb.duration;
         self.mf_channel = fb.channel;
