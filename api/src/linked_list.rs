@@ -123,6 +123,52 @@ impl<'a, T, A: Allocator> LinkedList<T, A>
         }
     }
     
+    pub fn insert<O>(&'a mut self, value: T, order: O) -> RefNode<T>
+        where O: Fn(&T, &T) -> bool
+    {
+        // the first node which is greater than the inserting
+        let ins = unsafe {
+            self.iter_forward_ref().skip_while(|v| order(&v.0.as_ref().value, &value)).nth(0)
+        };
+        
+        match ins
+        {
+            Some(i) =>
+            {
+                // insert into list before ins
+                unsafe
+                {
+                    let mut node = Box::new_in(Node::new(value), &self.alloc);
+                    let last = (*i.0.as_ptr()).previous;
+                    node.previous = last;
+                    node.next = Some(i.0);
+                    let node_ptr = NonNull::from(Box::leak(node));
+                    
+                    (*i.0.as_ptr()).previous = Some(node_ptr);
+                    
+                    match last
+                    {
+                        Some(l) =>
+                        {
+                            (*l.as_ptr()).next = Some(node_ptr);
+                        },
+                        None =>
+                        {
+                            self.start = Some(node_ptr)
+                        },
+                    }
+                    
+                    self.len += 1;
+                    return RefNode(node_ptr);
+                }
+            },
+            None =>
+            {
+                return self.append(value);
+            },
+        }
+    }
+    
     #[inline]
     pub fn iter_forward(&'a self) -> impl Iterator<Item = &'a T>
     {
@@ -180,49 +226,10 @@ impl<'a, T, A: Allocator> LinkedList<T, A>
 
 impl<'a, T: PartialOrd, A: Allocator> LinkedList<T, A>
 {
-    pub fn insert(&'a mut self, value: T) -> RefNode<T>
+    #[inline]
+    pub fn insert_ord(&'a mut self, value: T) -> RefNode<T>
     {
-        // the first node which is greater than the inserting
-        let ins = unsafe {
-            self.iter_forward_ref().skip_while(|v| v.0.as_ref().value < value).nth(0)
-        };
-        
-        match ins
-        {
-            Some(i) =>
-            {
-                // insert into list before ins
-                unsafe
-                {
-                    let mut node = Box::new_in(Node::new(value), &self.alloc);
-                    let last = (*i.0.as_ptr()).previous;
-                    node.previous = last;
-                    node.next = Some(i.0);
-                    let node_ptr = NonNull::from(Box::leak(node));
-                    
-                    (*i.0.as_ptr()).previous = Some(node_ptr);
-                    
-                    match last
-                    {
-                        Some(l) =>
-                        {
-                            (*l.as_ptr()).next = Some(node_ptr);
-                        },
-                        None =>
-                        {
-                            self.start = Some(node_ptr)
-                        },
-                    }
-                    
-                    self.len += 1;
-                    return RefNode(node_ptr);
-                }
-            },
-            None =>
-            {
-                return self.append(value);
-            },
-        }
+        return self.insert(value, |l, r| l < r);
     }
 }
 
