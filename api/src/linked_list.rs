@@ -123,6 +123,7 @@ impl<'a, T, A: Allocator> LinkedList<T, A>
         }
     }
     
+    /// `order` returns [`true`] if left is strictly less than right
     pub fn insert<O>(&'a mut self, value: T, order: O) -> RefNode<T>
         where O: Fn(&T, &T) -> bool
     {

@@ -26,12 +26,22 @@ impl NoteCollection
         return self.channel == channel;
     }
     
+    fn add_note(&mut self, sort: bool, value: (Note, i8)) -> RefNode<(Note, i8)>
+    {
+        if sort
+        {
+            return self.notes.insert(value, |l, r| l.0.key < r.0.key);
+        }
+        
+        return self.notes.append(value);
+    }
+    
     pub fn push_note(&mut self, config: &NoteConfig, panel: &PanelState, note: Note) -> NoteOutput
     {
         let hole = self.find_next_index(config, panel, note.key);
         if let Some(i) = hole
         {
-            let rn = self.notes.append((note, i as i8));
+            let rn = self.add_note(config.sort_notes, (note, i as i8));
             self.locations[i] = Some(rn);
             self.old_notes[i] = 0xFF;
             return NoteOutput::New(i as u8);
@@ -48,7 +58,7 @@ impl NoteCollection
                 let hole = take_ref.1;
                 take_ref.1 = -1;
                 
-                let rn = self.notes.append((note, hole));
+                let rn = self.add_note(config.sort_notes, (note, hole));
                 self.locations[hole as usize] = Some(rn);
                 // was already a note so no need for old_notes to change
                 
@@ -64,7 +74,7 @@ impl NoteCollection
             {
                 if !config.forget_notes
                 {
-                    self.notes.append((note, -1));
+                    self.add_note(config.sort_notes, (note, -1));
                 }
                 return NoteOutput::None;
             }
