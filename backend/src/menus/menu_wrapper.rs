@@ -4,12 +4,12 @@ use crate::{Configuration, Menu, MenuFeedback, MenuState};
 
 pub trait MenuWrapTrait
 {
-    fn on_note(&mut self, config: &mut Configuration,  time: u32, channel: Channel, note: Note) -> (bool, Option<MenuFeedback>);
-    fn off_note(&mut self, channel: Channel, note: Note) { }
+    fn on_note(&mut self, config: &mut Configuration, time: u32, channel: Channel, note: Note) -> (bool, Option<MenuFeedback>);
+    fn off_note(&mut self, _config: &mut Configuration, _channel: Channel, _note: Note) { }
     
     fn on_reset_switch(&mut self) -> (bool, Option<MenuFeedback>) { (true, None) }
-    fn on_message(&mut self, message: MidiCode) { }
-    fn allow_message(&self, message: MidiCode) -> bool { true }
+    fn on_message(&mut self, _message: MidiCode) { }
+    fn allow_message(&self, _message: MidiCode) -> bool { true }
 }
 
 #[macro_export]
@@ -56,12 +56,12 @@ macro_rules! create_dynamic_menus
                     $(Self::$n(t) => t.on_note(config, time, channel, note)),+
                 };
             }
-            fn off_note(&mut self, channel: Channel, note: Note)
+            fn off_note(&mut self, config: &mut Configuration, channel: Channel, note: Note)
             {
                 match self
                 {
                     Self::None => {},
-                    $(Self::$n(t) => t.off_note(channel, note)),+
+                    $(Self::$n(t) => t.off_note(config, channel, note)),+
                 }
             }
             
@@ -123,7 +123,9 @@ pub struct MenuWrapper<T: Menu>
     state: MenuState,
     digits: [u8; MAX_DIGITS],
     d_count: u8,
-    tap_time: u32,
+    tap_duration: u32,
+    last_tap_time: u32,
+    tap_count: usize,
     key_select: NoteKey,
     menu: T
 }
@@ -135,7 +137,9 @@ impl<T: Menu> MenuWrapper<T>
             state: MenuState::Listening,
             digits: [0; MAX_DIGITS],
             d_count: 0,
-            tap_time: 0,
+            tap_duration: 0,
+            last_tap_time: 0,
+            tap_count: 0,
             key_select: NoteKey::C,
             menu
         };
@@ -145,7 +149,7 @@ impl<T: Menu> MenuWrapper<T>
         return self.menu;
     }
     
-    fn set_state(&mut self, mut fb: Option<MenuFeedback>, time: u32, state: MenuState) -> (bool, Option<MenuFeedback>)
+    fn set_state(&mut self, mut fb: Option<MenuFeedback>, state: MenuState) -> (bool, Option<MenuFeedback>)
     {
         if state == MenuState::Exit
         {
@@ -156,8 +160,9 @@ impl<T: Menu> MenuWrapper<T>
         {
             MenuState::TapTime { key: _, channel } =>
             {
-                self.tap_time = time;
-                fb = Some(MenuFeedback::note_option_short(channel));
+                self.tap_count = 0;
+                self.tap_duration = 0;
+                fb = Some(MenuFeedback::note_select(channel));
             },
             MenuState::Number { digits: _, min: _min, max: _max, key: _key, channel } =>
             {
@@ -204,7 +209,7 @@ impl<T: Menu> MenuWrapTrait for MenuWrapper<T>
                     _ =>
                     {
                         let ns = self.menu.on_note(config, channel, note);
-                        self.set_state(ns.1, time, ns.0)
+                        self.set_state(ns.1, ns.0)
                     }
                 }
             },
@@ -260,15 +265,19 @@ impl<T: Menu> MenuWrapTrait for MenuWrapper<T>
                 self.d_count += 1;
                 (false, Some(MenuFeedback::number(note.key, cf)))
             },
-            MenuState::TapTime { key, channel: cf } =>
+            MenuState::TapTime { key: _, channel: cf } =>
             {
                 if cf != Channel::All && cf != channel
                 {
                     return (false, Some(MenuFeedback::note_fail(cf)));
                 }
                 
-                self.menu.on_tap_time(config, time - self.tap_time, channel, key);
-                self.state = MenuState::Listening;
+                if self.tap_count != 0
+                {
+                    self.tap_duration += time - self.last_tap_time;
+                }
+                self.last_tap_time = time;
+                self.tap_count += 1;
                 (false, Some(MenuFeedback::note_option_short(cf)))
             },
             MenuState::KeySelect { key, channel: cf } =>
@@ -329,8 +338,17 @@ impl<T: Menu> MenuWrapTrait for MenuWrapper<T>
     }
     
     #[inline]
-    fn off_note(&mut self, channel: Channel, note: Note)
+    fn off_note(&mut self, config: &mut Configuration, channel: Channel, note: Note)
     {
+        if let MenuState::TapTime { key, channel: cf } = self.state
+        {
+            if cf == Channel::All || cf == channel
+            {
+                self.menu.on_tap_time(config, self.tap_duration / (self.tap_count - 1) as u32, channel, key);
+                self.state = MenuState::Listening;
+            }
+        }
+        
         self.menu.off_note(channel, note);
     }
     #[inline]

@@ -91,13 +91,13 @@ pub trait Menu
     fn auto_close() -> bool { return true; }
     
     fn on_note(&mut self, config: &mut Configuration, channel: Channel, note: Note) -> (MenuState, Option<MenuFeedback>);
-    fn on_number_input(&mut self, config: &mut Configuration, value: Option<usize>, channel: Channel, key: u8) { }
-    fn on_tap_time(&mut self, config: &mut Configuration, value: u32, channel: Channel, key: u8) { }
-    fn on_key_select(&mut self, config: &mut Configuration, value: NoteKey, channel: Channel, key: u8) { }
+    fn on_number_input(&mut self, _config: &mut Configuration, _value: Option<usize>, _channel: Channel, _key: u8) { }
+    fn on_tap_time(&mut self, _config: &mut Configuration, _value: u32, _channel: Channel, _key: u8) { }
+    fn on_key_select(&mut self, _config: &mut Configuration, _value: NoteKey, _channel: Channel, _key: u8) { }
     
-    fn off_note(&self, channel: Channel, note: Note) { }
-    fn on_message(&self, message: MidiCode) { }
-    fn allow_message(&self, message: MidiCode) -> bool { true }
+    fn off_note(&self, _channel: Channel, _note: Note) { }
+    fn on_message(&self, _message: MidiCode) { }
+    fn allow_message(&self, _message: MidiCode) -> bool { true }
     fn on_loop(&self) {}
     
     fn reset_values(&self);

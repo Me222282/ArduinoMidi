@@ -66,17 +66,6 @@ impl Program
         
         match message
         {
-            MidiCode::NoteOFF(channel, note) =>
-            {
-                if self.menu.is_none()
-                {
-                    self.menu.off_note(channel, note);
-                }
-                else
-                {
-                    self.remove_note(channel, note);
-                }
-            },
             MidiCode::NoteON(channel, note) =>
             {
                 if self.menu.is_none()
@@ -98,8 +87,26 @@ impl Program
                     self.push_note(channel, note);
                 }
             },
-            MidiCode::ControlChange(channel, cctype, _) => todo!(),
-            MidiCode::PitchWheel(channel, _) => todo!(),
+            MidiCode::NoteOFF(channel, note) =>
+            {
+                if self.menu.is_none()
+                {
+                    let mut config = Configuration {
+                        other: &mut self.other_config,
+                        note: &mut self.note_config,
+                        sequen: &mut self.sequen_config,
+                        output: &mut self.panel.config,
+                        vibrato: &mut self.vibrato.config
+                    };
+                    self.menu.off_note(&mut config, channel, note);
+                }
+                else
+                {
+                    self.remove_note(channel, note);
+                }
+            },
+            MidiCode::ControlChange(channel, cctype, value) => todo!(),
+            MidiCode::PitchWheel(channel, value) => todo!(),
             _ => self.menu.on_message(message)
         }
     }
