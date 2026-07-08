@@ -234,6 +234,12 @@ impl Panel
     #[inline]
     fn calculate_pb(&self, vibrato: &mut VibratoOp, pb: isize, offset: isize, channel: Channel, slot: usize) -> u16
     {
+        if offset == 0
+        {
+            // 14 bit to 12 bit
+            return (pb >> 2) as u16;
+        }
+        
         let key = (self.externals.get_note)(slot);
         let offset = vibrato.frequency_correction(key, channel, offset);
         

@@ -105,7 +105,7 @@ impl Program
                 }
             },
             MidiCode::ControlChange(channel, cctype, value) => self.output.on_cc(channel, cctype, value),
-            MidiCode::PitchWheel(channel, value) => todo!(),
+            MidiCode::PitchWheel(channel, value) => self.output.on_pitch_bend(channel, value),
             
             // everything else should go to menu
             MidiCode::TimingClock =>

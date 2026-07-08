@@ -196,4 +196,14 @@ impl Output
             _ => {}
         }
     }
+    
+    pub fn on_pitch_bend(&mut self, mut channel: Channel, value: u16)
+    {
+        if self.config.all_channel_pb
+        {
+            channel = Channel::from_u8(channel as u8 % self.active_channels);
+        }
+        
+        self.panel.set_pitch_bend(&mut self.vibrato, channel, value);
+    }
 }
