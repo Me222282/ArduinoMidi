@@ -42,19 +42,19 @@ impl Menu for SpecialOpsMenu
             Note::G3 => menu_toggle_channel!(menu, channel, config.arpeggio.arpeggios[channel as usize].sort_notes),
             Note::A3 => menu_toggle_channel!(menu, channel, config.arpeggio.arpeggios[channel as usize].half_notes),
             
-            Note::C4 => menu_toggle!(menu, config.other.retrigger_old),
-            Note::Db4 => menu_toggle_channel!(menu, channel, config.other.channel_filters[channel as usize].filter_keys),
-            Note::D4 => menu_toggle!(menu, config.other.retrigger_new),
+            Note::C4 => menu_toggle!(menu, config.output.retrigger_old),
+            Note::Db4 => menu_toggle_channel!(menu, channel, config.output.channel_filters[channel as usize].filter_keys),
+            Note::D4 => menu_toggle!(menu, config.output.retrigger_new),
             FILTER_SELECT_KEY => {state = MenuState::KeySelect { key: FILTER_SELECT_KEY, channel }; None},
-            Note::E4 => menu_toggle!(menu, config.other.always_delay),
-            Note::F4 => menu_toggle!(menu, config.output.micro_tone),
+            Note::E4 => menu_toggle!(menu, config.output.always_delay),
+            Note::F4 => menu_toggle!(menu, config.panel.micro_tone),
             Note::Gb4 => menu_toggle!(menu, config.note.forget_notes),
             Note::G4 => menu_toggle_channel!(menu, channel, config.arpeggio.arpeggios[channel as usize].enabled),
             Note::Ab4 => menu_toggle!(menu, config.note.duplicate_release),
             Note::A4 => menu_toggle!(menu, config.note.sort_notes),
-            Note::C5 => menu_toggle!(menu, config.other.all_channel_mode),
+            Note::C5 => menu_toggle!(menu, config.output.all_channel_mode),
             Note::Db5 => menu_toggle!(menu, config.other.alternate_allocations),
-            Note::D5 => menu_toggle!(menu, config.other.menu_feedback),
+            Note::D5 => menu_toggle!(menu, config.output.menu_feedback),
             _ => None
         };
         
@@ -81,7 +81,7 @@ impl Menu for SpecialOpsMenu
     {
         match key
         {
-            FILTER_SELECT_KEY => config.other.channel_filters[channel as usize].note_filter = value,
+            FILTER_SELECT_KEY => config.output.channel_filters[channel as usize].note_filter = value,
             _ => {}
         }
     }

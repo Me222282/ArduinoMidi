@@ -1,6 +1,6 @@
 use api::{CCType, Channel, Externals, Gate, Note, PanelState};
 
-use crate::{OutputConfig, TriggerSource, VibratoOp};
+use crate::{PanelConfig, TriggerSource, VibratoOp};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum SlotSelect
@@ -31,7 +31,7 @@ pub struct Panel
     vibrato_values: [i16; 16],
     pdvs: [u16; 16],
     gate: Gate,
-    pub config: OutputConfig
+    pub config: PanelConfig
 }
 
 impl Panel
@@ -306,7 +306,7 @@ impl Panel
     //         (self.externals.set_pitch_bend)(i, nv);
     //     }
     // }
-    pub fn set_pf_offsets(&mut self, vibrato: &mut VibratoOp, values: &[i16; 16])
+    pub fn set_pb_offsets(&mut self, vibrato: &mut VibratoOp, values: &[i16; 16])
     {
         self.vibrato_values.copy_from_slice(values);
         

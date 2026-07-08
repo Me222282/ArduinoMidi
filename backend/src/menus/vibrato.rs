@@ -81,37 +81,37 @@ impl Menu for VibratoMenu
             PLUS_ST_KEY => {state = MenuState::number(2, ..=24, note.key, channel); None},
             Note::B5 =>
             {
-                config.other.channel_offsets[channel as usize].octave = -3;
+                config.output.channel_offsets[channel as usize].octave = -3;
                 Some(MenuFeedback::note_option(channel))
             },
             Note::C6 =>
             {
-                config.other.channel_offsets[channel as usize].octave = -2;
+                config.output.channel_offsets[channel as usize].octave = -2;
                 Some(MenuFeedback::note_option(channel))
             },
             Note::Db6 =>
             {
-                config.other.channel_offsets[channel as usize].octave = -1;
+                config.output.channel_offsets[channel as usize].octave = -1;
                 Some(MenuFeedback::note_option(channel))
             },
             Note::D6 =>
             {
-                config.other.channel_offsets[channel as usize].octave = 0;
+                config.output.channel_offsets[channel as usize].octave = 0;
                 Some(MenuFeedback::note_option(channel))
             },
             Note::Eb6 =>
             {
-                config.other.channel_offsets[channel as usize].octave = 1;
+                config.output.channel_offsets[channel as usize].octave = 1;
                 Some(MenuFeedback::note_option(channel))
             },
             Note::E6 =>
             {
-                config.other.channel_offsets[channel as usize].octave = 2;
+                config.output.channel_offsets[channel as usize].octave = 2;
                 Some(MenuFeedback::note_option(channel))
             },
             Note::F6 =>
             {
-                config.other.channel_offsets[channel as usize].octave = 3;
+                config.output.channel_offsets[channel as usize].octave = 3;
                 Some(MenuFeedback::note_option(channel))
             },
             _ => None
@@ -133,8 +133,8 @@ impl Menu for VibratoMenu
             SET_RATE_KEY => config.vibrato.vibratos[ci].angular_velocity = value_or_last!(value, self.rate_lv) as f32 * W_SET,
             SET_MRATE_KEY => config.vibrato.vibratos[ci].angular_velocity = value_or_last!(value, self.mrate_lv) as f32 * MW_SET,
             SET_SCALE_KEY => config.vibrato.vibratos[channel as usize].scale = value_or_last!(value, self.scale_lv) as f32 * SCALE_SET,
-            MINUS_ST_KEY => config.other.channel_offsets[channel as usize].semi_tone = -(value_or_last!(value, self.st_lv) as i8),
-            PLUS_ST_KEY => config.other.channel_offsets[channel as usize].semi_tone = value_or_last!(value, self.st_lv) as i8,
+            MINUS_ST_KEY => config.output.channel_offsets[channel as usize].semi_tone = -(value_or_last!(value, self.st_lv) as i8),
+            PLUS_ST_KEY => config.output.channel_offsets[channel as usize].semi_tone = value_or_last!(value, self.st_lv) as i8,
             _ => {}
         }
     }

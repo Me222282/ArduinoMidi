@@ -137,6 +137,7 @@ pub struct Configuration<'a>
     pub other: &'a mut OtherConfig,
     pub note: &'a mut NoteConfig,
     pub sequen: &'a mut SequencerConfig,
+    pub panel: &'a mut PanelConfig,
     pub output: &'a mut OutputConfig,
     pub vibrato: &'a mut VibratoConfig,
     pub arpeggio: &'a mut ArpeggioConfig,
@@ -144,19 +145,19 @@ pub struct Configuration<'a>
 
 pub struct OtherConfig
 {
-    retrigger_old: bool,
-    retrigger_new: bool,
+    // retrigger_old: bool,
+    // retrigger_new: bool,
     // filter_keys: bool,
     // filter: NoteKey,
-    always_delay: bool,
+    // always_delay: bool,
     // micro_tone: bool,
     // forget_notes: bool,
     // duplicate_release: bool,
     // sort_notes: bool,
-    all_channel_mode: bool,
-    all_channel_pb: bool,
+    // all_channel_mode: bool,
+    // all_channel_pb: bool,
     alternate_allocations: bool,
-    menu_feedback: bool,
+    // menu_feedback: bool,
     // clocked_arpeggios: bool,
     // global_vibrato: bool,
     per_channel_cc: bool,
@@ -165,9 +166,22 @@ pub struct OtherConfig
     // use_custom_allocations: bool,
     // custom_allocations: [(Channel, u8); 5],
     
-    channel_filters: [ChannelFilter; 16],
+    // channel_filters: [ChannelFilter; 16],
     // arpeggios: [Arpeggio; 16],
     // vibratos: [Vibrato; 16],
+    // channel_offsets: [NoteOffset; 16]
+}
+
+pub struct OutputConfig
+{
+    retrigger_old: bool,
+    retrigger_new: bool,
+    always_delay: bool,
+    all_channel_mode: bool,
+    all_channel_pb: bool,
+    menu_feedback: bool,
+    
+    channel_filters: [ChannelFilter; 16],
     channel_offsets: [NoteOffset; 16]
 }
 
@@ -198,7 +212,7 @@ pub struct SequencerConfig
     clocked_sequencer: bool,
 }
 
-pub struct OutputConfig
+pub struct PanelConfig
 {
     use_custom_allocations: bool,
     custom_allocations: [(Channel, u8); 5],

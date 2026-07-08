@@ -2,7 +2,7 @@ use core::intrinsics;
 
 use api::{CCType, Channel, Note};
 
-use crate::{AttenuationSource, FreqCorrection, VibratoConfig};
+use crate::{AttenuationSource, FreqCorrection, Output, VibratoConfig};
 
 struct VCorrData
 {
@@ -44,14 +44,15 @@ pub struct VibratoOp
 
 impl VibratoOp
 {   
-    pub fn on_loop(&mut self, time: u32, pb_offsets: &mut [i16; 16])
+    pub fn on_loop(&mut self, time: u32, output: &mut Output)
     {
         let time = time as f32;
+        let mut pb_offsets: [i16; 16] = [0; 16];
         
         if self.config.global_vibrato
         {
             let offset = (self.config.vibratos[0].function)(time * self.config.vibratos[0].angular_velocity);
-            for (i, v) in self.config.vibratos.iter().enumerate()
+            for (i, (v, pb)) in self.config.vibratos.iter().zip(&mut pb_offsets).enumerate()
             {
                 if !v.enabled { continue; }
                 let atten = match v.attenuation == AttenuationSource::None
@@ -62,25 +63,29 @@ impl VibratoOp
                 
                 let nv = offset * atten as f32 * v.scale;
                 // frequency correction done separately
-                pb_offsets[i] = nv as i16;
+                *pb = nv as i16;
             }
             return;
         }
-        
-        for (i, v) in self.config.vibratos.iter().enumerate()
+        else
         {
-            if !v.enabled { continue; }
-            let offset = (self.config.vibratos[i].function)(time * self.config.vibratos[i].angular_velocity);
-            let atten = match v.attenuation == AttenuationSource::None
+            for (i, (v, pb)) in self.config.vibratos.iter().zip(&mut pb_offsets).enumerate()
             {
-                true => 0x3FFF,
-                false => self.attenuations[i],
-            };
-            
-            let nv = offset * atten as f32 * v.scale;
-            // frequency correction done separately
-            pb_offsets[i] = nv as i16;
+                if !v.enabled { continue; }
+                let offset = (self.config.vibratos[i].function)(time * self.config.vibratos[i].angular_velocity);
+                let atten = match v.attenuation == AttenuationSource::None
+                {
+                    true => 0x3FFF,
+                    false => self.attenuations[i],
+                };
+                
+                let nv = offset * atten as f32 * v.scale;
+                // frequency correction done separately
+                *pb = nv as i16;
+            }
         }
+        
+        output.panel.set_pb_offsets(self, &pb_offsets);
     }
     
     pub fn on_cc(&mut self, cc: CCType, channel: Channel, value: u8)
