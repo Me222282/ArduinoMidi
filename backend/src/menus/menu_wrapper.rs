@@ -4,9 +4,10 @@ use crate::{Configuration, Menu, MenuFeedback, MenuState};
 
 pub trait MenuWrapTrait
 {
-    fn on_note(&mut self, config: &mut Configuration,  note_time: usize, channel: Channel, note: Note) -> (bool, Option<MenuFeedback>);
+    fn on_note(&mut self, config: &mut Configuration,  time: u32, channel: Channel, note: Note) -> (bool, Option<MenuFeedback>);
     fn off_note(&mut self, channel: Channel, note: Note) { }
     
+    fn on_reset_switch(&mut self) -> (bool, Option<MenuFeedback>) { (true, None) }
     fn on_message(&mut self, message: MidiCode) { }
     fn allow_message(&self, message: MidiCode) -> bool { true }
 }
@@ -33,14 +34,26 @@ macro_rules! create_dynamic_menus
             }
         )+
         
+        impl $name
+        {
+            pub fn is_none(&self) -> bool
+            {
+                return match self
+                {
+                    Self::None => true,
+                    _ => false
+                };
+            }
+        }
+        
         impl crate::MenuWrapTrait for $name
         {
-            fn on_note(&mut self, config: &mut crate::Configuration, note_time: usize, channel: Channel, note: Note) -> (bool, Option<MenuFeedback>)
+            fn on_note(&mut self, config: &mut crate::Configuration, time: u32, channel: Channel, note: Note) -> (bool, Option<MenuFeedback>)
             {
                 return match self
                 {
                     Self::None => (false, None),
-                    $(Self::$n(t) => t.on_note(config, note_time, channel, note)),+
+                    $(Self::$n(t) => t.on_note(config, time, channel, note)),+
                 };
             }
             fn off_note(&mut self, channel: Channel, note: Note)
@@ -52,6 +65,14 @@ macro_rules! create_dynamic_menus
                 }
             }
             
+            fn on_reset_switch(&mut self) -> (bool, Option<MenuFeedback>)
+            {
+                match self
+                {
+                    Self::None => (false, None),
+                    $(Self::$n(t) => t.on_reset_switch()),+
+                }
+            }
             fn on_message(&mut self, message: MidiCode)
             {
                 match self
@@ -80,28 +101,12 @@ pub struct MenuWrapper<T: Menu>
     state: MenuState,
     digits: [u8; MAX_DIGITS],
     d_count: u8,
-    time: usize,
+    time: u32,
     pub menu: T
 }
 impl<T: Menu> MenuWrapper<T>
 {
-    pub fn on_reset_switch(&mut self) -> (bool, Option<MenuFeedback>)
-    {
-        if self.state == MenuState::Listening
-        {
-            if T::auto_close()
-            {
-                return (true, None);
-            }
-            
-            return (false, None);
-        }
-        
-        self.state = MenuState::Listening;
-        return (false, Some(MenuFeedback::note_fail(Channel::All)));
-    }
-    
-    fn set_state(&mut self, mut fb: Option<MenuFeedback>, note_time: usize, state: MenuState) -> (bool, Option<MenuFeedback>)
+    fn set_state(&mut self, mut fb: Option<MenuFeedback>, time: u32, state: MenuState) -> (bool, Option<MenuFeedback>)
     {
         if state == MenuState::Exit
         {
@@ -112,7 +117,7 @@ impl<T: Menu> MenuWrapper<T>
         {
             MenuState::TapTime { key: _, channel } =>
             {
-                self.time = note_time;
+                self.time = time;
                 fb = Some(MenuFeedback::note_option_short(channel));
             },
             MenuState::Number { digits, min, max, key, channel } =>
@@ -134,7 +139,7 @@ impl<T: Menu> MenuWrapper<T>
 
 impl<T: Menu> MenuWrapTrait for MenuWrapper<T>
 {
-    fn on_note(&mut self, config: &mut Configuration, note_time: usize, channel: Channel, note: Note) -> (bool, Option<MenuFeedback>)
+    fn on_note(&mut self, config: &mut Configuration, time: u32, channel: Channel, note: Note) -> (bool, Option<MenuFeedback>)
     {
         return match self.state
         {
@@ -143,7 +148,7 @@ impl<T: Menu> MenuWrapTrait for MenuWrapper<T>
                 if !T::rsl()
                 {
                     let ns = self.menu.on_note(config, channel, note);
-                    return self.set_state(ns.1, note_time, ns.0);
+                    return self.set_state(ns.1, time, ns.0);
                 }
                 
                 match note.key
@@ -166,7 +171,7 @@ impl<T: Menu> MenuWrapTrait for MenuWrapper<T>
                     _ =>
                     {
                         let ns = self.menu.on_note(config, channel, note);
-                        self.set_state(ns.1, note_time, ns.0)
+                        self.set_state(ns.1, time, ns.0)
                     }
                 }
             },
@@ -207,6 +212,22 @@ impl<T: Menu> MenuWrapTrait for MenuWrapper<T>
         
     //     self.menu.on_loop();
     // }
+    
+    fn on_reset_switch(&mut self) -> (bool, Option<MenuFeedback>)
+    {
+        if self.state == MenuState::Listening
+        {
+            if T::auto_close()
+            {
+                return (true, None);
+            }
+            
+            return (false, None);
+        }
+        
+        self.state = MenuState::Listening;
+        return (false, Some(MenuFeedback::note_fail(Channel::All)));
+    }
     
     #[inline]
     fn off_note(&mut self, channel: Channel, note: Note)

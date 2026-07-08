@@ -44,7 +44,7 @@ pub struct VibratoOp
 
 impl VibratoOp
 {   
-    pub fn on_loop(&mut self, time: usize, pb_offsets: &mut [i16; 16])
+    pub fn on_loop(&mut self, time: u32, pb_offsets: &mut [i16; 16])
     {
         let time = time as f32;
         
@@ -100,7 +100,7 @@ impl VibratoOp
         }
     }
     
-    pub fn on_reseting_switch(&mut self)
+    pub fn on_reset_switch(&mut self)
     {
         // So that when vibrato scale changes, all k values must be recalculated
         // Happends when exiting the menu

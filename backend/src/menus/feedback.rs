@@ -6,20 +6,21 @@ pub const NOTEOFF: u8 = Note::G3;
 pub const NOTESELECT: u8 = Note::C3;
 pub const NOTEOPTION: u8 = Note::G4;
 
-pub const MF_DURATION: usize = 125;
-pub const MF_DURATION_SHORT: usize = 75;
+pub const MF_DURATION: u32 = 125;
+pub const MF_DURATION_SHORT: u32 = 75;
 
 pub struct MenuFeedback
 {
-    key: u8,
-    duration: usize,
-    channel: Channel
+    // velocity ix fixed (value chosen in prog.rs)
+    pub key: u8,
+    pub duration: u32,
+    pub channel: Channel
 }
 
 impl MenuFeedback
 {
     #[inline]
-    pub const fn new(key: u8, duration: usize, channel: Channel) -> Self
+    pub const fn new(key: u8, duration: u32, channel: Channel) -> Self
     {
         return Self { key, duration, channel };
     }

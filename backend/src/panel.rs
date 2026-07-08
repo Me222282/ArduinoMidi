@@ -1,6 +1,6 @@
 use api::{CCType, Channel, Externals, Gate, Note, PanelState};
 
-use crate::{FreqCorrection, OutputConfig, TriggerSource, VibratoConfig, VibratoOp};
+use crate::{OutputConfig, TriggerSource, VibratoOp};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum SlotSelect
@@ -31,7 +31,6 @@ pub struct Panel
     vibrato_values: [i16; 16],
     pdvs: [u16; 16],
     gate: Gate,
-    notes: [u8; 5],
     pub config: OutputConfig
 }
 
@@ -193,6 +192,18 @@ impl Panel
                     }
                 }
             },
+            SlotSelect::Channel(Channel::All) | 
+            SlotSelect::All =>
+            {
+                for i in 0..5
+                {
+                    if self.is_vf_cc(i, cc, channel)
+                    {
+                        // 7 bit to 8 bit
+                        (self.externals.set_vel)(i, value << 1);
+                    }
+                }
+            },
             SlotSelect::Channel(c) =>
             {
                 for (i, &com) in self.slot_allocations.iter().enumerate()
@@ -226,17 +237,6 @@ impl Panel
                 {
                     // 7 bit to 8 bit
                     (self.externals.set_vel)(i, value << 1);
-                }
-            },
-            SlotSelect::All =>
-            {
-                for i in 0..5
-                {
-                    if self.is_vf_cc(i, cc, channel)
-                    {
-                        // 7 bit to 8 bit
-                        (self.externals.set_vel)(i, value << 1);
-                    }
                 }
             }
         }
@@ -339,6 +339,11 @@ impl Panel
                     value.on(i as u8);
                 }
             },
+            SlotSelect::Channel(Channel::All) | 
+            SlotSelect::All =>
+            {
+                value = Gate::all_on();
+            },
             SlotSelect::Channel(c) =>
             {
                 for (i, &com) in self.slot_allocations.iter().enumerate()
@@ -360,10 +365,6 @@ impl Panel
             SlotSelect::Index(i) =>
             {
                 value.on(i);
-            },
-            SlotSelect::All =>
-            {
-                value = Gate::all_on();
             }
         }
         
