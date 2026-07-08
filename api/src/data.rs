@@ -126,7 +126,7 @@ impl Note
     pub const Ab0: u8 = 20u8;
     pub const A0: u8 = 21u8;
     pub const Bb0: u8 = 22u8;
-    pub const _B0: u8 = 23u8;
+    pub const B0: u8 = 23u8;
     pub const C1: u8 = 24u8;
     pub const Db1: u8 = 25u8;
     pub const D1: u8 = 26u8;

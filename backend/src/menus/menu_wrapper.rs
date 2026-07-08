@@ -95,6 +95,28 @@ macro_rules! create_dynamic_menus
 
 pub const MAX_DIGITS: usize = 5;
 
+fn get_value(digits: &[u8; 5], start: u8) -> usize
+{
+    let start = start as usize;
+    
+    let mut value = 0;
+    value += digits[start] as usize;
+    if start <= 0 { return value; }
+    
+    value += digits[start - 1] as usize * 10;
+    if start <= 1 { return value; }
+    
+    value += digits[start - 2] as usize * 100;
+    if start <= 2 { return value; }
+    
+    value += digits[start - 3] as usize * 1000;
+    if start <= 3 { return value; }
+    
+    value += digits[start - 4] as usize * 10000;
+    
+    return value;
+}
+
 pub struct MenuWrapper<T: Menu>
 {
     // pub panel: &'a mut Panel,
@@ -120,13 +142,13 @@ impl<T: Menu> MenuWrapper<T>
                 self.time = time;
                 fb = Some(MenuFeedback::note_option_short(channel));
             },
-            MenuState::Number { digits, min, max, key, channel } =>
+            MenuState::Number { digits: _, min: _min, max: _max, key: _key, channel } =>
             {
                 self.d_count = 0;
-                self.digits = [0; 5];
+                self.digits = [0; MAX_DIGITS];
                 fb = Some(MenuFeedback::note_select(channel));
             },
-            MenuState::KeySelect { key, channel } =>
+            MenuState::KeySelect { key: _, channel } =>
             {
                 fb = Some(MenuFeedback::note_select(channel));
             }
@@ -177,11 +199,55 @@ impl<T: Menu> MenuWrapTrait for MenuWrapper<T>
             },
             MenuState::Number { digits, min, max, key, channel: cf } =>
             {
-                if cf != Channel::All && cf != channel
+                // number is entered
+                if note.key == key
+                {
+                    self.state = MenuState::Listening;
+                    
+                    let value = match self.d_count == 0
+                    {
+                        true => None,
+                        false =>
+                        {
+                            let value = get_value(&self.digits, self.d_count - 1);
+                            
+                            // out of bounds
+                            if value < min || value > max
+                            {
+                                return (false, Some(MenuFeedback::note_fail(channel)));
+                            }
+                            
+                            Some(value)
+                        },
+                    };
+                    
+                    self.menu.on_number_input(config, value, channel, key);
+                    return (false, Some(MenuFeedback::note_select(channel)));
+                }
+                
+                // add digit
+                if (cf != Channel::All && cf != channel) || self.d_count >= digits
                 {
                     return (false, Some(MenuFeedback::note_fail(cf)));
                 }
-                (false, None)
+                
+                let digit = match note.key
+                {
+                    Note::A0 => 1,
+                    Note::B0 => 2,
+                    Note::C1 => 3,
+                    Note::D1 => 4,
+                    Note::E1 => 5,
+                    Note::F1 => 6,
+                    Note::G1 => 7,
+                    Note::A1 => 8,
+                    Note::B1 => 9,
+                    Note::C2 => 0,
+                    _ => return (false, Some(MenuFeedback::note_fail(cf)))
+                };
+                self.digits[self.d_count as usize] = digit;
+                self.d_count += 1;
+                (false, Some(MenuFeedback::number(note.key, channel)))
             },
             MenuState::TapTime { key, channel } =>
             {

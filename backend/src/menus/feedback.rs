@@ -127,4 +127,20 @@ impl MenuFeedback
             channel
         };
     }
+    pub const fn number(key: u8, channel: Channel) -> Self
+    {
+        return Self {
+            key: Note::A3 - Note::A0 + key,
+            duration: MF_DURATION,
+            channel
+        };
+    }
+    pub const fn slot(key: u8, channel: Channel) -> Self
+    {
+        return Self {
+            key: Note::A2 - Note::A0 + key,
+            duration: MF_DURATION,
+            channel
+        };
+    }
 }
