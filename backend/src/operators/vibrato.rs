@@ -1,6 +1,6 @@
 use core::intrinsics;
 
-use api::{CCType, Channel, Note};
+use api::{CCType, Channel, Externals, Note};
 
 use crate::{AttenuationSource, FreqCorrection, Panel, VibratoConfig};
 
@@ -44,7 +44,7 @@ pub struct VibratoOp
 
 impl VibratoOp
 {   
-    pub fn on_loop(&mut self, time: u32, panel: &mut Panel)
+    pub fn on_loop<E: Externals>(&mut self, time: u32, panel: &mut Panel<E>)
     {
         let time = time as f32;
         let mut pb_offsets: [i16; 16] = [0; 16];
@@ -117,7 +117,7 @@ impl VibratoOp
     
     /// `key` is the note value used by the hardware
     /// `offset` is the currently calculated offset for `channel`
-    pub fn frequency_correction(&mut self, key: u8, channel: Channel, offset: isize) -> isize
+    pub fn frequency_correction<E: Externals>(&mut self, slot: usize, channel: Channel, offset: isize) -> isize
     {
         let vib = &self.config.vibratos[channel as usize];
         
@@ -126,13 +126,13 @@ impl VibratoOp
             FreqCorrection::None => return offset,
             FreqCorrection::Half =>
             {
-                let k = self.vibrato_scales[channel as usize].get_k(vib.scale, key);
+                let k = self.vibrato_scales[channel as usize].get_k(vib.scale, E::get_note(slot));
                 let k = (k + 1.0) / 2.0;
                 return (offset as f32 * k) as isize;
             },
             FreqCorrection::Full =>
             {
-                let k = self.vibrato_scales[channel as usize].get_k(vib.scale, key);
+                let k = self.vibrato_scales[channel as usize].get_k(vib.scale, E::get_note(slot));
                 return (offset as f32 * k) as isize;
             }
         }

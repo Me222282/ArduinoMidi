@@ -10,18 +10,18 @@ create_dynamic_menus!(pub Menus:
     C => MenuWrapper<VibratoMenu>,
     D => MenuWrapper<SequencerMenu>);
 
-pub struct Program<N: NvsInterface>
+pub struct Program<E: api::Externals, N: NvsInterface>
 {
     menu: Menus,
     menu_storage: MenuStorage,
     
     // sequen_config: SequencerConfig,
     arpeggio: Arpeggiator,
-    pub output: Output,
+    pub output: Output<E>,
     _phantom_n: PhantomData<N>
 }
 
-impl<N: NvsInterface> Program<N>
+impl<E: api::Externals, N: NvsInterface> Program<E, N>
 {
     fn set_menu(&mut self, menu: Menus)
     {

@@ -2,9 +2,9 @@ use api::{CCType, Channel, Gate, Note, SA, Switch};
 
 use crate::{MenuFeedback, NoteCollection, NoteConfig, NoteOutput, OutputConfig, Panel, RETRIG_TIME, SlotSelect, VibratoOp, get_only_note, process_note};
 
-pub struct Output
+pub struct Output<E: api::Externals>
 {
-    pub panel: Panel,
+    pub panel: Panel<E>,
     pub note_manager: SA<NoteCollection, 5>,
     pub config: OutputConfig,
     pub note_config: NoteConfig,
@@ -21,7 +21,7 @@ pub struct Output
     pb_values: [u16; 16]
 }
 
-impl Output
+impl<E: api::Externals> Output<E>
 {
     pub fn menu_feedback(&mut self, fb: MenuFeedback, time: u32)
     {
@@ -78,7 +78,7 @@ impl Output
             {
                 if self.config.always_delay
                 {
-                    self.panel.delay(RETRIG_TIME);
+                    E::delay(RETRIG_TIME);
                 }
                 vi
             },
@@ -87,11 +87,11 @@ impl Output
                 if self.config.retrigger_new
                 {
                     self.panel.output_gate_off(SlotSelect::ChannelVoice(channel, vi));
-                    self.panel.delay(RETRIG_TIME);
+                    E::delay(RETRIG_TIME);
                 }
                 else if self.config.always_delay
                 {
-                    self.panel.delay(RETRIG_TIME);
+                    E::delay(RETRIG_TIME);
                 }
                 note = new;
                 vi

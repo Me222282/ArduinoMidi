@@ -22,7 +22,7 @@ pub struct Arpeggiator
 
 impl ArpInstance
 {
-    fn add_note(&mut self, config: &Arpeggio, output: &mut Output, channel: Channel, note: Note)
+    fn add_note<E: api::Externals>(&mut self, config: &Arpeggio, output: &mut Output<E>, channel: Channel, note: Note)
     {
         let rn = match config.sort_notes
         {
@@ -57,7 +57,7 @@ impl ArpInstance
         self.notes.remove(remove);
     }
     
-    fn trigger_next(&mut self, config: &Arpeggio, output: &mut Output, channel: Channel)
+    fn trigger_next<E: api::Externals>(&mut self, config: &Arpeggio, output: &mut Output<E>, channel: Channel)
     {
         // no current means output first
         if self.current.is_none()
@@ -171,7 +171,7 @@ impl ArpInstance
 
 impl Arpeggiator
 {
-    pub fn on_note(&mut self, output: &mut Output, mut channel: Channel, mut note: Note)
+    pub fn on_note<E: api::Externals>(&mut self, output: &mut Output<E>, mut channel: Channel, mut note: Note)
     {
         // process before arpeggio
         match process_note(channel, note, &output.config)
@@ -191,7 +191,7 @@ impl Arpeggiator
         output.push_note_post(channel, note);
     }
     
-    pub fn off_note(&mut self, output: &mut Output, mut channel: Channel, mut note: Note)
+    pub fn off_note<E: api::Externals>(&mut self, output: &mut Output<E>, mut channel: Channel, mut note: Note)
     {
         // process before arpeggio
         match process_note(channel, note, &output.config)
@@ -211,7 +211,7 @@ impl Arpeggiator
         output.remove_note_post(channel, note);
     }
     
-    pub fn on_loop(&mut self, time: u32, output: &mut Output)
+    pub fn on_loop<E: api::Externals>(&mut self, time: u32, output: &mut Output<E>)
     {
         if self.config.clocked_arpeggios { return; }
         
@@ -242,7 +242,7 @@ impl Arpeggiator
         }
     }
     
-    pub fn on_clock(&mut self, output: &mut Output)
+    pub fn on_clock<E: api::Externals>(&mut self, output: &mut Output<E>)
     {
         let acc = self.clock_count;
         self.clock_count += 1;

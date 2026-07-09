@@ -46,18 +46,30 @@ pub struct PanelState
     pub input: InputMode
 }
 
-pub struct Externals
+pub trait Externals
 {
-    pub set_gate: fn(Gate),
-    pub set_note: fn(usize, u8),
-    pub set_vel: fn(usize, u8),
-    pub set_pitch_bend: fn(usize, u16),
-    pub set_mod: fn(u16),
+    fn set_gate(gate: Gate);
+    fn set_note(slot: usize, key: u8);
+    fn set_vel(slot: usize, value: u8);
+    fn set_pitch_bend(slot: usize, value: u16);
+    fn set_mod(value: u16);
     
-    pub delay: fn(u32),
-    pub get_note: fn(usize) -> u8,
-    pub log: fn(f32) -> f32
+    fn delay(millis: u32);
+    fn get_note(slot: usize) -> u8;
 }
+
+// pub struct Externals
+// {
+//     pub set_gate: fn(Gate),
+//     pub set_note: fn(usize, u8),
+//     pub set_vel: fn(usize, u8),
+//     pub set_pitch_bend: fn(usize, u16),
+//     pub set_mod: fn(u16),
+    
+//     pub delay: fn(u32),
+//     pub get_note: fn(usize) -> u8,
+//     pub log: fn(f32) -> f32
+// }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Gate(u8);

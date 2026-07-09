@@ -1,3 +1,5 @@
+use core::marker::PhantomData;
+
 use api::{CCType, Channel, ChannelVoice, Externals, Gate, Note, PanelState, cv_new};
 
 use crate::{PanelConfig, TriggerSource, VibratoOp};
@@ -21,9 +23,9 @@ pub enum SlotSelect
 //     Trigger(TriggerSource)
 // }
 
-pub struct Panel
+pub struct Panel<E: Externals>
 {
-    externals: Externals,
+    // externals: Externals,
     pub state: PanelState,
     // pub configuration: Configuration,
     pub slot_allocations: [ChannelVoice; 5],
@@ -32,10 +34,11 @@ pub struct Panel
     pdvs: [u16; 16],
     vels: [u8; 5],
     gate: Gate,
-    pub config: PanelConfig
+    pub config: PanelConfig,
+    _phantom_e: PhantomData<E>
 }
 
-impl Panel
+impl<E: Externals> Panel<E>
 {
     // OUTPUT PRIORITY:
     // Trigger, CC, Modulation, Velocity
@@ -185,14 +188,14 @@ impl Panel
             if self.is_vf_mod(i)
             {
                 // 14 bit to 8 bit
-                (self.externals.set_vel)(i, (value >> 6) as u8);
+                E::set_vel(i, (value >> 6) as u8);
             }
         }
         
         if !self.state.modulation && channel == Channel::C1
         {
             // 14 bit to 12 bit
-            (self.externals.set_mod)(value >> 2)
+            E::set_mod(value >> 2)
         }
     }
     pub fn output_control_change(&self, cc: CCType, channel: Channel, value: u8)
@@ -208,7 +211,7 @@ impl Panel
                 if self.get_vf_cc_channel(i, cc).is_some()
                 {
                     // 7 bit to 8 bit
-                    (self.externals.set_vel)(slot, value << 1);
+                    E::set_vel(slot, value << 1);
                 }
                 
                 i += 1;
@@ -221,7 +224,7 @@ impl Panel
             if self.get_vf_cc_channel(i, cc) == Some(channel)
             {
                 // 7 bit to 8 bit
-                (self.externals.set_vel)(i, value << 1);
+                E::set_vel(i, value << 1);
             }
         }
     }
@@ -236,7 +239,7 @@ impl Panel
         {
             if self.is_vf_trigger(i, source)
             {
-                (self.externals.set_vel)(i, v);
+                E::set_vel(i, v);
             }
         }
     }
@@ -250,8 +253,7 @@ impl Panel
             return (pb >> 2) as u16;
         }
         
-        let key = (self.externals.get_note)(slot);
-        let offset = vibrato.frequency_correction(key, channel, offset);
+        let offset = vibrato.frequency_correction::<E>(slot, channel, offset);
         
         // 14 bit to 12 bit
         let nv = (pb >> 2) + offset;
@@ -276,7 +278,7 @@ impl Panel
             if com.get_channel() != channel { continue; }
             
             let nv = self.calculate_pb(vibrato, value as isize, offset as isize, channel, i);
-            (self.externals.set_pitch_bend)(i, nv);
+            E::set_pitch_bend(i, nv);
         }
     }
     // pub fn set_pb_offset(&mut self, channel: Channel, value: i16)
@@ -315,7 +317,7 @@ impl Panel
             };
             
             let nv = self.calculate_pb(vibrato, pb_value as isize, offset as isize, channel, i);
-            (self.externals.set_pitch_bend)(i, nv);
+            E::set_pitch_bend(i, nv);
         }
     }
     
@@ -369,7 +371,7 @@ impl Panel
         }
         
         self.gate = value;
-        (self.externals.set_gate)(value);
+        E::set_gate(value);
     }
     #[inline]
     pub fn output_gate_off(&mut self, slots: SlotSelect)
@@ -420,18 +422,18 @@ impl Panel
         }
         
         self.gate = value;
-        (self.externals.set_gate)(value);
+        E::set_gate(value);
     }
     // #[inline]
     // pub fn output_gate(&self, value: Gate)
     // {
     //     (self.externals.set_gate)(value);
     // }
-    #[inline]
-    pub fn delay(&self, value: u32)
-    {
-        (self.externals.delay)(value);
-    }
+    // #[inline]
+    // pub fn delay(&self, value: u32)
+    // {
+    //     E::delay(value);
+    // }
     
     #[inline]
     fn set_note(&self, slot: usize, key: u8)
@@ -442,20 +444,20 @@ impl Panel
             false => key << 1
         };
         
-        (self.externals.set_note)(slot, key);
+        E::set_note(slot, key);
     }
     fn set_vel(&self, slot: usize, value: u8)
     {
         if self.is_vf_velocity(slot)
         {
             // 7 bit to 8 bit
-            (self.externals.set_vel)(slot, value << 1);
+            E::set_vel(slot, value << 1);
         }
         
         if self.state.modulation && slot == 0
         {
             // 7 bit to 12 bit
-            (self.externals.set_mod)((value as u16) << 5)
+            E::set_mod((value as u16) << 5)
         }
     }
     
@@ -463,7 +465,7 @@ impl Panel
     {
         for i in 0..5
         {
-            let key = (self.externals.get_note)(i);
+            let key = E::get_note(i);
             self.set_note(i, shift_note(key, self.state.octave));
         }
     }
