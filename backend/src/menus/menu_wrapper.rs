@@ -123,7 +123,7 @@ pub struct MenuWrapper<T: Menu>
     digits: [u8; MAX_DIGITS],
     d_count: u8,
     tap_duration: u32,
-    last_tap_time: u32,
+    first_tap_time: u32,
     tap_count: usize,
     key_select: NoteKey,
     menu: T
@@ -137,7 +137,7 @@ impl<T: Menu> MenuWrapper<T>
             digits: [0; MAX_DIGITS],
             d_count: 0,
             tap_duration: 0,
-            last_tap_time: 0,
+            first_tap_time: 0,
             tap_count: 0,
             key_select: NoteKey::C,
             menu
@@ -273,9 +273,12 @@ impl<T: Menu> MenuWrapTrait for MenuWrapper<T>
                 
                 if self.tap_count != 0
                 {
-                    self.tap_duration += time - self.last_tap_time;
+                    self.tap_duration = time - self.first_tap_time;
                 }
-                self.last_tap_time = time;
+                else
+                {
+                    self.first_tap_time = time;
+                }
                 self.tap_count += 1;
                 (false, Some(MenuFeedback::note_option_short(cf)))
             },
@@ -343,7 +346,10 @@ impl<T: Menu> MenuWrapTrait for MenuWrapper<T>
         {
             if cf == Channel::All || cf == channel
             {
-                self.menu.on_tap_time(config, self.tap_duration / (self.tap_count - 1) as u32, channel, key);
+                if self.tap_count > 0
+                {
+                    self.menu.on_tap_time(config, self.tap_duration / (self.tap_count - 1) as u32, channel, key);
+                }
                 self.state = MenuState::Listening;
             }
         }
