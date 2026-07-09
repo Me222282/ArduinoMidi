@@ -16,7 +16,7 @@ use crate::{Configuration, SequencerMenu};
 #[macro_export]
 macro_rules! menu_toggle
 {
-    ($menu:ident, $value:expr) =>
+    ($value:expr) =>
     {{
         let nv = !$value;
         $value = nv;
@@ -26,7 +26,7 @@ macro_rules! menu_toggle
 #[macro_export]
 macro_rules! menu_toggle_channel
 {
-    ($menu:ident, $channel:ident, $value:expr) =>
+    ($channel:ident, $value:expr) =>
     {{
         let nv = !$value;
         $value = nv;

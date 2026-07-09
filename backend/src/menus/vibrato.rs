@@ -47,7 +47,7 @@ impl Menu for VibratoMenu
         let mut state = MenuState::Listening;
         let fb = match note.key
         {
-            Note::C4 => menu_toggle_channel!(menu, channel, config.vibrato.vibratos[channel as usize].enabled),
+            Note::C4 => menu_toggle_channel!(channel, config.vibrato.vibratos[channel as usize].enabled),
             Note::Db4 =>
             {
                 config.vibrato.vibratos[channel as usize].freq_correction = FreqCorrection::None;
@@ -76,7 +76,7 @@ impl Menu for VibratoMenu
             },
             SET_MRATE_KEY => {state = MenuState::number(5, 1.., note.key, channel); None},
             SET_SCALE_KEY => {state = MenuState::number(4, ..=2048, note.key, channel); None},
-            Note::C5 => menu_toggle!(menu, config.vibrato.global_vibrato),
+            Note::C5 => menu_toggle!(config.vibrato.global_vibrato),
             MINUS_ST_KEY => {state = MenuState::number(2, ..=24, note.key, channel); None},
             PLUS_ST_KEY => {state = MenuState::number(2, ..=24, note.key, channel); None},
             Note::B5 =>

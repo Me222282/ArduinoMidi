@@ -25,7 +25,7 @@ impl Menu for ProgramPortsMenu
         let mut state = MenuState::Listening;
         let fb = match note.key
         {
-            Note::C3 if channel <= Channel::C5 => menu_toggle_channel!(menu, channel, config.panel.trig_enabled[channel as usize]),
+            Note::C3 if channel <= Channel::C5 => menu_toggle_channel!(channel, config.panel.trig_enabled[channel as usize]),
             Note::D3 if channel <= Channel::C5 =>
             {
                 config.panel.triggers[channel as usize].set_source(TriggerSource::Arpeggio(Channel::All));
@@ -48,12 +48,12 @@ impl Menu for ProgramPortsMenu
             },
             CHANNEL_KEY if channel <= Channel::C5 => {state = MenuState::number(2, 1..16, note.key, channel); None},
             PULSE_LENGTH_KEY => {state = MenuState::number(4, 1.., note.key, Channel::All); None},
-            Note::C4 => menu_toggle!(menu, config.panel.cc_enabled[0]),
-            Note::D4 => menu_toggle!(menu, config.panel.cc_enabled[1]),
-            Note::E4 => menu_toggle!(menu, config.panel.cc_enabled[2]),
-            Note::F4 => menu_toggle!(menu, config.panel.cc_enabled[3]),
-            Note::G4 => menu_toggle!(menu, config.panel.cc_enabled[4]),
-            Note::A4 => menu_toggle!(menu, config.panel.per_channel_cc),
+            Note::C4 => menu_toggle!(config.panel.cc_enabled[0]),
+            Note::D4 => menu_toggle!(config.panel.cc_enabled[1]),
+            Note::E4 => menu_toggle!(config.panel.cc_enabled[2]),
+            Note::F4 => menu_toggle!(config.panel.cc_enabled[3]),
+            Note::G4 => menu_toggle!(config.panel.cc_enabled[4]),
+            Note::A4 => menu_toggle!(config.panel.per_channel_cc),
             CC1_KEY if channel <= Channel::C5 => {state = MenuState::number(3, ..127, note.key, channel); None},
             CC2_KEY if channel <= Channel::C5 => {state = MenuState::number(3, ..127, note.key, channel); None},
             CC3_KEY if channel <= Channel::C5 => {state = MenuState::number(3, ..127, note.key, channel); None},
