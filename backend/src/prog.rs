@@ -69,6 +69,10 @@ impl<E: api::Externals, N: NvsInterface> Program<E, N>
                     if let Some(fb) = exit.1 { self.output.menu_feedback(fb, time); }
                     // exit menu
                     if exit.0 { self.set_menu(Menus::None); }
+                    else if let Menus::D(s) = &self.menu
+                    {
+                        s.menu.sequencer.on_note(&mut self.output);
+                    }
                 }
                 else
                 {
@@ -112,6 +116,11 @@ impl<E: api::Externals, N: NvsInterface> Program<E, N>
     {
         self.output.on_loop(time);
         self.arpeggio.on_loop(time, &mut self.output);
+        
+        if let Menus::D(s) = &mut self.menu
+        {
+            s.menu.sequencer.on_loop(&mut self.output, time);
+        }
     }
     
     pub fn on_switch(&mut self, switch: Switch, time: u32)

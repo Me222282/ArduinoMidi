@@ -5,7 +5,7 @@ use crate::{Configuration, Menu, MenuFeedback, MenuState, menu_toggle, sequencer
 #[derive(Debug, Default)]
 pub(crate) struct SequencerMenu
 {
-    sequencer: Sequencer,
+    pub sequencer: Sequencer,
     bar_size_lv: usize,
     seq_time_lv: usize,
 }

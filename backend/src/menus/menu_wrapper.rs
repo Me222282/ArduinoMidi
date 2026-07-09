@@ -126,7 +126,7 @@ pub(crate) struct MenuWrapper<T: Menu>
     first_tap_time: u32,
     tap_count: usize,
     key_select: NoteKey,
-    menu: T
+    pub menu: T
 }
 impl<T: Menu> MenuWrapper<T>
 {
