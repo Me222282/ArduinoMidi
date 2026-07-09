@@ -1,4 +1,4 @@
-use api::{CCType, Channel, Externals, Gate, Note, PanelState};
+use api::{CCType, Channel, ChannelVoice, Externals, Gate, Note, PanelState, cv_new};
 
 use crate::{PanelConfig, TriggerSource, VibratoOp};
 
@@ -26,7 +26,7 @@ pub struct Panel
     externals: Externals,
     pub state: PanelState,
     // pub configuration: Configuration,
-    pub slot_allocations: [(Channel, u8); 5],
+    pub slot_allocations: [ChannelVoice; 5],
     // pub vel_functions: [VelFunc; 5],
     vibrato_values: [i16; 16],
     pdvs: [u16; 16],
@@ -121,7 +121,7 @@ impl Panel
             {
                 for (i, &com) in self.slot_allocations.iter().enumerate()
                 {
-                    if com != (c, v) { continue; }
+                    if com != ChannelVoice::new(c, v) { continue; }
                     
                     self.set_note(i, note.key);
                     self.set_vel(i, note.velocity);
@@ -144,7 +144,7 @@ impl Panel
             {
                 for (i, &com) in self.slot_allocations.iter().enumerate()
                 {
-                    if com.0 != c { continue; }
+                    if com.get_channel() != c { continue; }
                     
                     self.set_note(i, note.key);
                     self.set_vel(i, note.velocity);
@@ -156,7 +156,7 @@ impl Panel
             {
                 for (i, &com) in self.slot_allocations.iter().enumerate()
                 {
-                    if com.1 != v { continue; }
+                    if com.get_voice() != v { continue; }
                     
                     self.set_note(i, note.key);
                     self.set_vel(i, note.velocity);
@@ -180,7 +180,7 @@ impl Panel
     {
         for (i, &com) in self.slot_allocations.iter().enumerate()
         {
-            if com.0 != channel { continue; }
+            if com.get_channel() != channel { continue; }
             
             if self.is_vf_mod(i)
             {
@@ -203,7 +203,7 @@ impl Panel
             let mut i = 0;
             for (slot, &com) in self.slot_allocations.iter().enumerate()
             {
-                if com.0 != channel { continue; }
+                if com.get_channel() != channel { continue; }
                 
                 if self.get_vf_cc_channel(i, cc).is_some()
                 {
@@ -273,7 +273,7 @@ impl Panel
         
         for (i, &com) in self.slot_allocations.iter().enumerate()
         {
-            if com.0 != channel { continue; }
+            if com.get_channel() != channel { continue; }
             
             let nv = self.calculate_pb(vibrato, value as isize, offset as isize, channel, i);
             (self.externals.set_pitch_bend)(i, nv);
@@ -304,8 +304,9 @@ impl Panel
     {
         self.vibrato_values.copy_from_slice(values);
         
-        for (i, &(channel, _)) in self.slot_allocations.iter().enumerate()
+        for (i, cv) in self.slot_allocations.iter().enumerate()
         {
+            let channel = cv.get_channel();
             let pb_value = unsafe {
                 *self.pdvs.get_unchecked(channel as usize)
             };
@@ -333,7 +334,7 @@ impl Panel
             {
                 for (i, &com) in self.slot_allocations.iter().enumerate()
                 {
-                    if com != (c, v) { continue; }
+                    if com != ChannelVoice::new(c, v) { continue; }
                     
                     value.on(i as u8);
                 }
@@ -347,7 +348,7 @@ impl Panel
             {
                 for (i, &com) in self.slot_allocations.iter().enumerate()
                 {
-                    if com.0 != c { continue; }
+                    if com.get_channel() != c { continue; }
                     
                     value.on(i as u8);
                 }
@@ -356,7 +357,7 @@ impl Panel
             {
                 for (i, &com) in self.slot_allocations.iter().enumerate()
                 {
-                    if com.1 != v { continue; }
+                    if com.get_voice() != v { continue; }
                     
                     value.on(i as u8);
                 }
@@ -385,7 +386,7 @@ impl Panel
             {
                 for (i, &com) in self.slot_allocations.iter().enumerate()
                 {
-                    if com != (c, v) { continue; }
+                    if com != ChannelVoice::new(c, v) { continue; }
                     
                     value.off(i as u8);
                 }
@@ -394,7 +395,7 @@ impl Panel
             {
                 for (i, &com) in self.slot_allocations.iter().enumerate()
                 {
-                    if com.0 != c { continue; }
+                    if com.get_channel() != c { continue; }
                     
                     value.off(i as u8);
                 }
@@ -403,7 +404,7 @@ impl Panel
             {
                 for (i, &com) in self.slot_allocations.iter().enumerate()
                 {
-                    if com.1 != v { continue; }
+                    if com.get_voice() != v { continue; }
                     
                     value.off(i as u8);
                 }
@@ -526,18 +527,19 @@ fn shift_note(key: u8, octave: i8) -> u8
 }
 
 /// Returns cd ordered by channel
-fn determine_channel_data(slot_alloc: &[(Channel, u8); 5], cd: &mut [(Channel, u8); 5]) -> u8
+fn determine_channel_data(slot_alloc: &[ChannelVoice; 5], cd: &mut [(Channel, u8); 5]) -> u8
 {
     let mut ai = 0;
     let mut table = [0; 16];
     
-    for &(c, v) in slot_alloc
+    for cv in slot_alloc
     {
-        let v = v + 1;
-        let current = table[c as usize];
+        let v = cv.get_voice() + 1;
+        let c = cv.get_channel() as usize;
+        let current = table[c];
         if v > current
         {
-            table[c as usize] = v;
+            table[c] = v;
         }
     }
     
@@ -555,28 +557,28 @@ fn determine_channel_data(slot_alloc: &[(Channel, u8); 5], cd: &mut [(Channel, u
 
 const PB_DIV: [f32; 6] = [ 1.0 / 24.0, 1.0 / 12.0, 1.0 / 6.0, 5.0 / 12.0, 7.0 / 12.0, 1.0 ];
 
-const SS0: [(Channel, u8); 5] = [(Channel::C1, 0), (Channel::C1, 0), (Channel::C1, 0), (Channel::C1, 0), (Channel::C1, 0)];
-const SS1: [(Channel, u8); 5] = [(Channel::C1, 0), (Channel::C1, 0), (Channel::C1, 0), (Channel::C1, 1), (Channel::C1, 1)];
-const SS2: [(Channel, u8); 5] = [(Channel::C1, 0), (Channel::C1, 0), (Channel::C1, 1), (Channel::C1, 1), (Channel::C1, 2)];
-const SS3: [(Channel, u8); 5] = [(Channel::C1, 0), (Channel::C1, 0), (Channel::C1, 1), (Channel::C1, 2), (Channel::C1, 3)];
-const SS4: [(Channel, u8); 5] = [(Channel::C1, 0), (Channel::C1, 1), (Channel::C1, 2), (Channel::C1, 3), (Channel::C1, 4)];
-const SS5: [(Channel, u8); 5] = [(Channel::C1, 0), (Channel::C1, 0), (Channel::C1, 0), (Channel::C2, 0), (Channel::C2, 0)];
-const SS6: [(Channel, u8); 5] = [(Channel::C1, 0), (Channel::C1, 0), (Channel::C1, 1), (Channel::C2, 0), (Channel::C2, 1)];
-const SS7: [(Channel, u8); 5] = [(Channel::C1, 0), (Channel::C1, 1), (Channel::C1, 2), (Channel::C2, 0), (Channel::C2, 1)];
-const SS8: [(Channel, u8); 5] = [(Channel::C1, 0), (Channel::C1, 1), (Channel::C1, 2), (Channel::C1, 3), (Channel::C2, 0)];
-const SS9: [(Channel, u8); 5] = [(Channel::C1, 0), (Channel::C1, 0), (Channel::C2, 0), (Channel::C2, 0), (Channel::C3, 0)];
-const SS10: [(Channel, u8); 5] = [(Channel::C1, 0), (Channel::C1, 1), (Channel::C2, 0), (Channel::C2, 1), (Channel::C3, 0)];
-const SS11: [(Channel, u8); 5] = [(Channel::C1, 0), (Channel::C1, 1), (Channel::C1, 2), (Channel::C2, 0), (Channel::C3, 0)];
-const SS12: [(Channel, u8); 5] = [(Channel::C1, 0), (Channel::C1, 0), (Channel::C2, 0), (Channel::C3, 0), (Channel::C4, 0)];
-const SS13: [(Channel, u8); 5] = [(Channel::C1, 0), (Channel::C1, 1), (Channel::C2, 0), (Channel::C3, 0), (Channel::C4, 0)];
-const SS14: [(Channel, u8); 5] = [(Channel::C1, 0), (Channel::C2, 0), (Channel::C3, 0), (Channel::C4, 0), (Channel::C5, 0)];
+const SS0: [ChannelVoice; 5] = [cv_new!(C1, 0), cv_new!(C1, 0), cv_new!(C1, 0), cv_new!(C1, 0), cv_new!(C1, 0)];
+const SS1: [ChannelVoice; 5] = [cv_new!(C1, 0), cv_new!(C1, 0), cv_new!(C1, 0), cv_new!(C1, 1), cv_new!(C1, 1)];
+const SS2: [ChannelVoice; 5] = [cv_new!(C1, 0), cv_new!(C1, 0), cv_new!(C1, 1), cv_new!(C1, 1), cv_new!(C1, 2)];
+const SS3: [ChannelVoice; 5] = [cv_new!(C1, 0), cv_new!(C1, 0), cv_new!(C1, 1), cv_new!(C1, 2), cv_new!(C1, 3)];
+const SS4: [ChannelVoice; 5] = [cv_new!(C1, 0), cv_new!(C1, 1), cv_new!(C1, 2), cv_new!(C1, 3), cv_new!(C1, 4)];
+const SS5: [ChannelVoice; 5] = [cv_new!(C1, 0), cv_new!(C1, 0), cv_new!(C1, 0), cv_new!(C2, 0), cv_new!(C2, 0)];
+const SS6: [ChannelVoice; 5] = [cv_new!(C1, 0), cv_new!(C1, 0), cv_new!(C1, 1), cv_new!(C2, 0), cv_new!(C2, 1)];
+const SS7: [ChannelVoice; 5] = [cv_new!(C1, 0), cv_new!(C1, 1), cv_new!(C1, 2), cv_new!(C2, 0), cv_new!(C2, 1)];
+const SS8: [ChannelVoice; 5] = [cv_new!(C1, 0), cv_new!(C1, 1), cv_new!(C1, 2), cv_new!(C1, 3), cv_new!(C2, 0)];
+const SS9: [ChannelVoice; 5] = [cv_new!(C1, 0), cv_new!(C1, 0), cv_new!(C2, 0), cv_new!(C2, 0), cv_new!(C3, 0)];
+const SS10: [ChannelVoice; 5] = [cv_new!(C1, 0), cv_new!(C1, 1), cv_new!(C2, 0), cv_new!(C2, 1), cv_new!(C3, 0)];
+const SS11: [ChannelVoice; 5] = [cv_new!(C1, 0), cv_new!(C1, 1), cv_new!(C1, 2), cv_new!(C2, 0), cv_new!(C3, 0)];
+const SS12: [ChannelVoice; 5] = [cv_new!(C1, 0), cv_new!(C1, 0), cv_new!(C2, 0), cv_new!(C3, 0), cv_new!(C4, 0)];
+const SS13: [ChannelVoice; 5] = [cv_new!(C1, 0), cv_new!(C1, 1), cv_new!(C2, 0), cv_new!(C3, 0), cv_new!(C4, 0)];
+const SS14: [ChannelVoice; 5] = [cv_new!(C1, 0), cv_new!(C2, 0), cv_new!(C3, 0), cv_new!(C4, 0), cv_new!(C5, 0)];
 
-const SS15: [(Channel, u8); 5] = [(Channel::C1, 0), (Channel::C1, 1), (Channel::C1, 0), (Channel::C1, 1), (Channel::C1, 0)];
-const SS16: [(Channel, u8); 5] = [(Channel::C1, 0), (Channel::C1, 1), (Channel::C1, 2), (Channel::C1, 0), (Channel::C1, 1)];
-const SS17: [(Channel, u8); 5] = [(Channel::C1, 0), (Channel::C1, 1), (Channel::C1, 2), (Channel::C1, 3), (Channel::C1, 0)];
-const SS18: [(Channel, u8); 5] = [(Channel::C1, 0), (Channel::C1, 1), (Channel::C1, 0), (Channel::C2, 0), (Channel::C2, 1)];
+const SS15: [ChannelVoice; 5] = [cv_new!(C1, 0), cv_new!(C1, 1), cv_new!(C1, 0), cv_new!(C1, 1), cv_new!(C1, 0)];
+const SS16: [ChannelVoice; 5] = [cv_new!(C1, 0), cv_new!(C1, 1), cv_new!(C1, 2), cv_new!(C1, 0), cv_new!(C1, 1)];
+const SS17: [ChannelVoice; 5] = [cv_new!(C1, 0), cv_new!(C1, 1), cv_new!(C1, 2), cv_new!(C1, 3), cv_new!(C1, 0)];
+const SS18: [ChannelVoice; 5] = [cv_new!(C1, 0), cv_new!(C1, 1), cv_new!(C1, 0), cv_new!(C2, 0), cv_new!(C2, 1)];
 
-const SLOT_SETTINGS: [[&[(Channel, u8); 5]; 5]; 5] = [
+const SLOT_SETTINGS: [[&[ChannelVoice; 5]; 5]; 5] = [
     // voice priority
     // // 1 Channel
     // [&SS0, &SS1, &SS2, &SS3, &SS4],

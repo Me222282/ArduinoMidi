@@ -16,26 +16,26 @@ impl Switch
     pub const PITCH_BEND: Switch = Switch(0b00100000);
     pub const MOD_OPTION: Switch = Switch(0b01000000);
     
-    pub fn new(channels: bool, voices: bool, stack: bool, input_mode: bool, octave: bool, pitch_bend: bool, option: bool) -> Self
+    pub const fn new(channels: bool, voices: bool, stack: bool, input_mode: bool, octave: bool, pitch_bend: bool, option: bool) -> Self
     {
         let mut s = Switch(0);
         
-        if channels { s |= Self::CHANNELS; }
-        if voices { s |= Self::VOICES; }
-        if stack { s |= Self::STACK; }
-        if input_mode { s |= Self::INPUT_MODE; }
-        if octave { s |= Self::OCTAVE; }
-        if pitch_bend { s |= Self::PITCH_BEND; }
-        if option { s |= Self::MOD_OPTION; }
+        if channels { s.0 |= Self::CHANNELS.0; }
+        if voices { s.0 |= Self::VOICES.0; }
+        if stack { s.0 |= Self::STACK.0; }
+        if input_mode { s.0 |= Self::INPUT_MODE.0; }
+        if octave { s.0 |= Self::OCTAVE.0; }
+        if pitch_bend { s.0 |= Self::PITCH_BEND.0; }
+        if option { s.0 |= Self::MOD_OPTION.0; }
         
         return s;
     }
     
-    pub fn is_resetting(self) -> bool
+    pub const fn is_resetting(self) -> bool
     {
         return (self.0 & 0b1111) > 0;
     }
-    pub fn is_new_channels(self) -> bool
+    pub const fn is_new_channels(self) -> bool
     {
         return (self.0 & 0b11) > 0;
     }
@@ -141,7 +141,7 @@ pub enum Channel
 }
 impl Channel
 {
-    pub fn from_u8(value: u8) -> Channel
+    pub const fn from_u8(value: u8) -> Channel
     {
         return match value
         {
@@ -164,6 +164,42 @@ impl Channel
             _ => Channel::All
         }
     }
+}
+
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+pub struct ChannelVoice(u8);
+impl ChannelVoice
+{
+    pub const fn new(channel: Channel, voice: u8) -> ChannelVoice
+    {
+        let c = channel as u8;
+        return ChannelVoice(c << 4 | voice);
+    }
+    pub const fn get_channel(self) -> Channel
+    {
+        return Channel::from_u8(self.0 >> 4);
+    }
+    pub const fn get_voice(self) -> u8
+    {
+        return self.0 & 0b1111;
+    }
+    pub const fn set_channel(&mut self, channel: Channel)
+    {
+        self.0 = self.0 & 0b1111 + ((channel as u8) << 4);
+    }
+    pub const fn set_voice(&mut self, voice: u8)
+    {
+        self.0 = self.0 & 0b11110000 + voice;
+    }
+}
+
+#[macro_export]
+macro_rules! cv_new
+{
+    ($channel:ident, $voice:expr) =>
+    {{
+        crate::ChannelVoice::new(Channel::$channel, $voice)
+    }};
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

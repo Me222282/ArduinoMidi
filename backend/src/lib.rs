@@ -17,10 +17,7 @@ pub use crate::operators::*;
 pub mod prog;
 pub use crate::prog::*;
 
-use api::CCType;
-use api::Channel;
-use api::NoteKey;
-use api::NoteOffset;
+use api::{CCType, Channel, ChannelVoice, NoteKey, NoteOffset};
 
 extern crate alloc;
 
@@ -217,7 +214,7 @@ pub struct SequencerConfig
 pub struct PanelConfig
 {
     use_custom_allocations: bool,
-    custom_allocations: [(Channel, u8); 5],
+    custom_allocations: [ChannelVoice; 5],
     alternate_allocations: bool,
     
     per_channel_cc: bool,
