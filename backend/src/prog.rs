@@ -1,4 +1,4 @@
-use api::{Channel, MidiCode, Note};
+use api::{Channel, MidiCode, Note, Switch};
 
 use crate::{Arpeggiator, Configuration, MenuFeedback, MenuStorage, MenuWrapTrait, MenuWrapper, OtherConfig, Output, ProgramPortsMenu, SequencerConfig, SpecialOpsMenu, VibratoMenu, create_dynamic_menus};
 
@@ -123,36 +123,39 @@ impl Program
         self.arpeggio.on_loop(time, &mut self.output);
     }
     
-    pub fn on_reset_switch(&mut self, time: u32)
+    pub fn on_switch(&mut self, switch: Switch, time: u32)
     {
-        self.output.on_reset_switch();
+        self.output.on_switch(switch);
         
-        if self.menu.is_none()
+        if switch.is_resetting()
         {
-            // only pressing 1 note
-            if let Some(n) = self.output.get_only_note()
+            if self.menu.is_none()
             {
-                // enter menus
-                match n.key
+                // only pressing 1 note
+                if let Some(n) = self.output.get_only_note()
                 {
-                    Note::A0 => self.menu = Menus::A(MenuWrapper::new(self.menu_storage.get_special_ops())),
-                    Note::C1 => self.menu = Menus::B(MenuWrapper::new(self.menu_storage.get_program_ports())),
-                    Note::D1 => self.menu = Menus::C(MenuWrapper::new(self.menu_storage.get_vibrato())),
-                    _ => {}
-                }
-                // entered menu
-                if !self.menu.is_none()
-                {
-                    self.output.menu_feedback(MenuFeedback::note_select(Channel::All), time);
+                    // enter menus
+                    match n.key
+                    {
+                        Note::A0 => self.menu = Menus::A(MenuWrapper::new(self.menu_storage.get_special_ops())),
+                        Note::C1 => self.menu = Menus::B(MenuWrapper::new(self.menu_storage.get_program_ports())),
+                        Note::D1 => self.menu = Menus::C(MenuWrapper::new(self.menu_storage.get_vibrato())),
+                        _ => {}
+                    }
+                    // entered menu
+                    if !self.menu.is_none()
+                    {
+                        self.output.menu_feedback(MenuFeedback::note_select(Channel::All), time);
+                    }
                 }
             }
-        }
-        // in menu
-        else
-        {
-            let exit = self.menu.on_reset_switch();
-            if let Some(fb) = exit.1 { self.output.menu_feedback(fb, time); }
-            if exit.0 { self.set_menu(Menus::None); }
+            // in menu
+            else
+            {
+                let exit = self.menu.on_reset_switch();
+                if let Some(fb) = exit.1 { self.output.menu_feedback(fb, time); }
+                if exit.0 { self.set_menu(Menus::None); }
+            }
         }
     }
 }

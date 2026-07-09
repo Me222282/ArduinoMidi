@@ -15,6 +15,7 @@ pub struct NoteCollection
     notes: LinkedList<(Note, i8)>,
     locations: SA<Option<RefNode<(Note, i8)>>, 5>,
     old_notes: SA<u8, 5>,
+    /// Assumes it contains all the open slots if in loop mode
     history: Queue<usize, 5>,
     channel: Channel
 }
@@ -27,9 +28,26 @@ impl NoteCollection
             notes: LinkedList::new(alloc::alloc::Global),
             locations: SA::from_iter((0..voices).map(|_| None)),
             old_notes: SA::new(0xFF, voices as usize),
-            history: Queue::new(0),
+            history: Queue::from_iter(0..5, voices as usize),
             channel
         };
+    }
+    pub fn clear(&mut self)
+    {
+        // reset history
+        self.history = Queue::from_iter(0..5, self.locations.len());
+        
+        for on in self.old_notes.iter_mut()
+        {
+            *on = 0xFF;
+        }
+        for l in self.locations.iter_mut()
+        {
+            *l = None;
+        }
+        // recreate list after clearing locations
+        // to ensure no dangling pointers
+        self.notes = LinkedList::new(alloc::alloc::Global)
     }
     
     pub fn is_channel(&self, channel: Channel) -> bool

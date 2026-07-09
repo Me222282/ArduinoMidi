@@ -30,6 +30,7 @@ pub struct Panel
     // pub vel_functions: [VelFunc; 5],
     vibrato_values: [i16; 16],
     pdvs: [u16; 16],
+    vels: [u8; 5],
     gate: Gate,
     pub config: PanelConfig
 }
@@ -109,11 +110,10 @@ impl Panel
         }
     }
     
-    pub fn output_note(&self, slots: SlotSelect, mut note: Note)// -> Gate
+    pub fn output_note(&mut self, slots: SlotSelect, mut note: Note)// -> Gate
     {
         // let mut result = Gate::zero();
-        let nk = note.key as isize + self.state.octave as isize * 12;
-        note.key = nk.clamp(0, 127) as u8;
+        note.key = shift_note(note.key, self.state.octave);
         
         match slots
         {
@@ -125,6 +125,7 @@ impl Panel
                     
                     self.set_note(i, note.key);
                     self.set_vel(i, note.velocity);
+                    self.vels[i] = note.velocity;
                     // result.on(i as u8);
                 }
             },
@@ -135,6 +136,7 @@ impl Panel
                 {
                     self.set_note(i, note.key);
                     self.set_vel(i, note.velocity);
+                    self.vels[i] = note.velocity;
                 }
                 // result = Gate::all_on();
             },
@@ -146,6 +148,7 @@ impl Panel
                     
                     self.set_note(i, note.key);
                     self.set_vel(i, note.velocity);
+                    self.vels[i] = note.velocity;
                     // result.on(i as u8);
                 }
             },
@@ -157,6 +160,7 @@ impl Panel
                     
                     self.set_note(i, note.key);
                     self.set_vel(i, note.velocity);
+                    self.vels[i] = note.velocity;
                     // result.on(i as u8);
                 }
             },
@@ -166,6 +170,7 @@ impl Panel
                 let i = i as usize;
                 self.set_note(i, note.key);
                 self.set_vel(i, note.velocity);
+                self.vels[i] = note.velocity;
             }
         }
         
@@ -453,6 +458,22 @@ impl Panel
         }
     }
     
+    pub fn update_notes(&self)
+    {
+        for i in 0..5
+        {
+            let key = (self.externals.get_note)(i);
+            self.set_note(i, shift_note(key, self.state.octave));
+        }
+    }
+    pub fn update_vels(&self)
+    {
+        for i in 0..5
+        {
+            self.set_vel(i, self.vels[i]);
+        }
+    }
+    
     /// Returns cd ordered by channel
     pub fn update_slot_allocations(&mut self, cd: &mut [(Channel, u8); 5]) -> u8
     {
@@ -496,6 +517,12 @@ impl Panel
         self.slot_allocations = *SLOT_SETTINGS[c as usize - 1][v as usize - 1];
         return determine_channel_data(&self.slot_allocations, cd);
     }
+}
+
+fn shift_note(key: u8, octave: i8) -> u8
+{
+    let nk = key as isize + octave as isize * 12;
+    return nk.clamp(0, 127) as u8;
 }
 
 /// Returns cd ordered by channel

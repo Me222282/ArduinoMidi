@@ -1,4 +1,4 @@
-use api::{CCType, Channel, Gate, Note, SA};
+use api::{CCType, Channel, Gate, Note, SA, Switch};
 
 use crate::{MenuFeedback, NoteCollection, NoteConfig, NoteOutput, OutputConfig, Panel, RETRIG_TIME, SlotSelect, VibratoOp, get_only_note, process_note};
 
@@ -17,7 +17,8 @@ pub struct Output
     channel_voices: [(Channel, u8); 5],
     cv_count: u8,
     
-    mod_values: [u16; 16]
+    mod_values: [u16; 16],
+    pb_values: [u16; 16]
 }
 
 impl Output
@@ -206,6 +207,7 @@ impl Output
             channel = self.all_channel_modulo(channel);
         }
         
+        self.pb_values[channel as usize] = value;
         self.panel.set_pitch_bend(&mut self.vibrato, channel, value);
     }
     
@@ -222,20 +224,58 @@ impl Output
         let index = channel as u8 % self.cv_count;
         return self.channel_voices[index as usize].0;
     }
-    pub fn on_reset_switch(&mut self)
+    pub fn on_switch(&mut self, switch: Switch)
     {
-        self.vibrato.on_reset_switch();
+        if switch.is_new_channels()
+        {
+            // IMPORTANT: channel voices is ordered by channel
+            self.cv_count = self.panel.update_slot_allocations(&mut self.channel_voices);
+            
+            // reallocate note collections
+            let iter = self.channel_voices[0..(self.cv_count as usize)].iter()
+                .map(|cv| NoteCollection::new(cv.0, cv.1));
+            self.note_manager = SA::from_iter(iter);
+        }
+        else if switch.is_resetting()
+        {
+            // reset note collections
+            for nc in self.note_manager.iter_mut()
+            {
+                nc.clear();
+            }
+        }
+        if switch.is_resetting()
+        {
+            self.vibrato.on_reset_switch();
+            
+            // reset outputs
+            self.panel.output_gate_off(SlotSelect::All);
+            self.panel.output_note(SlotSelect::All, Note::new(0, 0));
+        }
         
-        // IMPORTANT: channel voices is ordered by channel
-        self.cv_count = self.panel.update_slot_allocations(&mut self.channel_voices);
-        
-        // reallocate note collections
-        let iter = self.channel_voices[0..(self.cv_count as usize)].iter()
-            .map(|cv| NoteCollection::new(cv.0, cv.1));
-        self.note_manager = SA::from_iter(iter);
-        
-        // reset outputs
-        self.panel.output_gate_off(SlotSelect::All);
-        self.panel.output_note(SlotSelect::All, Note::new(0, 0));
+        // non-resetting
+        match switch
+        {
+            Switch::OCTAVE => self.panel.update_notes(),
+            Switch::PITCH_BEND =>
+            {
+                // reoutput pitch bend values
+                for &(channel, _) in &self.channel_voices[0..(self.cv_count as usize)]
+                {
+                    self.panel.set_pitch_bend(&mut self.vibrato, channel, self.pb_values[channel as usize]);
+                }
+            },
+            Switch::MOD_OPTION =>
+            {
+                // reoutput velocities
+                self.panel.update_vels();
+                // reoutput mod values
+                for &(channel, _) in &self.channel_voices[0..(self.cv_count as usize)]
+                {
+                    self.panel.output_modulation(channel, self.mod_values[channel as usize]);
+                }
+            },
+            _ => {}
+        }
     }
 }

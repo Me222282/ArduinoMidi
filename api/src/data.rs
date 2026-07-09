@@ -1,5 +1,76 @@
 #![allow(non_upper_case_globals)]
 
+use core::ops::{BitAnd, BitAndAssign, BitOr, BitOrAssign};
+
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+pub struct Switch(u8);
+impl Switch
+{
+    // new channels and reseting switches
+    pub const CHANNELS: Switch = Switch(0b00000001);
+    pub const VOICES: Switch = Switch(0b00000010);
+    pub const STACK: Switch = Switch(0b00000100);
+    pub const INPUT_MODE: Switch = Switch(0b00001000);
+    // others
+    pub const OCTAVE: Switch = Switch(0b00010000);
+    pub const PITCH_BEND: Switch = Switch(0b00100000);
+    pub const MOD_OPTION: Switch = Switch(0b01000000);
+    
+    pub fn new(channels: bool, voices: bool, stack: bool, input_mode: bool, octave: bool, pitch_bend: bool, option: bool) -> Self
+    {
+        let mut s = Switch(0);
+        
+        if channels { s |= Self::CHANNELS; }
+        if voices { s |= Self::VOICES; }
+        if stack { s |= Self::STACK; }
+        if input_mode { s |= Self::INPUT_MODE; }
+        if octave { s |= Self::OCTAVE; }
+        if pitch_bend { s |= Self::PITCH_BEND; }
+        if option { s |= Self::MOD_OPTION; }
+        
+        return s;
+    }
+    
+    pub fn is_resetting(self) -> bool
+    {
+        return (self.0 & 0b1111) > 0;
+    }
+    pub fn is_new_channels(self) -> bool
+    {
+        return (self.0 & 0b11) > 0;
+    }
+}
+impl BitOr for Switch
+{
+    type Output = Self;
+    fn bitor(self, rhs: Self) -> Self
+    {
+        return Switch(self.0 | rhs.0);
+    }
+}
+impl BitOrAssign for Switch
+{
+    fn bitor_assign(&mut self, rhs: Self)
+    {
+        self.0 |= rhs.0;
+    }
+}
+impl BitAnd for Switch
+{
+    type Output = Self;
+    fn bitand(self, rhs: Self) -> Self
+    {
+        return Switch(self.0 & rhs.0);
+    }
+}
+impl BitAndAssign for Switch
+{
+    fn bitand_assign(&mut self, rhs: Self)
+    {
+        self.0 &= rhs.0;
+    }
+}
+
 #[repr(u8)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum NoteKey
