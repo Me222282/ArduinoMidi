@@ -12,14 +12,14 @@ pub enum SlotSelect
     All
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum VelFunc
-{
-    Velocity,
-    Modulation,
-    CC(CCType, Channel),
-    Trigger(TriggerSource)
-}
+// #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+// enum VelFunc
+// {
+//     Velocity,
+//     Modulation,
+//     CC(CCType, Channel),
+//     Trigger(TriggerSource)
+// }
 
 pub struct Panel
 {
@@ -60,6 +60,7 @@ impl Panel
     //         return VelFunc::Velocity;
     //     }
     // }
+    #[inline]
     fn is_vf_mod(&self, slot: usize) -> bool
     {
         unsafe
@@ -69,6 +70,7 @@ impl Panel
                 self.state.modulation;
         }
     }
+    #[inline]
     fn is_vf_velocity(&self, slot: usize) -> bool
     {
         unsafe
@@ -97,6 +99,7 @@ impl Panel
             return Some(src.1);
         }
     }
+    #[inline]
     fn is_vf_trigger(&self, slot: usize, source: TriggerSource) -> bool
     {
         unsafe
@@ -106,9 +109,11 @@ impl Panel
         }
     }
     
-    pub fn output_note(&self, slots: SlotSelect, note: Note) -> Gate
+    pub fn output_note(&self, slots: SlotSelect, mut note: Note)// -> Gate
     {
-        let mut result = Gate::zero();
+        // let mut result = Gate::zero();
+        let nk = note.key as isize + self.state.octave as isize * 12;
+        note.key = nk.clamp(0, 127) as u8;
         
         match slots
         {
@@ -120,7 +125,7 @@ impl Panel
                     
                     self.set_note(i, note.key);
                     self.set_vel(i, note.velocity);
-                    result.on(i as u8);
+                    // result.on(i as u8);
                 }
             },
             SlotSelect::Channel(Channel::All) | 
@@ -131,7 +136,7 @@ impl Panel
                     self.set_note(i, note.key);
                     self.set_vel(i, note.velocity);
                 }
-                result = Gate::all_on();
+                // result = Gate::all_on();
             },
             SlotSelect::Channel(c) =>
             {
@@ -141,7 +146,7 @@ impl Panel
                     
                     self.set_note(i, note.key);
                     self.set_vel(i, note.velocity);
-                    result.on(i as u8);
+                    // result.on(i as u8);
                 }
             },
             SlotSelect::Voice(v) =>
@@ -152,19 +157,19 @@ impl Panel
                     
                     self.set_note(i, note.key);
                     self.set_vel(i, note.velocity);
-                    result.on(i as u8);
+                    // result.on(i as u8);
                 }
             },
             SlotSelect::Index(i) =>
             {
-                result.on(i);
+                // result.on(i);
                 let i = i as usize;
                 self.set_note(i, note.key);
                 self.set_vel(i, note.velocity);
             }
         }
         
-        return result;
+        // return result;
     }
     pub fn output_modulation(&self, channel: Channel, value: u16)
     {
@@ -247,8 +252,12 @@ impl Panel
         let nv = (pb >> 2) + offset;
         return nv.clamp(0, 0xFFF) as u16;
     }
-    pub fn set_pitch_bend(&mut self, vibrato: &mut VibratoOp, channel: Channel, value: u16)
+    pub fn set_pitch_bend(&mut self, vibrato: &mut VibratoOp, channel: Channel, mut value: u16)
     {
+        // pitch bend select switch
+        let vf = (value as i16 - 2048) as f32;
+        value = ((vf * PB_DIV[self.state.pitch_bend as usize]) as i16 + 2048) as u16;
+        
         unsafe
         {
             *self.pdvs.get_unchecked_mut(channel as usize) = value;
@@ -444,82 +453,123 @@ impl Panel
         }
     }
     
-    // pub fn toggle_trigger(&mut self, slot: usize) -> bool
-    // {
-    //     let vs = &mut self.vel_functions[slot];
-    //     if let VelFunc::Trigger(_) = vs
-    //     {
-    //         if self.config.cc_enabled[slot]
-    //         {
-    //             let cc = self.config.cc_sources[slot];
-    //             self.vel_functions[slot] = VelFunc::CC(cc.0, cc.1);
-    //         }
-    //         else if self.state.modulation
-    //         {
-    //             self.vel_functions[slot] = VelFunc::Modulation;
-    //         }
-    //         else
-    //         {
-    //             self.vel_functions[slot] = VelFunc::Velocity;
-    //         }
-    //         return false;
-    //     }
+    /// Returns cd ordered by channel
+    pub fn update_slot_allocations(&mut self, cd: &mut [(Channel, u8); 5]) -> u8
+    {
+        if self.config.use_custom_allocations
+        {
+            self.slot_allocations = self.config.custom_allocations;
+            
+            return determine_channel_data(&self.slot_allocations, cd);
+        }
         
-    //     *vs = VelFunc::Trigger(self.config.triggers[slot]);
-    //     return true;
-    // }
-    // // set source without channel
-    // pub fn set_trigger(&mut self, slot: usize, mut source: TriggerSource)
-    // {
-    //     let ts = &mut self.config.triggers[slot];
-    //     source.set_channel(ts.get_channel());
+        let c = self.state.channels;
+        let v = self.state.voices;
+        if self.config.alternate_allocations
+        {
+            if c == 0
+            {
+                if v == 1
+                {
+                    self.slot_allocations = SS15;
+                    return determine_channel_data(&self.slot_allocations, cd);
+                }
+                else if v == 2
+                {
+                    self.slot_allocations = SS16;
+                    return determine_channel_data(&self.slot_allocations, cd);
+                }
+                else if v == 3
+                {
+                    self.slot_allocations = SS17;
+                    return determine_channel_data(&self.slot_allocations, cd);
+                }
+            }
+            else if c == 1 && v == 1
+            {
+                self.slot_allocations = SS18;
+                return determine_channel_data(&self.slot_allocations, cd);
+            }
+        }
         
-    //     *ts = source;
-    //     if let VelFunc::Trigger(s) = &mut self.vel_functions[slot]
-    //     {
-    //         *s = source;
-    //     }
-    // }
-    // pub fn set_trigger_channel(&mut self, slot: usize, channel: Channel)
-    // {
-    //     let trig = &mut self.config.triggers[slot];
-    //     trig.set_channel(channel);
-    //     if let VelFunc::Trigger(s) = &mut self.vel_functions[slot]
-    //     {
-    //         *s = *trig;
-    //     }
-    // }
-    // pub fn toggle_cc(&mut self, slot: usize) -> bool
-    // {
-    //     let enabled = !self.config.cc_enabled[slot];
-    //     self.config.cc_enabled[slot] = enabled;
-    //     if enabled
-    //     {
-    //         if let VelFunc::Trigger(_) = self.vel_functions[slot]
-    //         {
-    //             return enabled;
-    //         }
-    //         let cc = self.config.cc_sources[slot];
-    //         self.vel_functions[slot] = VelFunc::CC(cc.0, cc.1);
-    //     }
-    //     else if self.state.modulation
-    //     {
-    //         self.vel_functions[slot] = VelFunc::Modulation;
-    //     }
-    //     else
-    //     {
-    //         self.vel_functions[slot] = VelFunc::Velocity;
-    //     }
-        
-    //     return enabled;
-    // }
-    // pub fn set_cc(&mut self, slot: usize, source: CCType, channel: Channel)
-    // {
-    //     self.config.cc_sources[slot] = (source, channel);
-    //     if let VelFunc::CC(s, c) = &mut self.vel_functions[slot]
-    //     {
-    //         *s = source;
-    //         *c = channel;
-    //     }
-    // }
+        // default to normal
+        self.slot_allocations = *SLOT_SETTINGS[c as usize - 1][v as usize - 1];
+        return determine_channel_data(&self.slot_allocations, cd);
+    }
 }
+
+/// Returns cd ordered by channel
+fn determine_channel_data(slot_alloc: &[(Channel, u8); 5], cd: &mut [(Channel, u8); 5]) -> u8
+{
+    let mut ai = 0;
+    let mut table = [0; 16];
+    
+    for &(c, v) in slot_alloc
+    {
+        let v = v + 1;
+        let current = table[c as usize];
+        if v > current
+        {
+            table[c as usize] = v;
+        }
+    }
+    
+    for (i, v) in table.into_iter().enumerate()
+    {
+        if v > 0
+        {
+            cd[ai] = (Channel::from_u8(i as u8), v);
+            ai += 1;
+        }
+    }
+    
+    return ai as u8;
+}
+
+const PB_DIV: [f32; 6] = [ 1.0 / 24.0, 1.0 / 12.0, 1.0 / 6.0, 5.0 / 12.0, 7.0 / 12.0, 1.0 ];
+
+const SS0: [(Channel, u8); 5] = [(Channel::C1, 0), (Channel::C1, 0), (Channel::C1, 0), (Channel::C1, 0), (Channel::C1, 0)];
+const SS1: [(Channel, u8); 5] = [(Channel::C1, 0), (Channel::C1, 0), (Channel::C1, 0), (Channel::C1, 1), (Channel::C1, 1)];
+const SS2: [(Channel, u8); 5] = [(Channel::C1, 0), (Channel::C1, 0), (Channel::C1, 1), (Channel::C1, 1), (Channel::C1, 2)];
+const SS3: [(Channel, u8); 5] = [(Channel::C1, 0), (Channel::C1, 0), (Channel::C1, 1), (Channel::C1, 2), (Channel::C1, 3)];
+const SS4: [(Channel, u8); 5] = [(Channel::C1, 0), (Channel::C1, 1), (Channel::C1, 2), (Channel::C1, 3), (Channel::C1, 4)];
+const SS5: [(Channel, u8); 5] = [(Channel::C1, 0), (Channel::C1, 0), (Channel::C1, 0), (Channel::C2, 0), (Channel::C2, 0)];
+const SS6: [(Channel, u8); 5] = [(Channel::C1, 0), (Channel::C1, 0), (Channel::C1, 1), (Channel::C2, 0), (Channel::C2, 1)];
+const SS7: [(Channel, u8); 5] = [(Channel::C1, 0), (Channel::C1, 1), (Channel::C1, 2), (Channel::C2, 0), (Channel::C2, 1)];
+const SS8: [(Channel, u8); 5] = [(Channel::C1, 0), (Channel::C1, 1), (Channel::C1, 2), (Channel::C1, 3), (Channel::C2, 0)];
+const SS9: [(Channel, u8); 5] = [(Channel::C1, 0), (Channel::C1, 0), (Channel::C2, 0), (Channel::C2, 0), (Channel::C3, 0)];
+const SS10: [(Channel, u8); 5] = [(Channel::C1, 0), (Channel::C1, 1), (Channel::C2, 0), (Channel::C2, 1), (Channel::C3, 0)];
+const SS11: [(Channel, u8); 5] = [(Channel::C1, 0), (Channel::C1, 1), (Channel::C1, 2), (Channel::C2, 0), (Channel::C3, 0)];
+const SS12: [(Channel, u8); 5] = [(Channel::C1, 0), (Channel::C1, 0), (Channel::C2, 0), (Channel::C3, 0), (Channel::C4, 0)];
+const SS13: [(Channel, u8); 5] = [(Channel::C1, 0), (Channel::C1, 1), (Channel::C2, 0), (Channel::C3, 0), (Channel::C4, 0)];
+const SS14: [(Channel, u8); 5] = [(Channel::C1, 0), (Channel::C2, 0), (Channel::C3, 0), (Channel::C4, 0), (Channel::C5, 0)];
+
+const SS15: [(Channel, u8); 5] = [(Channel::C1, 0), (Channel::C1, 1), (Channel::C1, 0), (Channel::C1, 1), (Channel::C1, 0)];
+const SS16: [(Channel, u8); 5] = [(Channel::C1, 0), (Channel::C1, 1), (Channel::C1, 2), (Channel::C1, 0), (Channel::C1, 1)];
+const SS17: [(Channel, u8); 5] = [(Channel::C1, 0), (Channel::C1, 1), (Channel::C1, 2), (Channel::C1, 3), (Channel::C1, 0)];
+const SS18: [(Channel, u8); 5] = [(Channel::C1, 0), (Channel::C1, 1), (Channel::C1, 0), (Channel::C2, 0), (Channel::C2, 1)];
+
+const SLOT_SETTINGS: [[&[(Channel, u8); 5]; 5]; 5] = [
+    // voice priority
+    // // 1 Channel
+    // [&SS0, &SS1, &SS2, &SS3, &SS4],
+    // // 2 Channels
+    // [&SS5, &SS6, &SS7, &SS8, &SS4],
+    // // 3 Channels
+    // [&SS9, &SS10, &SS11, &SS8, &SS4],
+    // // 4 Channels
+    // [&SS12, &SS13, &SS11, &SS8, &SS4],
+    // // 5 Channels
+    // [&SS14, &SS13, &SS11, &SS8, &SS4]
+    // channel priority
+    // 1 Channel
+    [&SS0, &SS1, &SS2, &SS3, &SS4],
+    // 2 Channels
+    [&SS5, &SS6, &SS7, &SS8, &SS8],
+    // 3 Channels
+    [&SS9, &SS10, &SS11, &SS11, &SS11],
+    // 4 Channels
+    [&SS12, &SS13, &SS13, &SS13, &SS13],
+    // 5 Channels
+    [&SS14, &SS14, &SS14, &SS14, &SS14]
+];

@@ -69,6 +69,11 @@ impl<'a, T, A: Allocator> Drop for LinkedList<T, A>
 
 impl<'a, T, A: Allocator> LinkedList<T, A>
 {
+    pub fn new(alloc: A) -> Self
+    {
+        return LinkedList { start: None, end: None, alloc, len: 0 }
+    }
+    
     pub fn append(&'a mut self, value: T) -> RefNode<T>
     {
         let node = Box::new_in(Node::new(value), &self.alloc);

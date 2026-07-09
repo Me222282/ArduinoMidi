@@ -1,5 +1,6 @@
 #![no_std]
 #![feature(core_intrinsics)]
+#![feature(allocator_api)]
 
 mod panel;
 pub use crate::panel::*;
@@ -14,7 +15,7 @@ mod operators;
 pub use crate::operators::*;
 
 pub mod prog;
-// pub use crate::prog::*;
+pub use crate::prog::*;
 
 use api::CCType;
 use api::Channel;
@@ -156,7 +157,7 @@ pub struct OtherConfig
     // sort_notes: bool,
     // all_channel_mode: bool,
     // all_channel_pb: bool,
-    alternate_allocations: bool,
+    // alternate_allocations: bool,
     // menu_feedback: bool,
     // clocked_arpeggios: bool,
     // global_vibrato: bool,
@@ -217,6 +218,7 @@ pub struct PanelConfig
 {
     use_custom_allocations: bool,
     custom_allocations: [(Channel, u8); 5],
+    alternate_allocations: bool,
     
     per_channel_cc: bool,
     cc_enabled: [bool; 5],

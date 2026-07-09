@@ -53,7 +53,7 @@ impl Menu for SpecialOpsMenu
             Note::Ab4 => menu_toggle!(menu, config.note.duplicate_release),
             Note::A4 => menu_toggle!(menu, config.note.sort_notes),
             Note::C5 => menu_toggle!(menu, config.output.all_channel_mode),
-            Note::Db5 => menu_toggle!(menu, config.other.alternate_allocations),
+            Note::Db5 => menu_toggle!(menu, config.panel.alternate_allocations),
             Note::D5 => menu_toggle!(menu, config.output.menu_feedback),
             _ => None
         };

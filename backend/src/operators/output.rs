@@ -13,7 +13,9 @@ pub struct Output
     is_mf: bool,
     mf_end_time: u32,
     mf_channel: Channel,
-    active_channels: u8,
+    
+    channel_voices: [(Channel, u8); 5],
+    cv_count: u8,
     
     mod_values: [u16; 16]
 }
@@ -113,7 +115,7 @@ impl Output
     {
         if self.config.all_channel_mode
         {
-            channel = Channel::from_u8(channel as u8 % self.active_channels);
+            channel = self.all_channel_modulo(channel);
         }
         
         let nc = match Self::get_note_collection(&mut self.note_manager, channel)
@@ -138,7 +140,7 @@ impl Output
     {
         if self.config.all_channel_mode
         {
-            channel = Channel::from_u8(channel as u8 % self.active_channels);
+            channel = self.all_channel_modulo(channel);
         }
         
         let nc = match Self::get_note_collection(&mut self.note_manager, channel)
@@ -172,7 +174,7 @@ impl Output
     {
         if self.config.all_channel_cc
         {
-            channel = Channel::from_u8(channel as u8 % self.active_channels);
+            channel = self.all_channel_modulo(channel);
         }
         
         self.panel.output_control_change(cc, channel, value);
@@ -201,9 +203,39 @@ impl Output
     {
         if self.config.all_channel_pb
         {
-            channel = Channel::from_u8(channel as u8 % self.active_channels);
+            channel = self.all_channel_modulo(channel);
         }
         
         self.panel.set_pitch_bend(&mut self.vibrato, channel, value);
+    }
+    
+    fn all_channel_modulo(&mut self, channel: Channel) -> Channel
+    {
+        for cv in &self.channel_voices[0..(self.cv_count as usize)]
+        {
+            if cv.0 == channel
+            {
+                return channel;
+            }
+        }
+        
+        let index = channel as u8 % self.cv_count;
+        return self.channel_voices[index as usize].0;
+    }
+    pub fn on_reset_switch(&mut self)
+    {
+        self.vibrato.on_reset_switch();
+        
+        // IMPORTANT: channel voices is ordered by channel
+        self.cv_count = self.panel.update_slot_allocations(&mut self.channel_voices);
+        
+        // reallocate note collections
+        let iter = self.channel_voices[0..(self.cv_count as usize)].iter()
+            .map(|cv| NoteCollection::new(cv.0, cv.1));
+        self.note_manager = SA::from_iter(iter);
+        
+        // reset outputs
+        self.panel.output_gate_off(SlotSelect::All);
+        self.panel.output_note(SlotSelect::All, Note::new(0, 0));
     }
 }

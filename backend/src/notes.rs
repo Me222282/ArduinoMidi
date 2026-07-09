@@ -21,6 +21,17 @@ pub struct NoteCollection
 
 impl NoteCollection
 {
+    pub fn new(channel: Channel, voices: u8) -> NoteCollection
+    {
+        return Self {
+            notes: LinkedList::new(alloc::alloc::Global),
+            locations: SA::from_iter((0..voices).map(|_| None)),
+            old_notes: SA::new(0xFF, voices as usize),
+            history: Queue::new(0),
+            channel
+        };
+    }
+    
     pub fn is_channel(&self, channel: Channel) -> bool
     {
         return self.channel == channel;

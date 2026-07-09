@@ -1,6 +1,6 @@
 use api::{Channel, MidiCode, Note};
 
-use crate::{Arpeggiator, Configuration, MenuFeedback, MenuStorage, MenuWrapTrait, MenuWrapper, OtherConfig, Output, ProgramPortsMenu, SequencerConfig, SpecialOpsMenu, VibratoMenu, VibratoOp, create_dynamic_menus};
+use crate::{Arpeggiator, Configuration, MenuFeedback, MenuStorage, MenuWrapTrait, MenuWrapper, OtherConfig, Output, ProgramPortsMenu, SequencerConfig, SpecialOpsMenu, VibratoMenu, create_dynamic_menus};
 
 create_dynamic_menus!(pub Menus:
     A => MenuWrapper<SpecialOpsMenu>,
@@ -125,7 +125,7 @@ impl Program
     
     pub fn on_reset_switch(&mut self, time: u32)
     {
-        // self.vibrato.on_reset_switch();
+        self.output.on_reset_switch();
         
         if self.menu.is_none()
         {
