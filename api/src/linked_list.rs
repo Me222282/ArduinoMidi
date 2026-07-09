@@ -2,7 +2,7 @@ use core::{marker::PhantomData, ptr::NonNull};
 
 use alloc::{alloc::{Allocator, Global}, boxed::Box};
 
-pub(crate) struct Node<T>
+struct Node<T>
 {
     previous: Option<NonNull<Node<T>>>,
     next: Option<NonNull<Node<T>>>,

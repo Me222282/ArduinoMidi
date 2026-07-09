@@ -112,7 +112,7 @@ impl Output
             None => {}
         }
     }
-    pub(crate) fn push_note_post(&mut self, mut channel: Channel, note: Note)
+    pub(in crate::operators) fn push_note_post(&mut self, mut channel: Channel, note: Note)
     {
         if self.config.all_channel_mode
         {
@@ -137,7 +137,7 @@ impl Output
             None => {}
         }
     }
-    pub(crate) fn remove_note_post(&mut self, mut channel: Channel, note: Note)
+    pub(in crate::operators) fn remove_note_post(&mut self, mut channel: Channel, note: Note)
     {
         if self.config.all_channel_mode
         {

@@ -55,7 +55,7 @@ pub struct Externals
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct Gate(pub(crate) u8);
+pub struct Gate(u8);
 
 impl Gate
 {

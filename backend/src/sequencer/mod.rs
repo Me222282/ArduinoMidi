@@ -1,10 +1,10 @@
 pub mod menu;
-pub use crate::menu::*;
+pub use self::menu::*;
 
 use crate::SequencerConfig;
 
 #[derive(Debug, Default)]
-pub(crate) struct Sequencer
+pub(self) struct Sequencer
 {
     config: SequencerConfig
 }

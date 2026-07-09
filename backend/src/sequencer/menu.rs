@@ -1,6 +1,6 @@
 use api::{Channel, Note};
 
-use crate::{Configuration, Menu, MenuFeedback, MenuState, Sequencer};
+use crate::{Configuration, Menu, MenuFeedback, MenuState, sequencer::Sequencer};
 
 #[derive(Debug, Default)]
 pub struct SequencerMenu
