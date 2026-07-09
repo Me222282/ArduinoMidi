@@ -14,6 +14,9 @@ pub use crate::notes::*;
 mod operators;
 pub use crate::operators::*;
 
+mod sequencer;
+pub use crate::sequencer::*;
+
 pub mod prog;
 pub use crate::prog::*;
 

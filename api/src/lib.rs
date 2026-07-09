@@ -18,6 +18,9 @@ pub use crate::stack_array::*;
 mod queue;
 pub use crate::queue::*;
 
+mod cubic;
+pub use crate::cubic::*;
+
 extern crate alloc;
 
 pub enum InputMode
