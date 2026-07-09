@@ -209,9 +209,10 @@ pub struct NoteConfig
 #[derive(Debug, Default)]
 pub struct SequencerConfig
 {
-    bar_size: usize,
+    bar_size: u8,
     on_bar_trigger: bool,
-    sequencer_tempo_time: usize,
+    /// Half the full time - for half time stuff
+    sequencer_tempo_time: u32,
     clocked_sequencer: bool,
 }
 
