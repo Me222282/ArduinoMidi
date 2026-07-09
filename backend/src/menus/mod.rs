@@ -11,7 +11,7 @@ pub use program_ports::*;
 
 use core::ops::RangeBounds;
 use api::{Channel, MidiCode, Note, NoteKey};
-use crate::Configuration;
+use crate::{Configuration, SequencerMenu};
 
 #[macro_export]
 macro_rules! menu_toggle
@@ -110,7 +110,8 @@ pub struct MenuStorage
 {
     vibrato: VibratoMenu,
     special_ops: SpecialOpsMenu,
-    program_ports: ProgramPortsMenu
+    program_ports: ProgramPortsMenu,
+    sequencer: SequencerMenu
 }
 
 impl MenuStorage
@@ -127,6 +128,10 @@ impl MenuStorage
     {
         return core::mem::replace(&mut self.program_ports, ProgramPortsMenu::default());
     }
+    pub fn get_sequencer(&mut self) -> SequencerMenu
+    {
+        return core::mem::replace(&mut self.sequencer, SequencerMenu::default());
+    }
     
     pub fn set_vibrato(&mut self, menu: VibratoMenu)
     {
@@ -139,5 +144,9 @@ impl MenuStorage
     pub fn set_program_ports(&mut self, menu: ProgramPortsMenu)
     {
         self.program_ports = menu;
+    }
+    pub fn set_sequencer(&mut self, menu: SequencerMenu)
+    {
+        self.sequencer = menu;
     }
 }

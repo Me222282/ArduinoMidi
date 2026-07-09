@@ -74,7 +74,7 @@ impl Menu for ProgramPortsMenu
                 let c = value_or_last!(value, self.channel_lv);
                 config.panel.triggers[channel as usize].set_channel(Channel::from_u8(c as u8));
             },
-            PULSE_LENGTH_KEY => config.other.pulse_length = value_or_last!(value, self.pulse_length_lv),
+            // PULSE_LENGTH_KEY => config.other.pulse_length = value_or_last!(value, self.pulse_length_lv),
             CC1_KEY => config.panel.cc_sources[0] = (CCType::u8(value_or_last!(value, self.cc_source_lv) as u8), channel),
             CC2_KEY => config.panel.cc_sources[1] = (CCType::u8(value_or_last!(value, self.cc_source_lv) as u8), channel),
             CC3_KEY => config.panel.cc_sources[2] = (CCType::u8(value_or_last!(value, self.cc_source_lv) as u8), channel),

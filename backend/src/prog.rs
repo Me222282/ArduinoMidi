@@ -1,38 +1,25 @@
 use api::{Channel, MidiCode, Note, Switch};
 
-use crate::{Arpeggiator, Configuration, MenuFeedback, MenuStorage, MenuWrapTrait, MenuWrapper, OtherConfig, Output, ProgramPortsMenu, SequencerConfig, SpecialOpsMenu, VibratoMenu, create_dynamic_menus};
+use crate::{Arpeggiator, Configuration, MenuFeedback, MenuStorage, MenuWrapTrait, MenuWrapper, Output, ProgramPortsMenu, SequencerMenu, SpecialOpsMenu, VibratoMenu, create_dynamic_menus};
 
 create_dynamic_menus!(pub Menus:
     A => MenuWrapper<SpecialOpsMenu>,
     B => MenuWrapper<ProgramPortsMenu>,
-    C => MenuWrapper<VibratoMenu>);
+    C => MenuWrapper<VibratoMenu>,
+    D => MenuWrapper<SequencerMenu>);
 
 pub struct Program
 {
     menu: Menus,
     menu_storage: MenuStorage,
     
-    other_config: OtherConfig,
-    
-    sequen_config: SequencerConfig,
+    // sequen_config: SequencerConfig,
     arpeggio: Arpeggiator,
     pub output: Output
 }
 
 impl Program
 {
-    // #[inline]
-    // pub fn get_config<'a>(&'a mut self) -> Configuration<'a>
-    // {
-    //     return Configuration {
-    //         other: &mut self.other_config,
-    //         note: &mut self.note_config,
-    //         sequen: &mut self.sequen_config,
-    //         output: &mut self.panel.config,
-    //         vibrato: &mut self.vibrato.config
-    //     };
-    // }
-    
     fn set_menu(&mut self, menu: Menus)
     {
         if self.menu.is_none()
@@ -47,6 +34,7 @@ impl Program
             Menus::A(mw) => self.menu_storage.set_special_ops(mw.into_menu()),
             Menus::B(mw) => self.menu_storage.set_program_ports(mw.into_menu()),
             Menus::C(mw) => self.menu_storage.set_vibrato(mw.into_menu()),
+            Menus::D(mw) => self.menu_storage.set_sequencer(mw.into_menu()),
             Menus::None => {}
         }
     }
@@ -66,9 +54,9 @@ impl Program
                 if self.menu.is_none()
                 {
                     let mut config = Configuration {
-                        other: &mut self.other_config,
+                        // other: &mut self.other_config,
                         note: &mut self.output.note_config,
-                        sequen: &mut self.sequen_config,
+                        // sequen: &mut self.sequen_config,
                         output: &mut self.output.config,
                         panel: &mut self.output.panel.config,
                         vibrato: &mut self.output.vibrato.config,
@@ -89,9 +77,9 @@ impl Program
                 if self.menu.is_none()
                 {
                     let mut config = Configuration {
-                        other: &mut self.other_config,
+                        // other: &mut self.other_config,
                         note: &mut self.output.note_config,
-                        sequen: &mut self.sequen_config,
+                        // sequen: &mut self.sequen_config,
                         output: &mut self.output.config,
                         panel: &mut self.output.panel.config,
                         vibrato: &mut self.output.vibrato.config,
@@ -138,6 +126,7 @@ impl Program
                     match n.key
                     {
                         Note::A0 => self.menu = Menus::A(MenuWrapper::new(self.menu_storage.get_special_ops())),
+                        Note::B0 => self.menu = Menus::D(MenuWrapper::new(self.menu_storage.get_sequencer())),
                         Note::C1 => self.menu = Menus::B(MenuWrapper::new(self.menu_storage.get_program_ports())),
                         Note::D1 => self.menu = Menus::C(MenuWrapper::new(self.menu_storage.get_vibrato())),
                         _ => {}
