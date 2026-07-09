@@ -139,17 +139,17 @@ impl Menu for VibratoMenu
         }
     }
     
-    fn reset_values(&self)
+    fn reset_values(&mut self, config: &mut Configuration)
     {
         todo!()
     }
-
-    fn save_values(&self)
+    
+    fn save_values<T: api::NvsInterface>(&self, config: &Configuration, nvs: &mut T)
     {
         todo!()
     }
-
-    fn load_values(&self)
+    
+    fn load_values<T: api::NvsInterface>(&mut self, config: &mut Configuration, nvs: &mut T)
     {
         todo!()
     }

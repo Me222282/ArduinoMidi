@@ -21,6 +21,11 @@ pub use crate::queue::*;
 mod cubic;
 pub use crate::cubic::*;
 
+pub trait NvsInterface
+{
+    
+}
+
 extern crate alloc;
 
 pub enum InputMode

@@ -141,7 +141,7 @@ pub struct Configuration<'a>
     pub panel: &'a mut PanelConfig,
     pub output: &'a mut OutputConfig,
     pub vibrato: &'a mut VibratoConfig,
-    pub arpeggio: &'a mut ArpeggioConfig,
+    pub arpeggio: &'a mut ArpeggioConfig
 }
 
 // pub struct OtherConfig

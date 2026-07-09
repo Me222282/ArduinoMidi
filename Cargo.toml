@@ -20,6 +20,8 @@ esp-alloc        = "0.9.0"
 
 backend = { path = "./backend" }
 api = { path = "./api" }
+esp-nvs = "0.4.0"
+esp-storage = "0.9.0"
 
 
 [profile.dev]

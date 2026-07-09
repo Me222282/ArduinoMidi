@@ -39,7 +39,7 @@ impl Menu for SequencerMenu
         match key
         {
             SET_BAR_SIZE => self.sequencer.config.bar_size = (value_or_last!(value, self.bar_size_lv) << 1) as u8,
-            SET_SEQ_TIME => self.sequencer.config.sequencer_tempo_time = 30000 / value_or_last!(value, self.seq_time_lv) as u32,
+            SET_SEQ_TIME => self.sequencer.set_time(60000 / value_or_last!(value, self.seq_time_lv) as u32),
             _ => {}
         }
     }
@@ -48,22 +48,22 @@ impl Menu for SequencerMenu
     {
         match key
         {
-            TAP_TEMPO => self.sequencer.config.sequencer_tempo_time = value >> 1,
+            TAP_TEMPO => self.sequencer.set_time(value),
             _ => {}
         }
     }
     
-    fn reset_values(&self)
+    fn reset_values(&mut self, config: &mut Configuration)
     {
         todo!()
     }
-
-    fn save_values(&self)
+    
+    fn save_values<T: api::NvsInterface>(&self, config: &Configuration, nvs: &mut T)
     {
         todo!()
     }
-
-    fn load_values(&self)
+    
+    fn load_values<T: api::NvsInterface>(&mut self, config: &mut Configuration, nvs: &mut T)
     {
         todo!()
     }

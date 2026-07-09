@@ -1,4 +1,6 @@
-use api::{Channel, MidiCode, Note, Switch};
+use core::marker::PhantomData;
+
+use api::{Channel, MidiCode, Note, NvsInterface, Switch};
 
 use crate::{Arpeggiator, Configuration, MenuFeedback, MenuStorage, MenuWrapTrait, MenuWrapper, Output, ProgramPortsMenu, SequencerMenu, SpecialOpsMenu, VibratoMenu, create_dynamic_menus};
 
@@ -8,17 +10,18 @@ create_dynamic_menus!(pub Menus:
     C => MenuWrapper<VibratoMenu>,
     D => MenuWrapper<SequencerMenu>);
 
-pub struct Program
+pub struct Program<N: NvsInterface>
 {
     menu: Menus,
     menu_storage: MenuStorage,
     
     // sequen_config: SequencerConfig,
     arpeggio: Arpeggiator,
-    pub output: Output
+    pub output: Output,
+    _phantom_n: PhantomData<N>
 }
 
-impl Program
+impl<N: NvsInterface> Program<N>
 {
     fn set_menu(&mut self, menu: Menus)
     {
@@ -39,7 +42,7 @@ impl Program
         }
     }
     
-    pub fn on_midi_message(&mut self, message: MidiCode, time: u32)
+    pub fn on_midi_message(&mut self, nvs: &mut N, message: MidiCode, time: u32)
     {
         // ignore all messages from disabled channels
         let channel = message.get_channel();
@@ -62,7 +65,7 @@ impl Program
                         vibrato: &mut self.output.vibrato.config,
                         arpeggio: &mut self.arpeggio.config
                     };
-                    let exit = self.menu.on_note(&mut config, time, channel, note);
+                    let exit = self.menu.on_note(&mut config, nvs, time, channel, note);
                     if let Some(fb) = exit.1 { self.output.menu_feedback(fb, time); }
                     // exit menu
                     if exit.0 { self.set_menu(Menus::None); }

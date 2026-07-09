@@ -10,7 +10,7 @@ pub mod program_ports;
 pub use program_ports::*;
 
 use core::ops::RangeBounds;
-use api::{Channel, MidiCode, Note, NoteKey};
+use api::{Channel, MidiCode, Note, NoteKey, NvsInterface};
 use crate::{Configuration, SequencerMenu};
 
 #[macro_export]
@@ -100,9 +100,9 @@ pub trait Menu
     fn allow_message(&self, _message: MidiCode) -> bool { true }
     fn on_loop(&self) {}
     
-    fn reset_values(&self);
-    fn save_values(&self);
-    fn load_values(&self);
+    fn reset_values(&mut self, config: &mut Configuration);
+    fn save_values<T: NvsInterface>(&self, config: &Configuration, nvs: &mut T);
+    fn load_values<T: NvsInterface>(&mut self, config: &mut Configuration, nvs: &mut T);
 }
 
 #[derive(Debug, Default)]

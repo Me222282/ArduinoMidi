@@ -1,10 +1,10 @@
-use api::{Channel, MidiCode, Note, NoteKey};
+use api::{Channel, MidiCode, Note, NoteKey, NvsInterface};
 
 use crate::{Configuration, Menu, MenuFeedback, MenuState};
 
 pub trait MenuWrapTrait
 {
-    fn on_note(&mut self, config: &mut Configuration, time: u32, channel: Channel, note: Note) -> (bool, Option<MenuFeedback>);
+    fn on_note<T: NvsInterface>(&mut self, config: &mut Configuration, nvs: &mut T, time: u32, channel: Channel, note: Note) -> (bool, Option<MenuFeedback>);
     fn off_note(&mut self, _config: &mut Configuration, _channel: Channel, _note: Note) { }
     
     fn on_reset_switch(&mut self) -> (bool, Option<MenuFeedback>) { (true, None) }
@@ -48,12 +48,12 @@ macro_rules! create_dynamic_menus
         
         impl crate::MenuWrapTrait for $name
         {
-            fn on_note(&mut self, config: &mut crate::Configuration, time: u32, channel: Channel, note: Note) -> (bool, Option<MenuFeedback>)
+            fn on_note<T: api::NvsInterface>(&mut self, config: &mut crate::Configuration, nvs: &mut T, time: u32, channel: Channel, note: Note) -> (bool, Option<MenuFeedback>)
             {
                 return match self
                 {
                     Self::None => (false, None),
-                    $(Self::$n(t) => t.on_note(config, time, channel, note)),+
+                    $(Self::$n(t) => t.on_note::<T>(config, nvs, time, channel, note)),+
                 };
             }
             fn off_note(&mut self, config: &mut Configuration, channel: Channel, note: Note)
@@ -182,7 +182,7 @@ impl<T: Menu> MenuWrapper<T>
 
 impl<T: Menu> MenuWrapTrait for MenuWrapper<T>
 {
-    fn on_note(&mut self, config: &mut Configuration, time: u32, channel: Channel, note: Note) -> (bool, Option<MenuFeedback>)
+    fn on_note<N: NvsInterface>(&mut self, config: &mut Configuration, nvs: &mut N, time: u32, channel: Channel, note: Note) -> (bool, Option<MenuFeedback>)
     {
         return match self.state
         {
@@ -192,17 +192,17 @@ impl<T: Menu> MenuWrapTrait for MenuWrapper<T>
                 {
                     Note::B3 =>
                     {
-                        self.menu.reset_values();
+                        self.menu.reset_values(config);
                         (false, Some(MenuFeedback::note_on(Channel::All)))
                     },
                     Note::Bb4 =>
                     {
-                        self.menu.load_values();
+                        self.menu.load_values(config, nvs);
                         (false, Some(MenuFeedback::note_option(Channel::All)))
                     },
                     Note::B4 =>
                     {
-                        self.menu.save_values();
+                        self.menu.save_values(config, nvs);
                         (false, Some(MenuFeedback::note_option(Channel::All)))
                     },
                     _ =>
