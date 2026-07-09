@@ -5,7 +5,7 @@ use api::{Channel, Note};
 use crate::{Configuration, FreqCorrection, Menu, MenuFeedback, MenuState, menu_toggle, menu_toggle_channel, value_or_last};
 
 #[derive(Debug, Default)]
-pub struct VibratoMenu
+pub(crate) struct VibratoMenu
 {
     rate_lv: usize,
     mrate_lv: usize,

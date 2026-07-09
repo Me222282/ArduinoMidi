@@ -12,7 +12,7 @@ struct ArpInstance
     reversed: bool
 }
 
-pub struct Arpeggiator
+pub(crate) struct Arpeggiator
 {
     insts: [ArpInstance; 16],
     pub config: ArpeggioConfig,

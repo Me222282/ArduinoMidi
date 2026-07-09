@@ -1,8 +1,8 @@
 mod vibrato;
-pub use vibrato::*;
+pub(crate) use vibrato::*;
 
 mod arpeggio;
-pub use arpeggio::*;
+pub(crate) use arpeggio::*;
 
 mod output;
 pub use output::*;
@@ -11,7 +11,7 @@ use api::{Channel, Note};
 
 use crate::{ChannelRedirect, OutputConfig};
 
-pub fn process_note(mut channel: Channel, mut note: Note, config: &OutputConfig) -> Option<(Channel, Note)>
+pub(crate) fn process_note(mut channel: Channel, mut note: Note, config: &OutputConfig) -> Option<(Channel, Note)>
 {
     // Channel Redirect
     let filter = &config.channel_filters[channel as usize];

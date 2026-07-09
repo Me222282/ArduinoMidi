@@ -4,7 +4,7 @@ use api::{Channel, MidiCode, Note, NvsInterface, Switch};
 
 use crate::{Arpeggiator, Configuration, MenuFeedback, MenuStorage, MenuWrapTrait, MenuWrapper, Output, ProgramPortsMenu, SequencerMenu, SpecialOpsMenu, VibratoMenu, create_dynamic_menus};
 
-create_dynamic_menus!(pub Menus:
+create_dynamic_menus!(pub(crate) Menus:
     A => MenuWrapper<SpecialOpsMenu>,
     B => MenuWrapper<ProgramPortsMenu>,
     C => MenuWrapper<VibratoMenu>,

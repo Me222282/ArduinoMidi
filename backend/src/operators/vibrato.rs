@@ -34,7 +34,7 @@ impl VCorrData
     }
 }
 
-pub struct VibratoOp
+pub(crate) struct VibratoOp
 {
     pub config: VibratoConfig,
     attenuations: [u16; 16],

@@ -3,7 +3,7 @@ use api::{Channel, Note, NoteKey};
 use crate::{ArpeggioMode, Configuration, Menu, MenuFeedback, MenuState, menu_toggle, menu_toggle_channel, value_or_last};
 
 #[derive(Debug, Default)]
-pub struct SpecialOpsMenu
+pub(crate) struct SpecialOpsMenu
 {
     tempo_lv: usize
 }

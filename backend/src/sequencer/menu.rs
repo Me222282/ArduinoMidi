@@ -3,7 +3,7 @@ use api::{Channel, Note};
 use crate::{Configuration, Menu, MenuFeedback, MenuState, menu_toggle, sequencer::Sequencer, value_or_last};
 
 #[derive(Debug, Default)]
-pub struct SequencerMenu
+pub(crate) struct SequencerMenu
 {
     sequencer: Sequencer,
     bar_size_lv: usize,

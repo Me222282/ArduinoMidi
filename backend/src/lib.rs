@@ -9,7 +9,7 @@ mod menus;
 pub use crate::menus::*;
 
 mod notes;
-pub use crate::notes::*;
+pub(crate) use crate::notes::*;
 
 mod operators;
 pub use crate::operators::*;
@@ -42,7 +42,7 @@ extern crate alloc;
 pub const RETRIG_TIME: u32 = 4;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum TriggerSource
+pub(crate) enum TriggerSource
 {
     Arpeggio(Channel),
     Note(Channel),
@@ -78,13 +78,13 @@ impl TriggerSource
     }
 }
 
-pub enum ArpeggioMode
+pub(crate) enum ArpeggioMode
 {
     Ascending,
     Decending,
     Alternating
 }
-pub struct Arpeggio
+pub(crate) struct Arpeggio
 {
     enabled: bool,
     time: u32,
@@ -93,20 +93,20 @@ pub struct Arpeggio
     half_notes: bool
 }
 #[derive(Debug, PartialEq, Eq)]
-pub enum AttenuationSource
+pub(crate) enum AttenuationSource
 {
     None,
     Modulation,
     CC(CCType)
 }
 #[derive(Debug, Clone, Copy)]
-pub enum FreqCorrection
+pub(crate) enum FreqCorrection
 {
     None,
     Half,
     Full
 }
-pub struct Vibrato
+pub(crate) struct Vibrato
 {
     enabled: bool,
     function: fn(f32) -> f32,
@@ -115,7 +115,7 @@ pub struct Vibrato
     attenuation: AttenuationSource,
     freq_correction: FreqCorrection
 }
-pub struct ChannelRedirect
+pub(crate) struct ChannelRedirect
 {
     enabled: bool,
     start: u8,
@@ -124,7 +124,7 @@ pub struct ChannelRedirect
 }
 // channel enabled pre everything, channel redirects are only on note outputs
 // check for no channels enabled
-pub struct ChannelFilter
+pub(crate) struct ChannelFilter
 {
     enabled: bool,
     note_filter: NoteKey,
@@ -133,7 +133,7 @@ pub struct ChannelFilter
     redirect2: ChannelRedirect
 }
 
-pub struct Configuration<'a>
+pub(crate) struct Configuration<'a>
 {
     // pub other: &'a mut OtherConfig,
     pub note: &'a mut NoteConfig,
@@ -173,7 +173,7 @@ pub struct Configuration<'a>
 //     // channel_offsets: [NoteOffset; 16]
 // }
 
-pub struct OutputConfig
+pub(crate) struct OutputConfig
 {
     retrigger_old: bool,
     retrigger_new: bool,
@@ -187,19 +187,19 @@ pub struct OutputConfig
     channel_offsets: [NoteOffset; 16]
 }
 
-pub struct VibratoConfig
+pub(crate) struct VibratoConfig
 {
     global_vibrato: bool,
     vibratos: [Vibrato; 16]
 }
 
-pub struct ArpeggioConfig
+pub(crate) struct ArpeggioConfig
 {
     clocked_arpeggios: bool,
     arpeggios: [Arpeggio; 16],
 }
 
-pub struct NoteConfig
+pub(crate) struct NoteConfig
 {
     forget_notes: bool,
     duplicate_release: bool,
@@ -207,7 +207,7 @@ pub struct NoteConfig
 }
 
 #[derive(Debug, Default)]
-pub struct SequencerConfig
+pub(crate) struct SequencerConfig
 {
     bar_size: u8,
     on_bar_trigger: bool,
@@ -216,7 +216,7 @@ pub struct SequencerConfig
     clocked_sequencer: bool,
 }
 
-pub struct PanelConfig
+pub(crate) struct PanelConfig
 {
     use_custom_allocations: bool,
     custom_allocations: [ChannelVoice; 5],

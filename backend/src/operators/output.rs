@@ -5,10 +5,10 @@ use crate::{MenuFeedback, NoteCollection, NoteConfig, NoteOutput, OutputConfig, 
 pub struct Output<E: api::Externals>
 {
     pub panel: Panel<E>,
-    pub note_manager: SA<NoteCollection, 5>,
-    pub config: OutputConfig,
-    pub note_config: NoteConfig,
-    pub vibrato: VibratoOp,
+    note_manager: SA<NoteCollection, 5>,
+    pub(crate) config: OutputConfig,
+    pub(crate) note_config: NoteConfig,
+    pub(crate) vibrato: VibratoOp,
     
     is_mf: bool,
     mf_end_time: u32,
@@ -23,7 +23,7 @@ pub struct Output<E: api::Externals>
 
 impl<E: api::Externals> Output<E>
 {
-    pub fn menu_feedback(&mut self, fb: MenuFeedback, time: u32)
+    pub(crate) fn menu_feedback(&mut self, fb: MenuFeedback, time: u32)
     {
         if !self.config.menu_feedback { return; }
         
@@ -35,7 +35,7 @@ impl<E: api::Externals> Output<E>
         self.is_mf = true;
     }
     
-    pub fn on_loop(&mut self, time: u32)
+    pub(crate) fn on_loop(&mut self, time: u32)
     {
         if self.is_mf && time > self.mf_end_time
         {
@@ -47,7 +47,7 @@ impl<E: api::Externals> Output<E>
     }
     
     #[inline]
-    pub fn get_only_note(&self) -> Option<Note>
+    pub(crate) fn get_only_note(&self) -> Option<Note>
     {
         return get_only_note(&self.note_manager);
     }
@@ -104,7 +104,7 @@ impl<E: api::Externals> Output<E>
         self.panel.output_gate_on(slots);
     }
     
-    pub fn push_note(&mut self, channel: Channel, note: Note)
+    pub(crate) fn push_note(&mut self, channel: Channel, note: Note)
     {
         match process_note(channel, note, &self.config)
         {
@@ -129,7 +129,7 @@ impl<E: api::Externals> Output<E>
         self.manage_note_output(note_output, channel, note);
     }
     
-    pub fn remove_note(&mut self, channel: Channel, note: Note)
+    pub(crate) fn remove_note(&mut self, channel: Channel, note: Note)
     {
         match process_note(channel, note, &self.config)
         {
@@ -154,7 +154,7 @@ impl<E: api::Externals> Output<E>
         self.manage_note_output(note_output, channel, note);
     }
     
-    pub fn set_modulation(&mut self, channel: Channel, value: u16)
+    pub(crate) fn set_modulation(&mut self, channel: Channel, value: u16)
     {
         if channel == Channel::All
         {
@@ -171,13 +171,14 @@ impl<E: api::Externals> Output<E>
         self.vibrato.on_modulation(channel, value);
     }
     
-    pub fn on_cc(&mut self, mut channel: Channel, cc: CCType, value: u8)
+    pub(crate) fn on_cc(&mut self, mut channel: Channel, cc: CCType, value: u8)
     {
         if self.config.all_channel_cc
         {
             channel = self.all_channel_modulo(channel);
         }
         
+        self.vibrato.on_cc(cc, channel, value);
         self.panel.output_control_change(cc, channel, value);
         
         match cc
@@ -200,7 +201,7 @@ impl<E: api::Externals> Output<E>
         }
     }
     
-    pub fn on_pitch_bend(&mut self, mut channel: Channel, value: u16)
+    pub(crate) fn on_pitch_bend(&mut self, mut channel: Channel, value: u16)
     {
         if self.config.all_channel_pb
         {

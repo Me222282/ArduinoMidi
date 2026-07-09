@@ -1,19 +1,18 @@
 pub mod feedback;
-pub use feedback::*;
+pub(crate) use feedback::*;
 pub mod menu_wrapper;
-pub use menu_wrapper::*;
+pub(crate) use menu_wrapper::*;
 pub mod special_ops;
-pub use special_ops::*;
+pub(crate) use special_ops::*;
 pub mod vibrato;
-pub use vibrato::*;
+pub(crate) use vibrato::*;
 pub mod program_ports;
-pub use program_ports::*;
+pub(crate) use program_ports::*;
 
 use core::ops::RangeBounds;
 use api::{Channel, MidiCode, Note, NoteKey, NvsInterface};
 use crate::{Configuration, SequencerMenu};
 
-#[macro_export]
 macro_rules! menu_toggle
 {
     ($value:expr) =>
@@ -23,7 +22,7 @@ macro_rules! menu_toggle
         Some(crate::MenuFeedback::boolean(nv, Channel::All))
     }};
 }
-#[macro_export]
+pub(crate) use menu_toggle;
 macro_rules! menu_toggle_channel
 {
     ($channel:ident, $value:expr) =>
@@ -33,7 +32,7 @@ macro_rules! menu_toggle_channel
         Some(crate::MenuFeedback::boolean(nv, $channel))
     }};
 }
-#[macro_export]
+pub(crate) use menu_toggle_channel;
 macro_rules! value_or_last
 {
     ($op:expr, $last:expr) =>
@@ -43,9 +42,10 @@ macro_rules! value_or_last
         v
     }};
 }
+pub(crate) use value_or_last;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum MenuState
+pub(crate) enum MenuState
 {
     Listening,
     Number{
@@ -85,7 +85,7 @@ impl MenuState
     }
 }
 
-pub trait Menu
+pub(crate) trait Menu
     where Self: Sized
 {
     fn auto_close() -> bool { return true; }
@@ -98,7 +98,6 @@ pub trait Menu
     fn off_note(&self, _channel: Channel, _note: Note) { }
     fn on_message(&self, _message: MidiCode) { }
     fn allow_message(&self, _message: MidiCode) -> bool { true }
-    fn on_loop(&self) {}
     
     fn reset_values(&mut self, config: &mut Configuration);
     fn save_values<T: NvsInterface>(&self, config: &Configuration, nvs: &mut T);
@@ -106,7 +105,7 @@ pub trait Menu
 }
 
 #[derive(Debug, Default)]
-pub struct MenuStorage
+pub(crate) struct MenuStorage
 {
     vibrato: VibratoMenu,
     special_ops: SpecialOpsMenu,

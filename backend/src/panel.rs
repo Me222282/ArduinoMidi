@@ -34,7 +34,7 @@ pub struct Panel<E: Externals>
     pdvs: [u16; 16],
     vels: [u8; 5],
     gate: Gate,
-    pub config: PanelConfig,
+    pub(crate) config: PanelConfig,
     _phantom_e: PhantomData<E>
 }
 
@@ -228,7 +228,7 @@ impl<E: Externals> Panel<E>
             }
         }
     }
-    pub fn output_trigger(&self, source: TriggerSource, value: bool)
+    pub(crate) fn output_trigger(&self, source: TriggerSource, value: bool)
     {
         let v: u8 = match value
         {
@@ -259,7 +259,7 @@ impl<E: Externals> Panel<E>
         let nv = (pb >> 2) + offset;
         return nv.clamp(0, 0xFFF) as u16;
     }
-    pub fn set_pitch_bend(&mut self, vibrato: &mut VibratoOp, channel: Channel, mut value: u16)
+    pub(crate) fn set_pitch_bend(&mut self, vibrato: &mut VibratoOp, channel: Channel, mut value: u16)
     {
         // pitch bend select switch
         let vf = (value as i16 - 2048) as f32;
@@ -302,7 +302,7 @@ impl<E: Externals> Panel<E>
     //         (self.externals.set_pitch_bend)(i, nv);
     //     }
     // }
-    pub fn set_pb_offsets(&mut self, vibrato: &mut VibratoOp, values: &[i16; 16])
+    pub(crate) fn set_pb_offsets(&mut self, vibrato: &mut VibratoOp, values: &[i16; 16])
     {
         self.vibrato_values.copy_from_slice(values);
         
