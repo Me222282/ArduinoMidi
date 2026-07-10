@@ -1,10 +1,10 @@
 use api::{Channel, Note};
 
-pub const NOTEFAIL: u8 = Note::B1;
-pub const NOTEON: u8 = Note::C4;
-pub const NOTEOFF: u8 = Note::G3;
-pub const NOTESELECT: u8 = Note::C3;
-pub const NOTEOPTION: u8 = Note::G4;
+pub const NOTE_FAIL: u8 = Note::B1;
+pub const NOTE_ON: u8 = Note::C4;
+pub const NOTE_OFF: u8 = Note::G3;
+pub const NOTE_SELECT: u8 = Note::C3;
+pub const NOTE_OPTION: u8 = Note::G4;
 
 pub const MF_DURATION: u32 = 125;
 pub const MF_DURATION_SHORT: u32 = 75;
@@ -29,7 +29,7 @@ impl MenuFeedback
     pub const fn note_fail(channel: Channel) -> Self
     {
         return Self {
-            key: NOTEFAIL,
+            key: NOTE_FAIL,
             duration: MF_DURATION,
             channel
         };
@@ -38,7 +38,7 @@ impl MenuFeedback
     pub const fn note_fail_short(channel: Channel) -> Self
     {
         return Self {
-            key: NOTEFAIL,
+            key: NOTE_FAIL,
             duration: MF_DURATION_SHORT,
             channel
         };
@@ -47,7 +47,7 @@ impl MenuFeedback
     pub const fn note_on(channel: Channel) -> Self
     {
         return Self {
-            key: NOTEON,
+            key: NOTE_ON,
             duration: MF_DURATION,
             channel
         };
@@ -56,7 +56,7 @@ impl MenuFeedback
     pub const fn note_on_short(channel: Channel) -> Self
     {
         return Self {
-            key: NOTEON,
+            key: NOTE_ON,
             duration: MF_DURATION_SHORT,
             channel
         };
@@ -65,7 +65,7 @@ impl MenuFeedback
     pub const fn note_off(channel: Channel) -> Self
     {
         return Self {
-            key: NOTEOFF,
+            key: NOTE_OFF,
             duration: MF_DURATION,
             channel
         };
@@ -74,7 +74,7 @@ impl MenuFeedback
     pub const fn note_off_short(channel: Channel) -> Self
     {
         return Self {
-            key: NOTEOFF,
+            key: NOTE_OFF,
             duration: MF_DURATION_SHORT,
             channel
         };
@@ -83,7 +83,7 @@ impl MenuFeedback
     pub const fn note_select(channel: Channel) -> Self
     {
         return Self {
-            key: NOTESELECT,
+            key: NOTE_SELECT,
             duration: MF_DURATION,
             channel
         };
@@ -92,7 +92,7 @@ impl MenuFeedback
     pub const fn note_select_short(channel: Channel) -> Self
     {
         return Self {
-            key: NOTESELECT,
+            key: NOTE_SELECT,
             duration: MF_DURATION_SHORT,
             channel
         };
@@ -101,7 +101,7 @@ impl MenuFeedback
     pub const fn note_option(channel: Channel) -> Self
     {
         return Self {
-            key: NOTEOPTION,
+            key: NOTE_OPTION,
             duration: MF_DURATION,
             channel
         };
@@ -110,7 +110,7 @@ impl MenuFeedback
     pub const fn note_option_short(channel: Channel) -> Self
     {
         return Self {
-            key: NOTEOPTION,
+            key: NOTE_OPTION,
             duration: MF_DURATION_SHORT,
             channel
         };
@@ -120,8 +120,8 @@ impl MenuFeedback
     {
         return Self {
             key: match value {
-                true => NOTEON,
-                false => NOTEOFF
+                true => NOTE_ON,
+                false => NOTE_OFF
             },
             duration: MF_DURATION,
             channel
