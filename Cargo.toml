@@ -23,6 +23,8 @@ api = { path = "./api" }
 esp-nvs = "0.4.0"
 esp-storage = "0.9.0"
 
+# [package.metadata.espflash]
+# partition_table = "partitions.csv"
 
 [profile.dev]
 # Rust debug is too slow.

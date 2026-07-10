@@ -1,0 +1,9 @@
+baudrate = 460800
+
+[idf]
+partition_table = "partitions.csv"
+
+[flash]
+mode = "qio"
+size = "8MB"
+frequency = "80MHz"
