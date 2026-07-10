@@ -4,25 +4,36 @@
 
 mod panel;
 pub use crate::panel::*;
-
 mod menus;
 pub(crate) use crate::menus::*;
-
 mod notes;
 pub(crate) use crate::notes::*;
-
 mod operators;
-pub use crate::operators::*;
-
+pub use operators::*;
 mod sequencer;
-pub(crate) use crate::sequencer::*;
-
+pub(crate) use sequencer::*;
 mod prog;
-pub use crate::prog::*;
+pub use prog::*;
 
 use api::{CCType, Channel, ChannelVoice, NoteKey, NoteOffset};
 
 extern crate alloc;
+
+// TODO:
+// sequencer
+// saving, loading and reset
+// init structs
+// triggers
+// channel filter menu
+// custom slot allocation setting
+// drum mode
+
+// DRUMS:
+// drum mode option
+// whether drums override other option outputs (cc and trig)
+// choose which ports do what - can use gates but no velocity
+// use note and option outputs - with velocity
+// add trigger source for drums
 
 // ==========PIPELINE==========
 // Channel Filter

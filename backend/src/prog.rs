@@ -57,7 +57,7 @@ impl<E: api::Externals, N: NvsInterface> Program<E, N>
         {
             MidiCode::NoteON(channel, note) =>
             {
-                if self.menu.is_none()
+                if !self.menu.is_none()
                 {
                     let mut config = Configuration {
                         // other: &mut self.other_config,
@@ -104,7 +104,7 @@ impl<E: api::Externals, N: NvsInterface> Program<E, N>
             },
             MidiCode::NoteOFF(channel, note) =>
             {
-                if self.menu.is_none()
+                if !self.menu.is_none()
                 {
                     let mut config = Configuration {
                         // other: &mut self.other_config,

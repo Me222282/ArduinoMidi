@@ -1,9 +1,7 @@
 mod vibrato;
 pub(crate) use vibrato::*;
-
 mod arpeggio;
 pub(crate) use arpeggio::*;
-
 mod output;
 pub use output::*;
 
