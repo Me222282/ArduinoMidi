@@ -1,6 +1,6 @@
 use api::{Channel, LinkedList, Note, RefNode};
 
-use crate::{Arpeggio, ArpeggioConfig, Output, process_note};
+use crate::{Arpeggio, ArpeggioConfig, ChannelOutput, Output, process_note};
 
 struct ArpInstance
 {
@@ -22,7 +22,7 @@ pub(crate) struct Arpeggiator
 
 impl ArpInstance
 {
-    fn add_note<E: api::Externals>(&mut self, config: &Arpeggio, output: &mut Output<E>, channel: Channel, note: Note)
+    fn add_note<E: api::Externals>(&mut self, config: &Arpeggio, mut output: ChannelOutput<E>, note: Note)
     {
         let rn = match config.sort_notes
         {
@@ -35,7 +35,7 @@ impl ArpInstance
         {
             self.current = Some(rn);
             self.current_time = 0;
-            output.push_note_post(channel, note);
+            output.push_note_post(note);
         }
     }
     
@@ -57,7 +57,7 @@ impl ArpInstance
         self.notes.remove(remove);
     }
     
-    fn trigger_next<E: api::Externals>(&mut self, config: &Arpeggio, output: &mut Output<E>, channel: Channel)
+    fn trigger_next<E: api::Externals>(&mut self, config: &Arpeggio, mut output: ChannelOutput<E>)
     {
         // no current means output first
         if self.current.is_none()
@@ -65,7 +65,7 @@ impl ArpInstance
             self.current = self.notes.first();
             match &self.current
             {
-                Some(rn) => output.push_note_post(channel, *self.notes.get_ref(rn)),
+                Some(rn) => output.push_note_post(*self.notes.get_ref(rn)),
                 None => {},
             }
             return;
@@ -79,7 +79,7 @@ impl ArpInstance
                 self.current = self.notes.first();
                 match &self.current
                 {
-                    Some(rn) => output.push_note_post(channel, *self.notes.get_ref(rn)),
+                    Some(rn) => output.push_note_post(*self.notes.get_ref(rn)),
                     None => {},
                 }
                 return;
@@ -158,13 +158,13 @@ impl ArpInstance
         {
             Some(v) =>
             {
-                output.push_note_post(channel, *self.notes.get_ref(v));
+                output.push_note_post(*self.notes.get_ref(v));
             },
             None => {}
         };
         if !config.half_notes
         {
-            output.remove_note_post(channel, old);
+            output.remove_note_post(old);
         }
     }
 }
@@ -184,7 +184,7 @@ impl Arpeggiator
         if config.enabled
         {
             let arp = &mut self.insts[channel as usize];
-            arp.add_note(config, output, channel, note);
+            arp.add_note(config, ChannelOutput::new(output, channel), note);
             return;
         }
         
@@ -230,7 +230,7 @@ impl Arpeggiator
             if arp.current_time >= config.time
             {
                 arp.current_time -= config.time;
-                arp.trigger_next(config, output, Channel::from_u8(i as u8));
+                arp.trigger_next(config, ChannelOutput::new(output, Channel::from_u8(i as u8)));
                 continue;
             }
             // turn off at half time
@@ -252,7 +252,7 @@ impl Arpeggiator
             for (i, (arp, config)) in self.insts.iter_mut().zip(&self.config.arpeggios).enumerate()
             {
                 if arp.current.is_none() { continue; }
-                arp.trigger_next(config, output, Channel::from_u8(i as u8));
+                arp.trigger_next(config, ChannelOutput::new(output, Channel::from_u8(i as u8)));
             }
             return;
         }

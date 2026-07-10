@@ -5,9 +5,9 @@ pub(crate) use arpeggio::*;
 mod output;
 pub use output::*;
 
-use api::{Channel, Note};
+use api::{Channel, Externals, Note};
 
-use crate::{ChannelRedirect, OutputConfig};
+use crate::{ChannelRedirect, OutputConfig, SlotSelect};
 
 pub(crate) fn process_note(mut channel: Channel, mut note: Note, config: &OutputConfig) -> Option<(Channel, Note)>
 {
@@ -37,4 +37,43 @@ fn apply_redirect(cr: &ChannelRedirect, channel: Channel, note: Note) -> Channel
     }
     
     return cr.new_channel;
+}
+
+pub(crate) struct ChannelOutput<'a, E: Externals>
+{
+    output: &'a mut Output<E>,
+    channel: Channel
+}
+impl<'a, E: Externals> ChannelOutput<'a, E>
+{
+    pub fn new(output: &'a mut Output<E>, channel: Channel) -> Self
+    {
+        return Self { output, channel };
+    }
+    
+    #[inline]
+    pub fn set_modulation(&mut self, value: u16)
+    {
+        self.output.set_modulation(self.channel, value);
+    }
+    #[inline]
+    pub fn push_note(&mut self, note: Note)
+    {
+        self.output.push_note(self.channel, note);
+    }
+    #[inline]
+    pub(in crate::operators) fn push_note_post(&mut self, note: Note)
+    {
+        self.output.push_note_post(self.channel, note);
+    }
+    #[inline]
+    pub fn remove_note(&mut self, note: Note)
+    {
+        self.output.remove_note(self.channel, note);
+    }
+    #[inline]
+    pub(in crate::operators) fn remove_note_post(&mut self, note: Note)
+    {
+        self.output.remove_note_post(self.channel, note);
+    }
 }

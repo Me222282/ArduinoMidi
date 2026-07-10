@@ -202,7 +202,7 @@ macro_rules! cv_new
     }};
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
 pub struct Note
 {
     pub key: u8,
