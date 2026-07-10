@@ -8,10 +8,12 @@ mod vibrato;
 pub use vibrato::*;
 mod program_ports;
 pub use program_ports::*;
+mod manager;
+pub use manager::*;
 
 use core::ops::RangeBounds;
 use api::{Channel, MidiCode, Note, NoteKey, NvsInterface};
-use crate::{Configuration, SequencerMenu};
+use crate::Configuration;
 
 macro_rules! menu_toggle
 {
@@ -102,50 +104,4 @@ pub trait Menu
     fn reset_values(&mut self, config: &mut Configuration);
     fn save_values<T: NvsInterface>(&self, config: &Configuration, nvs: &mut T);
     fn load_values<T: NvsInterface>(&mut self, config: &mut Configuration, nvs: &mut T);
-}
-
-#[derive(Debug, Default)]
-pub struct MenuStorage
-{
-    pub vibrato: VibratoMenu,
-    pub special_ops: SpecialOpsMenu,
-    pub program_ports: ProgramPortsMenu,
-    pub sequencer: SequencerMenu
-}
-
-impl MenuStorage
-{
-    pub fn get_vibrato(&mut self) -> VibratoMenu
-    {
-        return core::mem::replace(&mut self.vibrato, VibratoMenu::default());
-    }
-    pub fn get_special_ops(&mut self) -> SpecialOpsMenu
-    {
-        return core::mem::replace(&mut self.special_ops, SpecialOpsMenu::default());
-    }
-    pub fn get_program_ports(&mut self) -> ProgramPortsMenu
-    {
-        return core::mem::replace(&mut self.program_ports, ProgramPortsMenu::default());
-    }
-    pub fn get_sequencer(&mut self) -> SequencerMenu
-    {
-        return core::mem::replace(&mut self.sequencer, SequencerMenu::default());
-    }
-    
-    pub fn set_vibrato(&mut self, menu: VibratoMenu)
-    {
-        self.vibrato = menu;
-    }
-    pub fn set_special_ops(&mut self, menu: SpecialOpsMenu)
-    {
-        self.special_ops = menu;
-    }
-    pub fn set_program_ports(&mut self, menu: ProgramPortsMenu)
-    {
-        self.program_ports = menu;
-    }
-    pub fn set_sequencer(&mut self, menu: SequencerMenu)
-    {
-        self.sequencer = menu;
-    }
 }

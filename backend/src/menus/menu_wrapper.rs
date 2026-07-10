@@ -47,7 +47,7 @@ macro_rules! create_dynamic_menus
         
         impl crate::MenuWrapTrait for $name
         {
-            fn on_note<T: api::NvsInterface>(&mut self, config: &mut crate::Configuration, nvs: &mut T, time: u32, channel: Channel, note: Note) -> (bool, Option<MenuFeedback>)
+            fn on_note<T: api::NvsInterface>(&mut self, config: &mut crate::Configuration, nvs: &mut T, time: u32, channel: api::Channel, note: api::Note) -> (bool, Option<crate::MenuFeedback>)
             {
                 return match self
                 {
@@ -55,7 +55,7 @@ macro_rules! create_dynamic_menus
                     $(Self::$n(t) => t.on_note::<T>(config, nvs, time, channel, note)),+
                 };
             }
-            fn off_note(&mut self, config: &mut Configuration, channel: Channel, note: Note)
+            fn off_note(&mut self, config: &mut crate::Configuration, channel: api::Channel, note: api::Note)
             {
                 match self
                 {
@@ -64,7 +64,7 @@ macro_rules! create_dynamic_menus
                 }
             }
             
-            fn on_reset_switch(&mut self) -> (bool, Option<MenuFeedback>)
+            fn on_reset_switch(&mut self) -> (bool, Option<crate::MenuFeedback>)
             {
                 match self
                 {
@@ -72,7 +72,7 @@ macro_rules! create_dynamic_menus
                     $(Self::$n(t) => t.on_reset_switch()),+
                 }
             }
-            fn on_message(&mut self, message: MidiCode)
+            fn on_message(&mut self, message: api::MidiCode)
             {
                 match self
                 {
@@ -80,7 +80,7 @@ macro_rules! create_dynamic_menus
                     $(Self::$n(t) => t.on_message(message)),+
                 }
             }
-            fn allow_message(&self, message: MidiCode) -> bool
+            fn allow_message(&self, message: api::MidiCode) -> bool
             {
                 return match self
                 {
@@ -91,7 +91,7 @@ macro_rules! create_dynamic_menus
         }
     };
 }
-pub(crate) use create_dynamic_menus;
+pub(in crate::menus) use create_dynamic_menus;
 
 pub const MAX_DIGITS: usize = 5;
 
@@ -117,7 +117,7 @@ fn get_value(digits: &[u8; 5], start: u8) -> usize
     return value;
 }
 
-pub struct MenuWrapper<T: Menu>
+pub(in crate::menus) struct MenuWrapper<T: Menu>
 {
     state: MenuState,
     digits: [u8; MAX_DIGITS],

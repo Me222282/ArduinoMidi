@@ -2,18 +2,11 @@ use core::marker::PhantomData;
 
 use api::{Channel, MidiCode, Note, NvsInterface, Switch};
 
-use crate::{Arpeggiator, Configuration, Menu, MenuFeedback, MenuStorage, MenuWrapTrait, MenuWrapper, Output, ProgramPortsMenu, SequencerMenu, SpecialOpsMenu, VibratoMenu, create_dynamic_menus};
-
-create_dynamic_menus!(pub(crate) Menus:
-    A => MenuWrapper<SpecialOpsMenu>,
-    B => MenuWrapper<ProgramPortsMenu>,
-    C => MenuWrapper<VibratoMenu>,
-    D => MenuWrapper<SequencerMenu>);
+use crate::{Arpeggiator, Configuration, MenuFeedback, MenuManager, MenuWrapTrait, Output};
 
 pub struct Program<E: api::Externals, N: NvsInterface>
 {
-    menu: Menus,
-    menu_storage: MenuStorage,
+    menu: MenuManager,
     
     // sequen_config: SequencerConfig,
     arpeggio: Arpeggiator,
@@ -26,25 +19,6 @@ pub struct Program<E: api::Externals, N: NvsInterface>
 
 impl<E: api::Externals, N: NvsInterface> Program<E, N>
 {
-    fn set_menu(&mut self, menu: Menus)
-    {
-        if self.menu.is_none()
-        {
-            self.menu = menu;
-            return;
-        }
-        
-        let old = core::mem::replace(&mut self.menu, menu);
-        match old
-        {
-            Menus::A(mw) => self.menu_storage.set_special_ops(mw.into_menu()),
-            Menus::B(mw) => self.menu_storage.set_program_ports(mw.into_menu()),
-            Menus::C(mw) => self.menu_storage.set_vibrato(mw.into_menu()),
-            Menus::D(mw) => self.menu_storage.set_sequencer(mw.into_menu()),
-            Menus::None => {}
-        }
-    }
-    
     pub fn on_midi_message(&mut self, nvs: &mut N, message: MidiCode, time: u32)
     {
         // ignore all messages from disabled channels
@@ -57,7 +31,7 @@ impl<E: api::Externals, N: NvsInterface> Program<E, N>
         {
             MidiCode::NoteON(channel, note) =>
             {
-                if !self.menu.is_none()
+                if self.menu.is_some()
                 {
                     let mut config = Configuration {
                         // other: &mut self.other_config,
@@ -71,14 +45,14 @@ impl<E: api::Externals, N: NvsInterface> Program<E, N>
                     let exit = self.menu.on_note(&mut config, nvs, time, channel, note);
                     if let Some(fb) = exit.1 { self.output.menu_feedback(fb, time); }
                     // exit menu
-                    if exit.0 { self.set_menu(Menus::None); }
+                    if exit.0 { self.menu.exit(); }
                     // sequencer
-                    else if let Menus::D(s) = &self.menu
+                    else if let Some(s) = self.menu.is_sequencer()
                     {
-                        s.menu.sequencer.on_note(&mut self.output);
+                        s.sequencer.on_note(&mut self.output);
                     }
                     // special ops menu - factory reset
-                    else if let Menus::A(_) = &self.menu
+                    else if self.menu.is_special_ops()
                     {
                         // repeated key in time
                         if note.key == Note::B3 &&
@@ -104,7 +78,7 @@ impl<E: api::Externals, N: NvsInterface> Program<E, N>
             },
             MidiCode::NoteOFF(channel, note) =>
             {
-                if !self.menu.is_none()
+                if self.menu.is_some()
                 {
                     let mut config = Configuration {
                         // other: &mut self.other_config,
@@ -140,9 +114,9 @@ impl<E: api::Externals, N: NvsInterface> Program<E, N>
         self.output.on_loop(time);
         self.arpeggio.on_loop(time, &mut self.output);
         
-        if let Menus::D(s) = &mut self.menu
+        if let Some(s) = self.menu.is_sequencer()
         {
-            s.menu.sequencer.on_loop(&mut self.output, time);
+            s.sequencer.on_loop(&mut self.output, time);
         }
     }
     
@@ -160,10 +134,10 @@ impl<E: api::Externals, N: NvsInterface> Program<E, N>
                     // enter menus
                     match n.key
                     {
-                        Note::A0 => self.menu = Menus::A(MenuWrapper::new(self.menu_storage.get_special_ops())),
-                        Note::B0 => self.menu = Menus::D(MenuWrapper::new(self.menu_storage.get_sequencer())),
-                        Note::C1 => self.menu = Menus::B(MenuWrapper::new(self.menu_storage.get_program_ports())),
-                        Note::D1 => self.menu = Menus::C(MenuWrapper::new(self.menu_storage.get_vibrato())),
+                        Note::A0 => self.menu.open_special_ops(),
+                        Note::B0 => self.menu.open_sequencer(),
+                        Note::C1 => self.menu.open_program_ports(),
+                        Note::D1 => self.menu.open_vibrato(),
                         _ => {}
                     }
                     // entered menu
@@ -178,16 +152,13 @@ impl<E: api::Externals, N: NvsInterface> Program<E, N>
             {
                 let exit = self.menu.on_reset_switch();
                 if let Some(fb) = exit.1 { self.output.menu_feedback(fb, time); }
-                if exit.0 { self.set_menu(Menus::None); }
+                if exit.0 { self.menu.exit(); }
             }
         }
     }
     
     pub fn on_factory_reset(&mut self, nvs: &mut N)
     {
-        // exit any menus
-        self.set_menu(Menus::None);
-        
         let mut config = Configuration {
             // other: &mut self.other_config,
             note: &mut self.output.note_config,
@@ -198,20 +169,6 @@ impl<E: api::Externals, N: NvsInterface> Program<E, N>
             arpeggio: &mut self.arpeggio.config
         };
         
-        let menu = &mut self.menu_storage.program_ports;
-        menu.reset_values(&mut config);
-        menu.save_values(&mut config, nvs);
-        
-        let menu = &mut self.menu_storage.sequencer;
-        menu.reset_values(&mut config);
-        menu.save_values(&mut config, nvs);
-        
-        let menu = &mut self.menu_storage.special_ops;
-        menu.reset_values(&mut config);
-        menu.save_values(&mut config, nvs);
-        
-        let menu = &mut self.menu_storage.vibrato;
-        menu.reset_values(&mut config);
-        menu.save_values(&mut config, nvs);
+        self.menu.factory_reset(&mut config, nvs);
     }
 }

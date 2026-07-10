@@ -8,7 +8,7 @@ pub use sequence::*;
 use crate::{Output, SequencerConfig};
 
 /// every half beat
-#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy, Default)]
 struct TimeStep(usize);
 impl TimeStep
 {
@@ -42,7 +42,8 @@ impl TimeStep
 pub struct Sequencer
 {
     config: SequencerConfig,
-    playing: bool
+    playing: bool,
+    play_step: TimeStep
 }
 
 impl Sequencer
