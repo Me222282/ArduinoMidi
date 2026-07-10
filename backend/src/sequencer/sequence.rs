@@ -3,7 +3,7 @@ use api::{Cubic, CubicInput, Externals, Note};
 
 use crate::{ChannelOutput, sequencer::{NOTE_HOLD, NOTE_OFF, TrackBank, TrackRef}};
 
-pub(in crate::sequencer) struct Sequence
+pub(super) struct Sequence
 {
     /// interpret u8 as +1 (so cannot represent zero)
     tracks: Box<[(TrackRef, u8); 256]>,
@@ -22,13 +22,15 @@ pub(in crate::sequencer) struct Sequence
     half_time: bool,
     
     /// decremented every time step - next step when it hits zero
-    time_steps: u16
-    // one_shot: bool
+    time_steps: u16,
+    
+    skip: u8,
+    one_shot: bool
 }
 
 impl Sequence
 {
-    pub fn play(&mut self, bank: &TrackBank)
+    pub fn play(&mut self, one_shot: bool, bank: &TrackBank)
     {
         if self.playing { return; }
         if !self.paused
@@ -47,6 +49,7 @@ impl Sequence
             self.next_note = track.get_step(0).unwrap_or((NOTE_OFF, 0)).0;
             
         }
+        self.one_shot = one_shot;
         self.playing = true;
         self.paused = false;
     }
@@ -59,6 +62,15 @@ impl Sequence
     {
         self.playing = false;
         self.paused = false;
+    }
+    
+    pub fn inc_skip(&mut self)
+    {
+        self.skip += 1;
+    }
+    pub fn set_one_shot(&mut self)
+    {
+        self.one_shot = true;
     }
     
     pub fn on_time_step<E: Externals>(&mut self, mut output: ChannelOutput<E>, bank: &TrackBank)

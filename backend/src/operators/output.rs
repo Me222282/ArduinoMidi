@@ -112,7 +112,7 @@ impl<E: api::Externals> Output<E>
             None => {}
         }
     }
-    pub(in crate::operators) fn push_note_post(&mut self, mut channel: Channel, note: Note)
+    pub(super) fn push_note_post(&mut self, mut channel: Channel, note: Note)
     {
         if self.config.all_channel_mode
         {
@@ -137,7 +137,7 @@ impl<E: api::Externals> Output<E>
             None => {}
         }
     }
-    pub(in crate::operators) fn remove_note_post(&mut self, mut channel: Channel, note: Note)
+    pub(super) fn remove_note_post(&mut self, mut channel: Channel, note: Note)
     {
         if self.config.all_channel_mode
         {

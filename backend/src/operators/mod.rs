@@ -62,7 +62,7 @@ impl<'a, E: Externals> ChannelOutput<'a, E>
         self.output.push_note(self.channel, note);
     }
     #[inline]
-    pub(in crate::operators) fn push_note_post(&mut self, note: Note)
+    fn push_note_post(&mut self, note: Note)
     {
         self.output.push_note_post(self.channel, note);
     }
@@ -72,7 +72,7 @@ impl<'a, E: Externals> ChannelOutput<'a, E>
         self.output.remove_note(self.channel, note);
     }
     #[inline]
-    pub(in crate::operators) fn remove_note_post(&mut self, note: Note)
+    fn remove_note_post(&mut self, note: Note)
     {
         self.output.remove_note_post(self.channel, note);
     }

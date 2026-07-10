@@ -1,16 +1,16 @@
 use alloc::boxed::Box;
 use api::Note;
 
-pub(in crate::sequencer) const NOTE_OFF: Note = Note::new(0xFF, 0);
-pub(in crate::sequencer) const NOTE_HOLD: Note = Note::new(0xFF, 0xFF);
+pub(super) const NOTE_OFF: Note = Note::new(0xFF, 0);
+pub(super) const NOTE_HOLD: Note = Note::new(0xFF, 0xFF);
 
 #[derive(Debug)]
-pub(in crate::sequencer) struct TrackBank
+pub(super) struct TrackBank
 {
     tracks: [Box<TrackData>; 32]
 }
 
-pub(in crate::sequencer) enum TrackRef
+pub(super) enum TrackRef
 {
     Bank(u8),
     Owned(Box<TrackData>)
@@ -44,7 +44,7 @@ impl Default for TrackRef
 
 /// Do not stack alloc
 #[derive(Debug)]
-pub(in crate::sequencer) struct TrackData
+pub(super) struct TrackData
 {
     steps: [(Note, u16); 256],
     /// interpret as +1 (so cannot represent zero)
