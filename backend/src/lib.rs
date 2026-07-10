@@ -59,7 +59,9 @@ pub(crate) enum TriggerSource
     Arpeggio(Channel),
     Note(Channel),
     Sequence(Channel),
-    Track(Channel)
+    Track(Channel),
+    SequencerBeat,
+    MidiClock
 }
 impl TriggerSource
 {
@@ -70,7 +72,9 @@ impl TriggerSource
             TriggerSource::Arpeggio(cv) => *cv = channel,
             TriggerSource::Note(cv) => *cv = channel,
             TriggerSource::Sequence(cv) => *cv = channel,
-            TriggerSource::Track(cv) => *cv = channel
+            TriggerSource::Track(cv) => *cv = channel,
+            TriggerSource::SequencerBeat => {}
+            TriggerSource::MidiClock => {}
         }
     }
     pub fn get_channel(self) -> Channel
@@ -80,7 +84,9 @@ impl TriggerSource
             TriggerSource::Arpeggio(channel) => channel,
             TriggerSource::Note(channel) => channel,
             TriggerSource::Sequence(channel) => channel,
-            TriggerSource::Track(channel) => channel
+            TriggerSource::Track(channel) => channel,
+            TriggerSource::SequencerBeat => Channel::All,
+            TriggerSource::MidiClock => Channel::All
         };
     }
     pub fn set_source(&mut self, mut source: TriggerSource)

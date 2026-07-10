@@ -1,16 +1,16 @@
 use alloc::boxed::Box;
 use api::Note;
 
-pub const NOTE_OFF: Note = Note::new(0xFF, 0);
-pub const NOTE_HOLD: Note = Note::new(0xFF, 0xFF);
+pub(in crate::sequencer) const NOTE_OFF: Note = Note::new(0xFF, 0);
+pub(in crate::sequencer) const NOTE_HOLD: Note = Note::new(0xFF, 0xFF);
 
 #[derive(Debug)]
-pub struct TrackBank
+pub(in crate::sequencer) struct TrackBank
 {
-    tracks: Box<[TrackData; 32]>
+    tracks: [Box<TrackData>; 32]
 }
 
-pub enum TrackRef
+pub(in crate::sequencer) enum TrackRef
 {
     Bank(u8),
     Owned(Box<TrackData>)
@@ -44,19 +44,36 @@ impl Default for TrackRef
 
 /// Do not stack alloc
 #[derive(Debug)]
-pub struct TrackData
+pub(in crate::sequencer) struct TrackData
 {
     steps: [(Note, u16); 256],
-    /// interpret as +1 (so cannot be zero)
+    /// interpret as +1 (so cannot represent zero)
     size: u8,
-    clock_div: u8,
-    use_mod: bool,
-    half_time: bool
+    /// clocl_div == 0 => empty track
+    pub clock_div: u8,
+    pub use_mod: bool,
+    pub half_time: bool
 }
 impl TrackData
 {
-    pub fn on_time_step()
+    pub fn empty() -> Box<Self>
     {
-        
+        // all values can safely be zeros
+        return unsafe { Box::new_zeroed().assume_init() };
+    }
+    
+    /// bool determines whether note is the last one
+    pub fn get_step(&self, step: u16) -> Option<(Note, u16)>
+    {
+        if step > self.size as u16
+        {
+            return None;
+        }
+        let value = self.steps[step as usize];
+        return Some((value.0, value.1));
+    }
+    pub fn is_empty(&self) -> bool
+    {
+        return self.clock_div == 0;
     }
 }

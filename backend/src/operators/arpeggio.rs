@@ -153,7 +153,7 @@ impl ArpInstance
         
         // output.panel.output_trigger(crate::TriggerSource::Arpeggio(channel), true);
         
-        // swap outputs
+        // swap outputs - in this order so that retrig is performed
         match &self.current
         {
             Some(v) =>
