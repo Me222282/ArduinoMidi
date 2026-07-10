@@ -185,7 +185,12 @@ impl<E: api::Externals> Output<E>
         {
             CCType::ALL_NOTES_OFF =>
             {
-                // TODO
+                // reset note collections
+                for nc in self.note_manager.iter_mut()
+                {
+                    nc.clear();
+                }
+                self.panel.output_gate_off(SlotSelect::All);
             },
             CCType::MODULATION_WHEEL_MSB =>
             {
