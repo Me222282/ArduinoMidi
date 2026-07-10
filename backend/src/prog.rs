@@ -2,7 +2,7 @@ use core::marker::PhantomData;
 
 use api::{Channel, MidiCode, Note, NvsInterface, Switch};
 
-use crate::{Arpeggiator, Configuration, MenuFeedback, MenuStorage, MenuWrapTrait, MenuWrapper, Output, ProgramPortsMenu, SequencerMenu, SpecialOpsMenu, VibratoMenu, create_dynamic_menus};
+use crate::{Arpeggiator, Configuration, Menu, MenuFeedback, MenuStorage, MenuWrapTrait, MenuWrapper, Output, ProgramPortsMenu, SequencerMenu, SpecialOpsMenu, VibratoMenu, create_dynamic_menus};
 
 create_dynamic_menus!(pub(crate) Menus:
     A => MenuWrapper<SpecialOpsMenu>,
@@ -18,7 +18,10 @@ pub struct Program<E: api::Externals, N: NvsInterface>
     // sequen_config: SequencerConfig,
     arpeggio: Arpeggiator,
     pub output: Output<E>,
-    _phantom_n: PhantomData<N>
+    _phantom_n: PhantomData<N>,
+    
+    factory_reset_count: u8,
+    factory_reset_time: u32
 }
 
 impl<E: api::Externals, N: NvsInterface> Program<E, N>
@@ -69,9 +72,29 @@ impl<E: api::Externals, N: NvsInterface> Program<E, N>
                     if let Some(fb) = exit.1 { self.output.menu_feedback(fb, time); }
                     // exit menu
                     if exit.0 { self.set_menu(Menus::None); }
+                    // sequencer
                     else if let Menus::D(s) = &self.menu
                     {
                         s.menu.sequencer.on_note(&mut self.output);
+                    }
+                    // special ops menu - factory reset
+                    else if let Menus::A(_) = &self.menu
+                    {
+                        // repeated key in time
+                        if note.key == Note::B3 &&
+                            (self.factory_reset_count == 0 || time - self.factory_reset_time <= crate::FACTORY_RESET_TIME)
+                        {
+                            self.factory_reset_time = time;
+                            self.factory_reset_count += 1;
+                            if self.factory_reset_count >= 3
+                            {
+                                self.on_factory_reset(nvs);
+                            }
+                        }
+                        else
+                        {
+                            self.factory_reset_count = 0;
+                        }
                     }
                 }
                 else
@@ -158,5 +181,37 @@ impl<E: api::Externals, N: NvsInterface> Program<E, N>
                 if exit.0 { self.set_menu(Menus::None); }
             }
         }
+    }
+    
+    pub fn on_factory_reset(&mut self, nvs: &mut N)
+    {
+        // exit any menus
+        self.set_menu(Menus::None);
+        
+        let mut config = Configuration {
+            // other: &mut self.other_config,
+            note: &mut self.output.note_config,
+            // sequen: &mut self.sequen_config,
+            output: &mut self.output.config,
+            panel: &mut self.output.panel.config,
+            vibrato: &mut self.output.vibrato.config,
+            arpeggio: &mut self.arpeggio.config
+        };
+        
+        let menu = &mut self.menu_storage.program_ports;
+        menu.reset_values(&mut config);
+        menu.save_values(&mut config, nvs);
+        
+        let menu = &mut self.menu_storage.sequencer;
+        menu.reset_values(&mut config);
+        menu.save_values(&mut config, nvs);
+        
+        let menu = &mut self.menu_storage.special_ops;
+        menu.reset_values(&mut config);
+        menu.save_values(&mut config, nvs);
+        
+        let menu = &mut self.menu_storage.vibrato;
+        menu.reset_values(&mut config);
+        menu.save_values(&mut config, nvs);
     }
 }

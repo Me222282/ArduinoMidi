@@ -40,6 +40,7 @@ extern crate alloc;
 // Output
 
 pub const RETRIG_TIME: u32 = 4;
+pub const FACTORY_RESET_TIME: u32 = 750;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum TriggerSource

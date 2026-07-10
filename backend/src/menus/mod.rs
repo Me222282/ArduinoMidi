@@ -107,10 +107,10 @@ pub(crate) trait Menu
 #[derive(Debug, Default)]
 pub(crate) struct MenuStorage
 {
-    vibrato: VibratoMenu,
-    special_ops: SpecialOpsMenu,
-    program_ports: ProgramPortsMenu,
-    sequencer: SequencerMenu
+    pub vibrato: VibratoMenu,
+    pub special_ops: SpecialOpsMenu,
+    pub program_ports: ProgramPortsMenu,
+    pub sequencer: SequencerMenu
 }
 
 impl MenuStorage
