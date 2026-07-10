@@ -3,7 +3,7 @@ use api::{CCType, Channel, Note};
 use crate::{Configuration, Menu, MenuFeedback, MenuState, TriggerSource, menu_toggle, menu_toggle_channel, value_or_last};
 
 #[derive(Debug, Default)]
-pub(crate) struct ProgramPortsMenu
+pub struct ProgramPortsMenu
 {
     channel_lv: usize,
     pulse_length_lv: usize,

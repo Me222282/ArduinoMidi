@@ -1,15 +1,15 @@
 use api::{Channel, Note};
 
-pub(crate) const NOTEFAIL: u8 = Note::B1;
-pub(crate) const NOTEON: u8 = Note::C4;
-pub(crate) const NOTEOFF: u8 = Note::G3;
-pub(crate) const NOTESELECT: u8 = Note::C3;
-pub(crate) const NOTEOPTION: u8 = Note::G4;
+pub const NOTEFAIL: u8 = Note::B1;
+pub const NOTEON: u8 = Note::C4;
+pub const NOTEOFF: u8 = Note::G3;
+pub const NOTESELECT: u8 = Note::C3;
+pub const NOTEOPTION: u8 = Note::G4;
 
-pub(crate) const MF_DURATION: u32 = 125;
-pub(crate) const MF_DURATION_SHORT: u32 = 75;
+pub const MF_DURATION: u32 = 125;
+pub const MF_DURATION_SHORT: u32 = 75;
 
-pub(crate) struct MenuFeedback
+pub struct MenuFeedback
 {
     // velocity ix fixed (value chosen in prog.rs)
     pub key: u8,

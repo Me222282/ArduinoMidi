@@ -6,7 +6,7 @@ mod panel;
 pub use crate::panel::*;
 
 mod menus;
-pub use crate::menus::*;
+pub(crate) use crate::menus::*;
 
 mod notes;
 pub(crate) use crate::notes::*;
@@ -15,9 +15,9 @@ mod operators;
 pub use crate::operators::*;
 
 mod sequencer;
-pub use crate::sequencer::*;
+pub(crate) use crate::sequencer::*;
 
-pub mod prog;
+mod prog;
 pub use crate::prog::*;
 
 use api::{CCType, Channel, ChannelVoice, NoteKey, NoteOffset};

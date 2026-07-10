@@ -1,13 +1,13 @@
-pub mod feedback;
-pub(crate) use feedback::*;
-pub mod menu_wrapper;
-pub(crate) use menu_wrapper::*;
-pub mod special_ops;
-pub(crate) use special_ops::*;
-pub mod vibrato;
-pub(crate) use vibrato::*;
-pub mod program_ports;
-pub(crate) use program_ports::*;
+mod feedback;
+pub use feedback::*;
+mod menu_wrapper;
+pub use menu_wrapper::*;
+mod special_ops;
+pub use special_ops::*;
+mod vibrato;
+pub use vibrato::*;
+mod program_ports;
+pub use program_ports::*;
 
 use core::ops::RangeBounds;
 use api::{Channel, MidiCode, Note, NoteKey, NvsInterface};
@@ -45,7 +45,7 @@ macro_rules! value_or_last
 pub(crate) use value_or_last;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub(crate) enum MenuState
+pub enum MenuState
 {
     Listening,
     Number{
@@ -85,7 +85,7 @@ impl MenuState
     }
 }
 
-pub(crate) trait Menu
+pub trait Menu
     where Self: Sized
 {
     fn auto_close() -> bool { return true; }
@@ -105,7 +105,7 @@ pub(crate) trait Menu
 }
 
 #[derive(Debug, Default)]
-pub(crate) struct MenuStorage
+pub struct MenuStorage
 {
     pub vibrato: VibratoMenu,
     pub special_ops: SpecialOpsMenu,

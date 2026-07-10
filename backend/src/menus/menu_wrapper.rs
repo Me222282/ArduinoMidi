@@ -2,7 +2,7 @@ use api::{Channel, MidiCode, Note, NoteKey, NvsInterface};
 
 use crate::{Configuration, Menu, MenuFeedback, MenuState};
 
-pub(crate) trait MenuWrapTrait
+pub trait MenuWrapTrait
 {
     fn on_note<T: NvsInterface>(&mut self, config: &mut Configuration, nvs: &mut T, time: u32, channel: Channel, note: Note) -> (bool, Option<MenuFeedback>);
     fn off_note(&mut self, _config: &mut Configuration, _channel: Channel, _note: Note) { }
@@ -93,7 +93,7 @@ macro_rules! create_dynamic_menus
 }
 pub(crate) use create_dynamic_menus;
 
-pub(crate) const MAX_DIGITS: usize = 5;
+pub const MAX_DIGITS: usize = 5;
 
 fn get_value(digits: &[u8; 5], start: u8) -> usize
 {
@@ -117,7 +117,7 @@ fn get_value(digits: &[u8; 5], start: u8) -> usize
     return value;
 }
 
-pub(crate) struct MenuWrapper<T: Menu>
+pub struct MenuWrapper<T: Menu>
 {
     state: MenuState,
     digits: [u8; MAX_DIGITS],

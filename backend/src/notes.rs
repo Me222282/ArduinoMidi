@@ -2,7 +2,7 @@ use api::{Channel, InputMode, LinkedList, Note, PanelState, Queue, SA, RefNode};
 
 use crate::NoteConfig;
 
-pub(crate) enum NoteOutput
+pub enum NoteOutput
 {
     None,
     Off(u8),
@@ -10,7 +10,7 @@ pub(crate) enum NoteOutput
     Retrig(u8, Note)
 }
 
-pub(crate) struct NoteCollection
+pub struct NoteCollection
 {
     notes: LinkedList<(Note, i8)>,
     locations: SA<Option<RefNode<(Note, i8)>>, 5>,
