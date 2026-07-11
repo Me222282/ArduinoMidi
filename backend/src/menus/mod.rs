@@ -69,6 +69,7 @@ pub enum MenuState
 }
 impl MenuState
 {
+    #[must_use]
     pub fn number<R: RangeBounds<usize>>(digits: u8, range: R, key: u8, channel: Channel) -> MenuState
     {
         let min = match range.start_bound()
@@ -99,6 +100,7 @@ pub trait Menu
     
     fn off_note(&self, _channel: Channel, _note: Note) { }
     fn on_message(&self, _message: MidiCode) { }
+    #[must_use]
     fn allow_message(&self, _message: MidiCode) -> bool { true }
     
     fn reset_values(&mut self, config: &mut Configuration);

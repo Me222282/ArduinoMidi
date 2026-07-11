@@ -25,6 +25,7 @@ const SCALE_SET: f32 = 1.0 / 16384.0;
 
 const GRAD1: f32 = 2.0 / PI;
 const GRAD2: f32 = -GRAD1;
+#[must_use]
 fn tri(t: f32) -> f32
 {
     let t = t % TAU;
@@ -35,6 +36,7 @@ fn tri(t: f32) -> f32
     return (t * GRAD1) - 1.0;
 }
 #[inline]
+#[must_use]
 fn sin(t: f32) -> f32
 {
     return intrinsics::sinf32(t);

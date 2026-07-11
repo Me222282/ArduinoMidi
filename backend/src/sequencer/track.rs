@@ -17,6 +17,7 @@ pub(super) enum TrackRef
 }
 impl TrackRef
 {
+    #[must_use]
     pub fn get_ref<'a>(&'a self, bank: &'a TrackBank) -> &'a TrackData
     {
         return match self
@@ -25,6 +26,7 @@ impl TrackRef
             TrackRef::Owned(track_data) => &track_data,
         };
     }
+    #[must_use]
     pub fn get_mut<'a>(&'a mut self, bank: &'a mut TrackBank) -> &'a mut TrackData
     {
         return match self
@@ -42,6 +44,13 @@ impl Default for TrackRef
     }
 }
 
+pub enum AddStepResult
+{
+    Ok,
+    End,
+    Error
+}
+
 /// Do not stack alloc
 #[derive(Debug)]
 pub(super) struct TrackData
@@ -50,12 +59,14 @@ pub(super) struct TrackData
     /// interpret as +1 (so cannot represent zero)
     size: u8,
     /// clocl_div == 0 => empty track
-    pub clock_div: u8,
+    clock_div: u8,
     pub use_mod: bool,
     pub half_time: bool
 }
 impl TrackData
 {
+    #[inline]
+    #[must_use]
     pub fn empty() -> Box<Self>
     {
         // all values can safely be zeros
@@ -63,6 +74,7 @@ impl TrackData
     }
     
     /// bool determines whether note is the last one
+    #[must_use]
     pub fn get_step(&self, step: u16) -> Option<(Note, u16)>
     {
         if step > self.size as u16
@@ -72,12 +84,45 @@ impl TrackData
         let value = self.steps[step as usize];
         return Some((value.0, value.1));
     }
+    #[inline]
+    #[must_use]
     pub fn get_last_step(&self) -> (Note, u16)
     {
         return self.steps[self.size as usize];
     }
+    #[inline]
+    #[must_use]
     pub fn is_empty(&self) -> bool
     {
         return self.clock_div == 0;
+    }
+    #[inline]
+    #[must_use]
+    pub fn get_clock_div(&self) -> u8
+    {
+        return self.clock_div;
+    }
+    
+    pub fn add_step(&mut self, value: (Note, u16)) -> bool
+    {
+        if !self.is_empty() { return false; }
+        
+        self.steps[self.size as usize] = value;
+        // reached maximum size
+        if self.size == 0xFF
+        {
+            self.clock_div = 1;
+        }
+        self.size = self.size.wrapping_add(1);
+        return true;
+    }
+    pub fn finalise(&mut self, clock_div: u8) -> bool
+    {
+        // no data was added
+        if self.size == 0 && self.clock_div == 0 { return false; }
+        
+        self.clock_div = clock_div;
+        self.size = self.size.wrapping_sub(1);
+        return true;
     }
 }

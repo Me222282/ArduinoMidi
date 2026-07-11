@@ -16,6 +16,7 @@ impl Switch
     pub const PITCH_BEND: Switch = Switch(0b00100000);
     pub const MOD_OPTION: Switch = Switch(0b01000000);
     
+    #[must_use]
     pub const fn new(channels: bool, voices: bool, stack: bool, input_mode: bool, octave: bool, pitch_bend: bool, option: bool) -> Self
     {
         let mut s = Switch(0);
@@ -31,10 +32,14 @@ impl Switch
         return s;
     }
     
+    #[inline]
+    #[must_use]
     pub const fn is_resetting(self) -> bool
     {
         return (self.0 & 0b1111) > 0;
     }
+    #[inline]
+    #[must_use]
     pub const fn is_new_channels(self) -> bool
     {
         return (self.0 & 0b11) > 0;
@@ -91,12 +96,15 @@ pub enum NoteKey
 
 impl NoteKey
 {
+    #[must_use]
     pub const fn contains_note(self, key: u8) -> bool
     {
         let v = (self as u8 + 12 - key) % 12;
         return !(v == 1 || v == 3 || v == 6 || v == 8 || v == 10);
     }
     
+    #[inline]
+    #[must_use]
     pub const unsafe fn from_key(key: u8) -> NoteKey
     {
         return unsafe { core::mem::transmute(key) };
@@ -141,6 +149,7 @@ pub enum Channel
 }
 impl Channel
 {
+    #[must_use]
     pub const fn from_u8(value: u8) -> Channel
     {
         return match value
@@ -170,23 +179,31 @@ impl Channel
 pub struct ChannelVoice(u8);
 impl ChannelVoice
 {
+    #[inline]
+    #[must_use]
     pub const fn new(channel: Channel, voice: u8) -> ChannelVoice
     {
         let c = channel as u8;
         return ChannelVoice(c << 4 | voice);
     }
+    #[inline]
+    #[must_use]
     pub const fn get_channel(self) -> Channel
     {
         return Channel::from_u8(self.0 >> 4);
     }
+    #[inline]
+    #[must_use]
     pub const fn get_voice(self) -> u8
     {
         return self.0 & 0b1111;
     }
+    #[inline]
     pub const fn set_channel(&mut self, channel: Channel)
     {
         self.0 = self.0 & 0b1111 + ((channel as u8) << 4);
     }
+    #[inline]
     pub const fn set_voice(&mut self, voice: u8)
     {
         self.0 = self.0 & 0b11110000 + voice;
@@ -224,6 +241,8 @@ impl Ord for Note
 }
 impl Note
 {
+    #[inline]
+    #[must_use]
     pub const fn new(key: u8, vel: u8) -> Note
     {
         return Note { key, velocity: vel };

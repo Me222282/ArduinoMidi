@@ -8,10 +8,13 @@ pub struct Queue<T, const SIZE: usize>
 
 impl<T: Copy, const SIZE: usize> Queue<T, SIZE>
 {
+    #[inline]
+    #[must_use]
     pub fn new(init: T) -> Self
     {
         return Self { inner: [init; SIZE], wr: 0, rd: 0, len: 0 };
     }
+    #[must_use]
     pub fn from_iter(iter: impl Iterator<Item = T>, init: T) -> Self
     {
         let mut inner = [init; SIZE];

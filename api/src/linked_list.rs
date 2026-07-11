@@ -10,6 +10,8 @@ struct Node<T>
 }
 impl<T> Node<T>
 {
+    #[inline]
+    #[must_use]
     const fn new(value: T) -> Self
     {
         return Node { previous: None, next: None, value }
@@ -69,6 +71,8 @@ impl<'a, T, A: Allocator> Drop for LinkedList<T, A>
 
 impl<'a, T, A: Allocator> LinkedList<T, A>
 {
+    #[inline]
+    #[must_use]
     pub fn new(alloc: A) -> Self
     {
         return LinkedList { start: None, end: None, alloc, len: 0 }
@@ -176,43 +180,51 @@ impl<'a, T, A: Allocator> LinkedList<T, A>
     }
     
     #[inline]
+    #[must_use]
     pub fn iter_forward(&'a self) -> impl Iterator<Item = &'a T>
     {
         return IterForward { current: self.start, len: self.len, phantom: PhantomData };
     }
     #[inline]
+    #[must_use]
     pub fn iter_backward(&'a self) -> impl Iterator<Item = &'a T>
     {
         return IterBackward { current: self.start, len: self.len, phantom: PhantomData };
     }
     #[inline]
+    #[must_use]
     pub fn iter_forward_ref(&'a self) -> impl Iterator<Item = RefNode<T>>
     {
         return IterForwardRef { current: self.start, len: self.len, phantom: PhantomData };
     }
     #[inline]
+    #[must_use]
     pub fn iter_backward_ref(&'a self) -> impl Iterator<Item = RefNode<T>>
     {
         return IterBackwardRef { current: self.start, len: self.len, phantom: PhantomData };
     }
     
     #[inline]
+    #[must_use]
     pub fn len(&self) -> usize
     {
         return self.len;
     }
     #[inline]
+    #[must_use]
     pub fn first(&'a self) -> Option<RefNode<T>>
     {
         return self.start.map(|s| RefNode(s));
     }
     #[inline]
+    #[must_use]
     pub fn last(&'a self) -> Option<RefNode<T>>
     {
         return self.end.map(|l| RefNode(l));
     }
     
     #[inline]
+    #[must_use]
     pub fn get_mut(&'a mut self, ref_node: &'a mut RefNode<T>) -> &'a mut T
     {
         unsafe
@@ -221,6 +233,7 @@ impl<'a, T, A: Allocator> LinkedList<T, A>
         }
     }
     #[inline]
+    #[must_use]
     pub fn get_ref(&'a self, ref_node: &'a RefNode<T>) -> &'a T
     {
         unsafe
@@ -229,6 +242,7 @@ impl<'a, T, A: Allocator> LinkedList<T, A>
         }
     }
     #[inline]
+    #[must_use]
     pub fn get_next(&'a self, ref_node: &'a RefNode<T>) -> Option<RefNode<T>>
     {
         unsafe
@@ -237,6 +251,7 @@ impl<'a, T, A: Allocator> LinkedList<T, A>
         }
     }
     #[inline]
+    #[must_use]
     pub fn get_previous(&'a self, ref_node: &'a RefNode<T>) -> Option<RefNode<T>>
     {
         unsafe

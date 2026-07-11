@@ -117,6 +117,7 @@ impl VibratoOp
     
     /// `key` is the note value used by the hardware
     /// `offset` is the currently calculated offset for `channel`
+    #[must_use]
     pub fn frequency_correction<E: Externals>(&mut self, slot: usize, channel: Channel, offset: isize) -> isize
     {
         let vib = &self.config.vibratos[channel as usize];

@@ -84,6 +84,8 @@ impl MenuManager
         }
     }
     
+    #[inline]
+    #[must_use]
     pub fn is_special_ops(&self) -> bool
     {
         if let Menus::Spec(_) = self.menu
@@ -92,6 +94,8 @@ impl MenuManager
         }
         return false;
     }
+    #[inline]
+    #[must_use]
     pub fn is_sequencer(&mut self) -> Option<&mut SequencerMenu>
     {
         if let Menus::Seq(s) = &mut self.menu
@@ -100,10 +104,14 @@ impl MenuManager
         }
         return None;
     }
+    #[inline]
+    #[must_use]
     pub fn is_some(&self) -> bool
     {
         return !self.menu.is_none();
     }
+    #[inline]
+    #[must_use]
     pub fn is_none(&self) -> bool
     {
         return self.menu.is_none();

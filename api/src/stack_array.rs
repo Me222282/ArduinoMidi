@@ -41,10 +41,14 @@ impl<T, const CAP: usize> Index<usize> for SA<T, CAP>
 
 impl<T, const CAP: usize> SA<T, CAP>
 {
+    #[inline]
+    #[must_use]
     pub fn iter(&self) -> impl Iterator<Item = &T>
     {
         return self.inner[0..self.len].iter();
     }
+    #[inline]
+    #[must_use]
     pub fn iter_mut(&mut self) -> impl Iterator<Item = &mut T>
     {
         return self.inner[0..self.len].iter_mut();
@@ -54,6 +58,7 @@ impl<T, const CAP: usize> SA<T, CAP>
 impl<T, const CAP: usize> SA<T, CAP>
     where [u8; CAP * core::mem::size_of::<T>()]: Sized
 {
+    #[must_use]
     pub fn from_iter(iter: impl Iterator<Item = T>) -> Self
     {
         let init = [0u8; CAP * core::mem::size_of::<T>()];
@@ -70,6 +75,7 @@ impl<T, const CAP: usize> SA<T, CAP>
     }
     
     #[inline]
+    #[must_use]
     pub fn len(&self) -> usize
     {
         return self.len;
@@ -79,6 +85,7 @@ impl<T, const CAP: usize> SA<T, CAP>
 impl<T: Copy, const CAP: usize> SA<T, CAP>
     where [(); CAP * core::mem::size_of::<T>()]: Sized
 {
+    #[must_use]
     pub fn new(value: T, size: usize) -> Self
     {
         return Self { inner: [value; CAP], len: size };
@@ -90,8 +97,9 @@ impl<T: Default, const CAP: usize> Default for SA<T, CAP>
 {
     fn default() -> Self
     {
-        let init = [0u8; CAP * core::mem::size_of::<T>()];
-        let inner = unsafe { core::mem::transmute_copy::<_, [T; CAP]>(&init) };
-        return Self { inner, len: 0 };
+        // let init = [0u8; CAP * core::mem::size_of::<T>()];
+        // let inner = unsafe { core::mem::transmute_copy::<_, [T; CAP]>(&init) };
+        // return Self { inner, len: 0 };
+        return Self::from_iter(core::iter::repeat_with(T::default));
     }
 }

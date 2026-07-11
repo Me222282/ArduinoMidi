@@ -31,6 +31,7 @@ pub enum MidiCode
 
 impl MidiCode
 {
+    #[must_use]
     pub fn get_channel(self) -> Channel
     {
         return match self
@@ -61,6 +62,7 @@ pub enum QFData
 }
 impl QFData
 {
+    #[must_use]
     pub const fn from_u8(data: u8) -> QFData
     {
         let code = data >> 4;
@@ -104,6 +106,7 @@ pub enum QF7
 pub struct CCType(u8);
 impl CCType
 {
+    #[must_use]
     pub const fn u8(value: u8) -> CCType
     {
         return CCType(value);
@@ -146,6 +149,7 @@ pub struct MidiParser
 
 impl MidiParser
 {
+    #[must_use]
     pub fn parse_byte(&mut self, data: u8) -> Option<MidiCode>
     {
         if self.in_exclusive

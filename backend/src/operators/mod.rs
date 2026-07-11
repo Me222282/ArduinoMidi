@@ -7,8 +7,9 @@ pub use output::*;
 
 use api::{Channel, Externals, Note};
 
-use crate::{ChannelRedirect, OutputConfig, SlotSelect};
+use crate::{ChannelRedirect, OutputConfig};
 
+#[must_use]
 pub(crate) fn process_note(mut channel: Channel, mut note: Note, config: &OutputConfig) -> Option<(Channel, Note)>
 {
     // Channel Redirect
@@ -28,6 +29,7 @@ pub(crate) fn process_note(mut channel: Channel, mut note: Note, config: &Output
     }
     return Some((channel, note));
 }
+#[must_use]
 fn apply_redirect(cr: &ChannelRedirect, channel: Channel, note: Note) -> Channel
 {
     if !cr.enabled ||
@@ -46,6 +48,7 @@ pub(crate) struct ChannelOutput<'a, E: Externals>
 }
 impl<'a, E: Externals> ChannelOutput<'a, E>
 {
+    #[must_use]
     pub fn new(output: &'a mut Output<E>, channel: Channel) -> Self
     {
         return Self { output, channel };

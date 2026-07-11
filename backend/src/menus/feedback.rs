@@ -20,12 +20,14 @@ pub struct MenuFeedback
 impl MenuFeedback
 {
     #[inline]
+    #[must_use]
     pub const fn new(key: u8, duration: u32, channel: Channel) -> Self
     {
         return Self { key, duration, channel };
     }
     
     #[inline]
+    #[must_use]
     pub const fn note_fail(channel: Channel) -> Self
     {
         return Self {
@@ -35,6 +37,7 @@ impl MenuFeedback
         };
     }
     #[inline]
+    #[must_use]
     pub const fn note_fail_short(channel: Channel) -> Self
     {
         return Self {
@@ -44,6 +47,7 @@ impl MenuFeedback
         };
     }
     #[inline]
+    #[must_use]
     pub const fn note_on(channel: Channel) -> Self
     {
         return Self {
@@ -53,6 +57,7 @@ impl MenuFeedback
         };
     }
     #[inline]
+    #[must_use]
     pub const fn note_on_short(channel: Channel) -> Self
     {
         return Self {
@@ -62,6 +67,7 @@ impl MenuFeedback
         };
     }
     #[inline]
+    #[must_use]
     pub const fn note_off(channel: Channel) -> Self
     {
         return Self {
@@ -71,6 +77,7 @@ impl MenuFeedback
         };
     }
     #[inline]
+    #[must_use]
     pub const fn note_off_short(channel: Channel) -> Self
     {
         return Self {
@@ -80,6 +87,7 @@ impl MenuFeedback
         };
     }
     #[inline]
+    #[must_use]
     pub const fn note_select(channel: Channel) -> Self
     {
         return Self {
@@ -89,6 +97,7 @@ impl MenuFeedback
         };
     }
     #[inline]
+    #[must_use]
     pub const fn note_select_short(channel: Channel) -> Self
     {
         return Self {
@@ -98,6 +107,7 @@ impl MenuFeedback
         };
     }
     #[inline]
+    #[must_use]
     pub const fn note_option(channel: Channel) -> Self
     {
         return Self {
@@ -107,6 +117,7 @@ impl MenuFeedback
         };
     }
     #[inline]
+    #[must_use]
     pub const fn note_option_short(channel: Channel) -> Self
     {
         return Self {
@@ -116,6 +127,7 @@ impl MenuFeedback
         };
     }
     #[inline]
+    #[must_use]
     pub const fn boolean(value: bool, channel: Channel) -> Self
     {
         return Self {
@@ -127,6 +139,8 @@ impl MenuFeedback
             channel
         };
     }
+    #[inline]
+    #[must_use]
     pub const fn number(key: u8, channel: Channel) -> Self
     {
         return Self {
@@ -135,6 +149,8 @@ impl MenuFeedback
             channel
         };
     }
+    #[inline]
+    #[must_use]
     pub const fn slot(key: u8, channel: Channel) -> Self
     {
         return Self {

@@ -76,6 +76,8 @@ pub struct Gate(u8);
 
 impl Gate
 {
+    #[inline]
+    #[must_use]
     pub fn set(self, bit: u8, value: bool) -> Gate
     {
         return match value
@@ -84,36 +86,52 @@ impl Gate
             false => self.off(bit)
         };
     }
+    #[inline]
+    #[must_use]
     pub fn on(self, bit: u8) -> Gate
     {
         return Gate(self.0 | 1 << bit);
     }
+    #[inline]
+    #[must_use]
     pub fn off(self, bit: u8) -> Gate
     {
         return Gate(self.0 & !(1 << bit));
     }
+    #[inline]
+    #[must_use]
     pub fn get(&self, bit: u8) -> bool
     {
         return (self.0 & 1 << bit) > 0;
     }
     
+    #[inline]
+    #[must_use]
     pub const fn zero() -> Gate
     {
         return Gate(0);
     }
+    #[inline]
+    #[must_use]
     pub const fn all_on() -> Gate
     {
         return Gate(0b00011111);
     }
+    #[inline]
+    #[must_use]
     pub const fn new(value: u8) -> Gate
     {
         return Gate(value);
     }
     
+    #[inline]
+    #[must_use]
     pub const fn invert(self) -> Gate
     {
         return Gate(!self.0);
     }
+    #[inline]
+    #[must_use]
     pub const fn mask(self, mask: Gate) -> Gate
     {
         return Gate(self.0 & mask.0);

@@ -47,11 +47,13 @@ impl<E: api::Externals> Output<E>
     }
     
     #[inline]
+    #[must_use]
     pub(crate) fn get_only_note(&self) -> Option<Note>
     {
         return get_only_note(&self.note_manager);
     }
     
+    #[must_use]
     fn get_note_collection(note_manager: &mut SA<NoteCollection, 5>, channel: Channel) -> Option<&mut NoteCollection>
     {
         for nc in note_manager.iter_mut()

@@ -77,6 +77,7 @@ impl TriggerSource
             TriggerSource::MidiClock => {}
         }
     }
+    #[must_use]
     pub fn get_channel(self) -> Channel
     {
         return match self

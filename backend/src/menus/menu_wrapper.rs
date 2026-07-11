@@ -9,6 +9,7 @@ pub trait MenuWrapTrait
     
     fn on_reset_switch(&mut self) -> (bool, Option<MenuFeedback>) { (true, None) }
     fn on_message(&mut self, _message: MidiCode) { }
+    #[must_use]
     fn allow_message(&self, _message: MidiCode) -> bool { true }
 }
 
@@ -35,6 +36,8 @@ macro_rules! create_dynamic_menus
         
         impl $name
         {
+            #[inline]
+            #[must_use]
             pub fn is_none(&self) -> bool
             {
                 return match self
@@ -95,6 +98,7 @@ pub(in crate::menus) use create_dynamic_menus;
 
 pub const MAX_DIGITS: usize = 5;
 
+#[must_use]
 fn get_value(digits: &[u8; 5], start: u8) -> usize
 {
     let start = start as usize;
@@ -130,6 +134,7 @@ pub(in crate::menus) struct MenuWrapper<T: Menu>
 }
 impl<T: Menu> MenuWrapper<T>
 {
+    #[must_use]
     pub fn new(menu: T) -> Self
     {
         return Self {
@@ -143,6 +148,7 @@ impl<T: Menu> MenuWrapper<T>
             menu
         };
     }
+    #[must_use]
     pub fn into_menu(self) -> T
     {
         return self.menu;
@@ -339,7 +345,6 @@ impl<T: Menu> MenuWrapTrait for MenuWrapper<T>
         return (false, Some(MenuFeedback::note_fail(Channel::All)));
     }
     
-    #[inline]
     fn off_note(&mut self, config: &mut Configuration, channel: Channel, note: Note)
     {
         if let MenuState::TapTime { key, channel: cf } = self.state

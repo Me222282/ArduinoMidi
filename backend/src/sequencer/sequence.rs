@@ -53,7 +53,7 @@ impl Sequence
             let current = &self.tracks[0];
             let track = current.0.get_ref(bank);
             self.half_time = track.half_time;
-            self.current_clock_div = track.clock_div;
+            self.current_clock_div = track.get_clock_div();
             self.use_mod = track.use_mod;
             
             self.next_step = track.get_step(0).unwrap_or((NOTE_OFF, 0));
@@ -108,12 +108,14 @@ impl Sequence
         self.one_shot = true;
     }
     
+    #[must_use]
     fn get_last_mod(&self, bank: &TrackBank) -> u16
     {
         let track = self.tracks[self.size as usize - 1].0.get_ref(bank);
         return track.get_last_step().1;
     }
     /// run after `inc_track` to get the correct data
+    #[must_use]
     fn get_next_mod(&self, bank: &TrackBank) -> u16
     {
         let ts = self.track_step + 1;
@@ -263,7 +265,7 @@ impl Sequence
         
         // get data about current track
         let track = current.0.get_ref(bank);
-        self.current_clock_div = track.clock_div;
+        self.current_clock_div = track.get_clock_div();
         self.half_time = track.half_time;
         self.use_mod = track.use_mod;
         // now get first note

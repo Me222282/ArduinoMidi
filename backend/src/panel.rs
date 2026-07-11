@@ -65,6 +65,7 @@ impl<E: Externals> Panel<E>
     //     }
     // }
     #[inline]
+    #[must_use]
     fn is_vf_mod(&self, slot: usize) -> bool
     {
         unsafe
@@ -75,6 +76,7 @@ impl<E: Externals> Panel<E>
         }
     }
     #[inline]
+    #[must_use]
     fn is_vf_velocity(&self, slot: usize) -> bool
     {
         unsafe
@@ -84,6 +86,7 @@ impl<E: Externals> Panel<E>
                 !self.state.modulation;
         }
     }
+    #[must_use]
     fn get_vf_cc_channel(&self, slot: usize, cc: CCType) -> Option<Channel>
     {
         unsafe
@@ -104,6 +107,7 @@ impl<E: Externals> Panel<E>
         }
     }
     #[inline]
+    #[must_use]
     fn is_vf_trigger(&self, slot: usize, source: TriggerSource) -> bool
     {
         unsafe
@@ -245,6 +249,7 @@ impl<E: Externals> Panel<E>
     }
     
     #[inline]
+    #[must_use]
     fn calculate_pb(&self, vibrato: &mut VibratoOp, pb: isize, offset: isize, channel: Channel, slot: usize) -> u16
     {
         if offset == 0
@@ -522,6 +527,7 @@ impl<E: Externals> Panel<E>
     }
 }
 
+#[must_use]
 fn shift_note(key: u8, octave: i8) -> u8
 {
     let nk = key as isize + octave as isize * 12;

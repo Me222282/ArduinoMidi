@@ -22,11 +22,12 @@ pub struct NoteCollection
 
 impl NoteCollection
 {
+    #[must_use]
     pub fn new(channel: Channel, voices: u8) -> NoteCollection
     {
         return Self {
             notes: LinkedList::new(alloc::alloc::Global),
-            locations: SA::from_iter((0..voices).map(|_| None)),
+            locations: SA::from_iter(core::iter::repeat_with(|| None)),
             old_notes: SA::new(0xFF, voices as usize),
             history: Queue::from_iter(0..5, voices as usize),
             channel
@@ -50,6 +51,7 @@ impl NoteCollection
         self.notes = LinkedList::new(alloc::alloc::Global)
     }
     
+    #[must_use]
     pub fn is_channel(&self, channel: Channel) -> bool
     {
         return self.channel == channel;
@@ -154,6 +156,7 @@ impl NoteCollection
         }
     }
     
+    #[must_use]
     fn get_next_note(&self, panel: &PanelState) -> Option<RefNode<(Note, i8)>>
     {
         // all notes in use
@@ -202,6 +205,7 @@ impl NoteCollection
         return None;
     }
     
+    #[must_use]
     fn find_next_index(&mut self, config: &NoteConfig, panel: &PanelState, key: u8) -> Option<usize>
     {
         if !config.duplicate_release
@@ -231,6 +235,7 @@ impl NoteCollection
         return None;
     }
     
+    #[must_use]
     fn losable_u_note(&self, panel: &PanelState) -> Option<RefNode<(Note, i8)>>
     {
         match panel.input
@@ -273,6 +278,7 @@ impl NoteCollection
         }
     }
     
+    #[must_use]
     fn losable_o_note(&self, panel: &PanelState, key: u8) -> Option<RefNode<(Note, i8)>>
     {
         match panel.input
@@ -396,6 +402,7 @@ impl NoteCollection
         }
     }
     
+    #[must_use]
     fn get_losable_note(&self, config: &NoteConfig, panel: &PanelState, key: u8) -> Option<RefNode<(Note, i8)>>
     {
         if config.sort_notes
@@ -406,6 +413,7 @@ impl NoteCollection
     }
 }
 
+#[must_use]
 pub(crate) fn get_only_note(manager: &SA<NoteCollection, 5>) -> Option<Note>
 {
     let mut note = Note::new(0, 0);
