@@ -8,10 +8,16 @@ pub struct CubicInput
 
 impl CubicInput
 {
+    #[inline]
     pub const fn new(x: f32) -> CubicInput
     {
         let x2 = x * x;
         return CubicInput { x3: x2 * x, x2, x };
+    }
+    #[inline]
+    pub const fn get_x(self) -> f32
+    {
+        return self.x;
     }
 }
 
@@ -26,7 +32,7 @@ impl Cubic
     }
     
     /// the points used are:
-    /// ([`-1.0`], `p1`), ([`0.0`], `p2`), ([`1.0`], `p3`), ([`2.0`], `p4`)
+    /// (`-1.0`, `p1`), (`0.0`, `p2`), (`1.0`, `p3`), (`2.0`, `p4`)
     pub const fn generate(p1: u16, p2: u16, p3: u16, p4: u16) -> Cubic
     {
         let d = p2 as f32;

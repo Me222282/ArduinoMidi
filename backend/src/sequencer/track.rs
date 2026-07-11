@@ -72,6 +72,10 @@ impl TrackData
         let value = self.steps[step as usize];
         return Some((value.0, value.1));
     }
+    pub fn get_last_step(&self) -> (Note, u16)
+    {
+        return self.steps[self.size as usize];
+    }
     pub fn is_empty(&self) -> bool
     {
         return self.clock_div == 0;
