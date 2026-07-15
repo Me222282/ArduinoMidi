@@ -8,7 +8,7 @@ pub trait MenuWrapTrait
     fn off_note(&mut self, _config: &mut Configuration, _channel: Channel, _note: Note) { }
     
     fn on_reset_switch(&mut self) -> (bool, Option<MenuFeedback>) { (true, None) }
-    fn on_message(&mut self, _message: MidiCode) { }
+    fn on_message<E: api::Externals>(&mut self, _output: &mut crate::Output<E>, message: MidiCode) { }
     #[must_use]
     fn allow_message(&self, _message: MidiCode) -> bool { true }
 }
@@ -75,12 +75,12 @@ macro_rules! create_dynamic_menus
                     $(Self::$n(t) => t.on_reset_switch()),+
                 }
             }
-            fn on_message(&mut self, message: api::MidiCode)
+            fn on_message<E: api::Externals>(&mut self, output: &mut crate::Output<E>, message: api::MidiCode)
             {
                 match self
                 {
                     Self::None => {},
-                    $(Self::$n(t) => t.on_message(message)),+
+                    $(Self::$n(t) => t.on_message(output, message)),+
                 }
             }
             fn allow_message(&self, message: api::MidiCode) -> bool
@@ -385,9 +385,9 @@ impl<T: Menu> MenuWrapTrait for MenuWrapper<T>
         self.menu.off_note(channel, note);
     }
     #[inline]
-    fn on_message(&mut self, message: MidiCode)
+    fn on_message<E: api::Externals>(&mut self, output: &mut crate::Output<E>, message: MidiCode)
     {
-        self.menu.on_message(message);
+        self.menu.on_message(output, message);
     }
     #[inline]
     fn allow_message(&self, message: MidiCode) -> bool

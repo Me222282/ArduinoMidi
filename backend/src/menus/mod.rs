@@ -13,7 +13,7 @@ pub use manager::*;
 
 use core::ops::RangeBounds;
 use api::{Channel, MidiCode, Note, NoteKey, NvsInterface};
-use crate::Configuration;
+use crate::{Configuration, Output};
 
 macro_rules! menu_toggle
 {
@@ -108,7 +108,7 @@ pub trait Menu
     fn on_custom_state(&mut self, _state: Self::State, _channel: Channel, _note: Note) -> (MenuState<Self::State>, Option<MenuFeedback>) { (MenuState::Listening, None) }
     
     fn off_note(&self, _channel: Channel, _note: Note) { }
-    fn on_message(&self, _message: MidiCode) { }
+    fn on_message<E: api::Externals>(&mut self, _output: &mut Output<E>, _message: MidiCode) { }
     #[must_use]
     fn allow_message(&self, _message: MidiCode) -> bool { true }
     

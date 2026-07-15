@@ -69,6 +69,17 @@ impl Menu for SequencerMenu
     {
         return (MenuState::Custom(state), None);
     }
+    fn on_message<E: api::Externals>(&mut self, output: &mut crate::Output<E>, message: api::MidiCode)
+    {
+        match message
+        {
+            api::MidiCode::TimingClock =>
+            {
+                self.sequencer.on_clock(output);
+            },
+            _ => {}
+        }
+    }
     
     fn on_number_input(&mut self, _config: &mut Configuration, value: Option<usize>, _channel: Channel, key: u8)
     {

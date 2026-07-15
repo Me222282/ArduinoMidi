@@ -174,9 +174,9 @@ impl MenuWrapTrait for MenuManager
         return self.menu.on_reset_switch();
     }
     #[inline]
-    fn on_message(&mut self, message: api::MidiCode)
+    fn on_message<E: api::Externals>(&mut self, output: &mut crate::Output<E>, message: api::MidiCode)
     {
-        return self.menu.on_message(message);
+        return self.menu.on_message(output, message);
     }
     #[inline]
     fn allow_message(&self, message: api::MidiCode) -> bool

@@ -110,9 +110,9 @@ impl<E: api::Externals, N: NvsInterface> Program<E, N>
             MidiCode::TimingClock =>
             {
                 self.arpeggio.on_clock(&mut self.output);
-                self.menu.on_message(message);
+                self.menu.on_message(&mut self.output, message);
             }
-            _ => self.menu.on_message(message)
+            _ => self.menu.on_message(&mut self.output, message)
         }
     }
     
