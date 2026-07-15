@@ -343,7 +343,7 @@ impl<E: Externals> Panel<E>
                 {
                     if com != ChannelVoice::new(c, v) { continue; }
                     
-                    value.on(i as u8);
+                    value = value.on(i as u8);
                 }
             },
             SlotSelect::Channel(Channel::All) | 
@@ -357,7 +357,7 @@ impl<E: Externals> Panel<E>
                 {
                     if com.get_channel() != c { continue; }
                     
-                    value.on(i as u8);
+                    value = value.on(i as u8);
                 }
             },
             SlotSelect::Voice(v) =>
@@ -366,12 +366,12 @@ impl<E: Externals> Panel<E>
                 {
                     if com.get_voice() != v { continue; }
                     
-                    value.on(i as u8);
+                    value = value.on(i as u8);
                 }
             },
             SlotSelect::Index(i) =>
             {
-                value.on(i);
+                value = value.on(i);
             }
         }
         
@@ -395,7 +395,7 @@ impl<E: Externals> Panel<E>
                 {
                     if com != ChannelVoice::new(c, v) { continue; }
                     
-                    value.off(i as u8);
+                    value = value.off(i as u8);
                 }
             },
             SlotSelect::Channel(c) =>
@@ -404,7 +404,7 @@ impl<E: Externals> Panel<E>
                 {
                     if com.get_channel() != c { continue; }
                     
-                    value.off(i as u8);
+                    value = value.off(i as u8);
                 }
             },
             SlotSelect::Voice(v) =>
@@ -413,12 +413,12 @@ impl<E: Externals> Panel<E>
                 {
                     if com.get_voice() != v { continue; }
                     
-                    value.off(i as u8);
+                    value = value.off(i as u8);
                 }
             },
             SlotSelect::Index(i) =>
             {
-                value.off(i);
+                value = value.off(i);
             },
             SlotSelect::All =>
             {
