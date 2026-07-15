@@ -44,13 +44,6 @@ impl Default for TrackRef
     }
 }
 
-pub enum AddStepResult
-{
-    Ok,
-    End,
-    Error
-}
-
 /// Do not stack alloc
 #[derive(Debug)]
 pub(super) struct TrackData

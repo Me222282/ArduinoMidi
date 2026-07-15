@@ -40,7 +40,8 @@ impl SequencerMenu
             SET_BAR_SIZE => {state = MenuState::number(3, 1..=127, note.key, Channel::All); None},
             SET_SEQ_TIME => {state = MenuState::number(3, 10.., note.key, Channel::All); None},
             TAP_TEMPO => {state = MenuState::TapTime { key: note.key, channel: Channel::All }; None},
-            Note::D3 => {
+            Note::D3 =>
+            {
                 self.sequencer.play_mode += channel.into();
                 None
             },
@@ -61,67 +62,83 @@ impl SequencerMenu
             },
             
             Note::C5 => Some(MenuFeedback::boolean(self.sequencer.play_stop_seq(0), self.sequencer.get_channel(0))),
-            Note::Db5 => {
+            Note::Db5 =>
+            {
                 self.sequencer.sequences[0].inc_skip();
                 Some(MenuFeedback::note_option(self.sequencer.get_channel(0)))
             },
             Note::D5 => Some(MenuFeedback::boolean(self.sequencer.play_stop_seq(1), self.sequencer.get_channel(1))),
-            Note::Eb5 => {
+            Note::Eb5 =>
+            {
                 self.sequencer.sequences[1].inc_skip();
                 Some(MenuFeedback::note_option(self.sequencer.get_channel(1)))
             },
             Note::E5 => Some(MenuFeedback::boolean(self.sequencer.play_stop_seq(2), self.sequencer.get_channel(2))),
             Note::F5 => Some(MenuFeedback::boolean(self.sequencer.play_stop_seq(3), self.sequencer.get_channel(3))),
-            Note::Gb5 => {
+            Note::Gb5 =>
+            {
                 self.sequencer.sequences[2].inc_skip();
                 Some(MenuFeedback::note_option(self.sequencer.get_channel(2)))
             },
             Note::G5 => Some(MenuFeedback::boolean(self.sequencer.play_stop_seq(4), self.sequencer.get_channel(4))),
-            Note::Ab5 => {
+            Note::Ab5 =>
+            {
                 self.sequencer.sequences[3].inc_skip();
                 Some(MenuFeedback::note_option(self.sequencer.get_channel(3)))
             },
-            Note::Bb5 => {
+            Note::Bb5 =>
+            {
                 self.sequencer.sequences[4].inc_skip();
                 Some(MenuFeedback::note_option(self.sequencer.get_channel(4)))
             },
-            Note::C6 => {
+            
+            Note::C6 =>
+            {
                 self.sequencer.one_shot_seq(0);
                 Some(MenuFeedback::note_on(self.sequencer.get_channel(0)))
             },
-            Note::Db6 => {
+            Note::Db6 =>
+            {
                 self.sequencer.reset_seq(0);
                 Some(MenuFeedback::note_option(self.sequencer.get_channel(0)))
             },
-            Note::D6 => {
+            Note::D6 =>
+            {
                 self.sequencer.one_shot_seq(1);
                 Some(MenuFeedback::note_on(self.sequencer.get_channel(1)))
             },
-            Note::Eb6 => {
+            Note::Eb6 =>
+            {
                 self.sequencer.reset_seq(1);
                 Some(MenuFeedback::note_option(self.sequencer.get_channel(1)))
             },
-            Note::E6 => {
+            Note::E6 =>
+            {
                 self.sequencer.one_shot_seq(2);
                 Some(MenuFeedback::note_on(self.sequencer.get_channel(2)))
             },
-            Note::F6 => {
+            Note::F6 =>
+            {
                 self.sequencer.one_shot_seq(3);
                 Some(MenuFeedback::note_on(self.sequencer.get_channel(3)))
             },
-            Note::Gb6 => {
+            Note::Gb6 =>
+            {
                 self.sequencer.reset_seq(2);
                 Some(MenuFeedback::note_option(self.sequencer.get_channel(2)))
             },
-            Note::G6 => {
+            Note::G6 =>
+            {
                 self.sequencer.one_shot_seq(4);
                 Some(MenuFeedback::note_on(self.sequencer.get_channel(4)))
             },
-            Note::Ab6 => {
+            Note::Ab6 =>
+            {
                 self.sequencer.reset_seq(3);
                 Some(MenuFeedback::note_option(self.sequencer.get_channel(3)))
             },
-            Note::Bb6 => {
+            Note::Bb6 =>
+            {
                 self.sequencer.reset_seq(4);
                 Some(MenuFeedback::note_option(self.sequencer.get_channel(4)))
             },

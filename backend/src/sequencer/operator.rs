@@ -1,5 +1,5 @@
 use alloc::boxed::Box;
-use api::{Channel, ChannelSelect, Note};
+use api::{Channel, ChannelSelect};
 
 use crate::{Output, SequencerConfig, sequencer::{Sequence, TrackBank}};
 
@@ -13,6 +13,8 @@ pub struct Sequencer
     
     on_stop: bool,
     on_continue: bool,
+    playing_time: u32,
+    last_time: u32,
     
     seq_play: [bool; 5],
     pub(super) sequences: [Box<Sequence>; 5],
@@ -27,6 +29,45 @@ impl Sequencer
     }
     
     pub fn on_loop<E: api::Externals>(&mut self, output: &mut Output<E>, time: u32)
+    {
+        self.on_update(output);
+        
+        // doesnt matter about last_time not being updated if not in the sequencer menu
+        // as when first entered - no sequences will be playing straight the next on_loop
+        let dt = time - self.last_time;
+        self.last_time = time;
+        
+        if !self.playing || self.config.clocked_sequencer { return; }
+        
+        self.playing_time += dt;
+        if self.playing_time >= self.config.sequencer_tempo_time
+        {
+            self.playing_time -= dt;
+            self.on_time_step(output);
+        }
+        
+        let sub = self.playing_time as f32 / self.config.sequencer_tempo_time as f32;
+        self.on_sub_step(output, sub);
+    }
+    pub fn on_clock<E: api::Externals>(&mut self, output: &mut Output<E>)
+    {
+        // always counting
+        let acc = self.playing_time;
+        // use playing time as step counter
+        self.playing_time += 1;
+        
+        if !self.playing || !self.config.clocked_sequencer { return; }
+        
+        if acc % 3 == 0
+        {
+            self.on_time_step(output);
+        }
+        
+        let sub = (acc % 3) as f32 / 3.0;
+        self.on_sub_step(output, sub);
+    }
+    /// every loop - perform user inputs that need access to `output`
+    fn on_update<E: api::Externals>(&mut self, output: &mut Output<E>)
     {
         if self.on_stop
         {
@@ -60,14 +101,23 @@ impl Sequencer
                 s.stop(output.get_channel_only(s.channel));
             }
         }
-        
-        if !self.playing || self.config.clocked_sequencer { return; }
     }
-    pub fn on_clock<E: api::Externals>(&mut self, output: &mut Output<E>)
+    fn on_time_step<E: api::Externals>(&mut self, output: &mut Output<E>)
     {
-        if !self.playing || !self.config.clocked_sequencer { return; }
-        
-        
+        for (s, enabled) in self.sequences.iter_mut().zip(self.seq_play)
+        {
+            if !enabled { continue; }
+            s.on_time_step(output.get_channel_only(s.channel), &self.bank);
+        }
+    }
+    /// `sub` is 0.0 - 1.0 between every `on_time_step`
+    fn on_sub_step<E: api::Externals>(&mut self, output: &mut Output<E>, sub: f32)
+    {
+        for (s, enabled) in self.sequences.iter_mut().zip(self.seq_play)
+        {
+            if !enabled { continue; }
+            s.on_sub_step(output.get_channel_only(s.channel), sub);
+        }
     }
     
     #[inline]
@@ -78,6 +128,7 @@ impl Sequencer
     pub fn play(&mut self)
     {
         self.playing = true;
+        self.playing_time = 0;
         
         // start sequencers
         for (s, enabled) in self.sequences.iter_mut().zip(self.seq_play)

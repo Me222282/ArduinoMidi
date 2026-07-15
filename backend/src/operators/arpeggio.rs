@@ -214,7 +214,8 @@ impl Arpeggiator
     pub fn on_loop<E: api::Externals>(&mut self, time: u32, output: &mut Output<E>)
     {
         if self.config.clocked_arpeggios { return; }
-        
+        // doesnt matter about last_time not being updated if not clocked
+        // as if clocked is set to false - no arpeggios will be going straight the next on_loop
         let dt = time - self.last_time;
         self.last_time = time;
         
@@ -244,8 +245,11 @@ impl Arpeggiator
     
     pub fn on_clock<E: api::Externals>(&mut self, output: &mut Output<E>)
     {
+        // always counting
         let acc = self.clock_count;
         self.clock_count += 1;
+        
+        if !self.config.clocked_arpeggios { return; }
         
         if acc % 6 == 0
         {

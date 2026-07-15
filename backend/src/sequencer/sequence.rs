@@ -79,6 +79,12 @@ impl Sequence
     {
         self.time_steps = (self.current_clock_div as u16) << 1;
     }
+    #[inline]
+    #[must_use]
+    fn sub_time_scale(&mut self) -> u16
+    {
+        return (self.current_clock_div as u16) << 1 - self.time_steps;
+    }
     
     #[inline]
     pub fn playing(&self) -> bool
@@ -271,11 +277,15 @@ impl Sequence
             }
         }
     }
-    pub fn on_sub_step<E: Externals>(&mut self, mut output: ChannelOutput<E>, time: CubicInput)
+    pub fn on_sub_step<E: Externals>(&mut self, mut output: ChannelOutput<E>, mut time: f32)
     {
         if !self.playing || !self.use_mod { return; }
         
-        let m = self.cubic.compute(time);
+        // scale so that 0.0 - 1.0 between on_time_step is 0.0 - 1.0 for every actual step
+        time *= self.sub_time_scale() as f32;
+        let ci = CubicInput::new(time);
+        
+        let m = self.cubic.compute(ci);
         output.set_modulation((m as u16).clamp(0, 0x3FFF));
     }
     
