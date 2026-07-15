@@ -96,10 +96,17 @@ pub trait Menu
     
     #[inline]
     #[must_use]
-    fn auto_close() -> bool { return true; }
+    fn on_reset_switch(&mut self, _current: MenuState<Self::State>) -> MenuState<Self::State> { return MenuState::Exit; }
     #[inline]
     #[must_use]
     fn menu_feedback(&self) -> bool { return true; }
+    #[inline]
+    #[must_use]
+    fn return_state(&self) -> MenuState<Self::State> { return MenuState::Listening; }
+    #[inline]
+    #[must_use]
+    /// whether on not notes are processed by the menu
+    fn note_filter(&self, _channel: Channel, _note: Note) -> bool { return true; }
     
     fn on_note(&mut self, config: &mut Configuration, channel: Channel, note: Note) -> (MenuState<Self::State>, Option<MenuFeedback>);
     fn on_number_input(&mut self, _config: &mut Configuration, _value: Option<usize>, _channel: Channel, _key: u8) { }

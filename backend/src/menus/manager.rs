@@ -159,14 +159,14 @@ impl MenuManager
 impl MenuWrapTrait for MenuManager
 {
     #[inline]
-    fn on_note<T: api::NvsInterface>(&mut self, config: &mut crate::Configuration, nvs: &mut T, time: u32, channel: api::Channel, note: api::Note) -> (bool, Option<super::MenuFeedback>)
+    fn on_note<T: api::NvsInterface>(&mut self, config: &mut crate::Configuration, nvs: &mut T, time: u32, channel: api::Channel, note: api::Note) -> Option<(bool, Option<super::MenuFeedback>)>
     {
         return self.menu.on_note(config, nvs, time, channel, note);
     }
     #[inline]
-    fn off_note(&mut self, config: &mut crate::Configuration, channel: api::Channel, note: api::Note)
+    fn off_note(&mut self, config: &mut crate::Configuration, channel: api::Channel, note: api::Note) -> bool
     {
-        self.menu.off_note(config, channel, note);
+        return self.menu.off_note(config, channel, note);
     }
     #[inline]
     fn on_reset_switch(&mut self) -> (bool, Option<super::MenuFeedback>)

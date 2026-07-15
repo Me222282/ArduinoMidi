@@ -1,6 +1,6 @@
 #![allow(non_upper_case_globals)]
 
-use core::ops::{BitAnd, BitAndAssign, BitOr, BitOrAssign};
+use core::ops::{Add, AddAssign, BitAnd, BitAndAssign, BitOr, BitOrAssign, Sub, SubAssign};
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub struct Switch(u8);
@@ -172,6 +172,98 @@ impl Channel
             15 => Channel::C16,
             _ => Channel::All
         }
+    }
+}
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct ChannelSelect(u16);
+impl ChannelSelect
+{
+    pub const C1: Self = Self::new(Channel::C1);
+    pub const C2: Self = Self::new(Channel::C2);
+    pub const C3: Self = Self::new(Channel::C3);
+    pub const C4: Self = Self::new(Channel::C4);
+    pub const C5: Self = Self::new(Channel::C5);
+    pub const C6: Self = Self::new(Channel::C6);
+    pub const C7: Self = Self::new(Channel::C7);
+    pub const C8: Self = Self::new(Channel::C8);
+    pub const C9: Self = Self::new(Channel::C9);
+    pub const C10: Self = Self::new(Channel::C10);
+    pub const C11: Self = Self::new(Channel::C11);
+    pub const C12: Self = Self::new(Channel::C12);
+    pub const C13: Self = Self::new(Channel::C13);
+    pub const C14: Self = Self::new(Channel::C14);
+    pub const C15: Self = Self::new(Channel::C15);
+    pub const C16: Self = Self::new(Channel::C16);
+    pub const All: Self = Self::new(Channel::All);
+    
+    #[must_use]
+    pub const fn new(channel: Channel) -> Self
+    {
+        return match channel
+        {
+            // Channel::C1 => Self(0b1),
+            // Channel::C2 => Self(0b10),
+            // Channel::C3 => Self(0b100),
+            // Channel::C4 => Self(0b1000),
+            // Channel::C5 => Self(0b1_0000),
+            // Channel::C6 => Self(0b10_0000),
+            // Channel::C7 => Self(0b100_0000),
+            // Channel::C8 => Self(0b1000_0000),
+            // Channel::C9 => Self(0b1_0000_0000),
+            // Channel::C10 => Self(0b10_0000_0000),
+            // Channel::C11 => Self(0b100_0000_0000),
+            // Channel::C12 => Self(0b1000_0000_0000),
+            // Channel::C13 => Self(0b1_0000_0000_0000),
+            // Channel::C14 => Self(0b10_0000_0000_0000),
+            // Channel::C15 => Self(0b100_0000_0000_0000),
+            // Channel::C16 => Self(0b1000_0000_0000_0000),
+            Channel::All => Self(0b1111_1111_1111_1111),
+            _ => Self(1 << channel as u16)
+        };
+    }
+    
+    #[must_use]
+    pub const fn has_channel(self, channel: Channel) -> bool
+    {
+        let check = Self::new(channel);
+        return check.0 & self.0 == check.0;
+    }
+}
+impl From<Channel> for ChannelSelect
+{
+    fn from(value: Channel) -> Self
+    {
+        return Self::new(value);
+    }
+}
+impl Add for ChannelSelect
+{
+    type Output = Self;
+    fn add(self, rhs: Self) -> Self
+    {
+        return Self(self.0 | rhs.0);
+    }
+}
+impl AddAssign for ChannelSelect
+{
+    fn add_assign(&mut self, rhs: Self)
+    {
+        self.0 |= rhs.0;
+    }
+}
+impl Sub for ChannelSelect
+{
+    type Output = Self;
+    fn sub(self, rhs: Self) -> Self
+    {
+        return Self(self.0 & !rhs.0);
+    }
+}
+impl SubAssign for ChannelSelect
+{
+    fn sub_assign(&mut self, rhs: Self)
+    {
+        self.0 &= !rhs.0;
     }
 }
 

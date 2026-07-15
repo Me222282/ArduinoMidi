@@ -44,11 +44,10 @@ impl<E: api::Externals, N: NvsInterface> Program<E, N>
                         vibrato: &mut self.output.vibrato.config,
                         arpeggio: &mut self.arpeggio.config
                     };
-                    self.menu.off_note(&mut config, channel, note);
-                    // sequencer
-                    if let Some(s) = self.menu.is_sequencer()
+                    // do normal note if not processed
+                    if !self.menu.off_note(&mut config, channel, note)
                     {
-                        s.sequencer.off_note(&mut self.output, channel, note);
+                        self.arpeggio.off_note(&mut self.output, channel, note);
                     }
                 }
                 else
@@ -70,33 +69,34 @@ impl<E: api::Externals, N: NvsInterface> Program<E, N>
                         arpeggio: &mut self.arpeggio.config
                     };
                     let exit = self.menu.on_note(&mut config, nvs, time, channel, note);
-                    if let Some(fb) = exit.1 { self.output.menu_feedback(fb, time); }
-                    // exit menu
-                    if exit.0 { self.menu.exit(); }
-                    // sequencer
-                    else if let Some(s) = self.menu.is_sequencer()
+                    // was note processed
+                    if let Some(exit) = exit
                     {
-                        s.sequencer.on_note(&mut self.output, channel, note);
-                    }
-                    // special ops menu - factory reset
-                    else if self.menu.is_special_ops()
-                    {
-                        // repeated key in time
-                        if note.key == Note::B3 &&
-                            (self.factory_reset_count == 0 || time - self.factory_reset_time <= crate::FACTORY_RESET_TIME)
+                        if let Some(fb) = exit.1 { self.output.menu_feedback(fb, time); }
+                        // exit menu
+                        if exit.0 { self.menu.exit(); }
+                        // special ops menu - factory reset
+                        else if self.menu.is_special_ops()
                         {
-                            self.factory_reset_time = time;
-                            self.factory_reset_count += 1;
-                            if self.factory_reset_count >= 3
+                            // repeated key in time
+                            if note.key == Note::B3 &&
+                                (self.factory_reset_count == 0 || time - self.factory_reset_time <= crate::FACTORY_RESET_TIME)
                             {
-                                self.on_factory_reset(nvs);
+                                self.factory_reset_time = time;
+                                self.factory_reset_count += 1;
+                                if self.factory_reset_count >= 3
+                                {
+                                    self.on_factory_reset(nvs);
+                                }
+                            }
+                            else
+                            {
+                                self.factory_reset_count = 0;
                             }
                         }
-                        else
-                        {
-                            self.factory_reset_count = 0;
-                        }
                     }
+                    // otherwise do normal note
+                    self.arpeggio.on_note(&mut self.output, channel, note);
                 }
                 else
                 {

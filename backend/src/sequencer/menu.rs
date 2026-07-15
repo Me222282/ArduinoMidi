@@ -1,6 +1,8 @@
-use api::{Channel, Note};
+use api::{Channel, ChannelSelect, Note};
 
-use crate::{Configuration, Menu, MenuFeedback, MenuState, menu_toggle, sequencer::Sequencer, value_or_last};
+use crate::{Configuration, Menu, MenuFeedback, menu_toggle, sequencer::Sequencer, value_or_last};
+
+type MenuState = crate::MenuState<SeqMenuState>;
 
 // #[derive(Debug, Default)]
 pub struct SequencerMenu
@@ -8,6 +10,7 @@ pub struct SequencerMenu
     pub sequencer: Sequencer,
     bar_size_lv: usize,
     seq_time_lv: usize,
+    return_state: MenuState
 }
 
 const SET_BAR_SIZE: u8 = Note::B2;
@@ -17,34 +20,30 @@ const TAP_TEMPO: u8 = Note::Db3;
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum SeqMenuState
 {
-    PlayMode
+    
 }
 
-impl Menu for SequencerMenu
+impl SequencerMenu
 {
-    type State = SeqMenuState;
-    
-    #[inline]
-    fn auto_close() -> bool { return false; }
-    #[inline]
-    fn menu_feedback(&self) -> bool { return self.sequencer.is_playing() }
-    
-    fn on_note(&mut self, _config: &mut Configuration, channel: Channel, note: Note) -> (MenuState<SeqMenuState>, Option<MenuFeedback>)
+    /// menu options that can be used whilst playing
+    fn on_playing_note(&mut self, channel: Channel, note: Note) -> (MenuState, Option<MenuFeedback>)
     {
         let mut state = MenuState::Listening;
         let fb = match note.key
         {
+            Note::G2 =>
+            {
+                self.sequencer.play_mode -= ChannelSelect::All;
+                None
+            }
             Note::A2 => menu_toggle!(self.sequencer.config.on_bar_trigger),
             SET_BAR_SIZE => {state = MenuState::number(3, 1..=127, note.key, Channel::All); None},
             SET_SEQ_TIME => {state = MenuState::number(3, 10.., note.key, Channel::All); None},
             TAP_TEMPO => {state = MenuState::TapTime { key: note.key, channel: Channel::All }; None},
             Note::D3 => {
-                self.sequencer.play_mode = true;
-                state = MenuState::Custom(SeqMenuState::PlayMode);
+                self.sequencer.play_mode += channel.into();
                 None
             },
-            Note::Eb3 => menu_toggle!(self.sequencer.config.clocked_sequencer),
-            Note::Bb3 => return (MenuState::Exit, None),
             Note::C4 =>
             {
                 self.sequencer.play();
@@ -65,7 +64,61 @@ impl Menu for SequencerMenu
         
         return (state, fb);
     }
-    fn on_custom_state(&mut self, state: SeqMenuState, channel: Channel, note: Note) -> (MenuState<SeqMenuState>, Option<MenuFeedback>)
+}
+impl Menu for SequencerMenu
+{
+    type State = SeqMenuState;
+    
+    fn on_reset_switch(&mut self, current: MenuState) -> MenuState
+    {
+        // exit any play modes
+        self.sequencer.play_mode -= ChannelSelect::All;
+        self.sequencer.stop();
+        
+        if current == self.return_state
+        {
+            self.return_state = MenuState::Listening;
+            return MenuState::Listening;
+        }
+        
+        return self.return_state;
+    }
+    #[inline]
+    fn menu_feedback(&self) -> bool { return self.sequencer.is_playing() }
+    #[inline]
+    fn return_state(&self) -> MenuState { return self.return_state; }
+    #[inline]
+    fn note_filter(&self, channel: Channel, _note: Note) -> bool
+    {
+        return !self.sequencer.play_mode.has_channel(channel);
+    }
+    
+    #[inline]
+    fn on_note(&mut self, _config: &mut Configuration, channel: Channel, note: Note) -> (MenuState, Option<MenuFeedback>)
+    {
+        // playing menu only
+        if self.sequencer.is_playing()
+        {
+            return self.on_playing_note(channel, note);
+        }
+        
+        let mut state = MenuState::Listening;
+        let fb = match note.key
+        {
+            Note::Eb3 => menu_toggle!(self.sequencer.config.clocked_sequencer),
+            Note::Bb3 => return (MenuState::Exit, None),
+            // do the rest of the menu functions
+            _ =>
+            {
+                let res;
+                (state, res) = self.on_playing_note(channel, note);
+                res
+            }
+        };
+        
+        return (state, fb);
+    }
+    fn on_custom_state(&mut self, state: SeqMenuState, channel: Channel, note: Note) -> (MenuState, Option<MenuFeedback>)
     {
         return (MenuState::Custom(state), None);
     }

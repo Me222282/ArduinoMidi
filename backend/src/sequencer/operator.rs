@@ -1,5 +1,5 @@
 use alloc::boxed::Box;
-use api::{Channel, Note};
+use api::{Channel, ChannelSelect, Note};
 
 use crate::{Output, SequencerConfig, sequencer::{Sequence, TrackBank}};
 
@@ -9,7 +9,7 @@ pub struct Sequencer
     pub(super) config: SequencerConfig,
     playing: bool,
     
-    pub(super) play_mode: bool,
+    pub(super) play_mode: ChannelSelect,
     
     on_stop: bool,
     on_continue: bool,
@@ -25,20 +25,6 @@ impl Sequencer
         self.config.sequencer_tempo_time = value >> 1;
     }
     
-    pub fn on_note<E: api::Externals>(&self, output: &mut Output<E>, channel: Channel, note: Note)
-    {
-        if self.play_mode
-        {
-            output.push_note(channel, note);
-        }
-    }
-    pub fn off_note<E: api::Externals>(&self, output: &mut Output<E>, channel: Channel, note: Note)
-    {
-        if self.play_mode
-        {
-            output.remove_note(channel, note);
-        }
-    }
     pub fn on_loop<E: api::Externals>(&mut self, output: &mut Output<E>, time: u32)
     {
         if self.on_stop
