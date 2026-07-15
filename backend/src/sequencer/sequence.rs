@@ -87,9 +87,16 @@ impl Sequence
     }
     
     #[inline]
-    pub fn playing(&self) -> bool
+    #[must_use]
+    pub fn is_playing(&self) -> bool
     {
         return self.playing;
+    }
+    #[inline]
+    #[must_use]
+    pub fn use_mod(&self) -> bool
+    {
+        return self.use_mod;
     }
     
     pub fn play(&mut self, bank: &TrackBank)

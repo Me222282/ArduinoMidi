@@ -1,4 +1,4 @@
-use api::{Channel, ChannelSelect, Note};
+use api::{CCType, Channel, ChannelSelect, MidiCode, Note};
 
 use crate::{Configuration, Menu, MenuFeedback, menu_toggle, sequencer::Sequencer, value_or_last};
 
@@ -205,28 +205,39 @@ impl Menu for SequencerMenu
     {
         return (MenuState::Custom(state), None);
     }
-    fn on_message<E: api::Externals>(&mut self, output: &mut crate::Output<E>, message: api::MidiCode)
+    fn on_message<E: api::Externals>(&mut self, output: &mut crate::Output<E>, message: MidiCode)
     {
         match message
         {
-            api::MidiCode::TimingClock =>
+            MidiCode::TimingClock =>
             {
                 self.sequencer.on_clock(output);
             },
-            api::MidiCode::Start =>
+            MidiCode::Start =>
             {
                 self.sequencer.play();
             },
-            api::MidiCode::Continue =>
+            MidiCode::Continue =>
             {
                 self.sequencer.r#continue();
             },
-            api::MidiCode::Stop =>
+            MidiCode::Stop =>
             {
                 self.sequencer.stop();
             },
             _ => {}
         }
+    }
+    fn allow_message(&self, message: MidiCode) -> bool
+    {
+        return match message
+        {
+            MidiCode::ControlChange(channel, CCType::MODULATION_WHEEL_MSB, _) |
+            MidiCode::ControlChange(channel, CCType::MODULATION_WHEEL_LSB, _) =>
+            // disable mod wheel for a particular channel if that sequence is playing and using the mod wheel
+                !self.sequencer.is_playing() || !self.sequencer.get_sequence(channel).is_some_and(|s| s.is_playing() && s.use_mod()),
+            _ => true
+        };
     }
     
     fn on_number_input(&mut self, _config: &mut Configuration, value: Option<usize>, _channel: Channel, key: u8)

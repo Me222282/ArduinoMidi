@@ -6,7 +6,7 @@ use crate::{Output, SequencerConfig, sequencer::{Sequence, TrackBank}};
 // #[derive(Debug, Default)]
 pub struct Sequencer
 {
-    pub(super) config: SequencerConfig,
+    pub config: SequencerConfig,
     playing: bool,
     
     pub(super) play_mode: ChannelSelect,
@@ -23,7 +23,7 @@ pub struct Sequencer
 
 impl Sequencer
 {
-    pub fn set_time(&mut self, value: u32)
+    pub(super) fn set_time(&mut self, value: u32)
     {
         self.config.sequencer_tempo_time = value >> 1;
     }
@@ -49,7 +49,7 @@ impl Sequencer
         let sub = self.playing_time as f32 / self.config.sequencer_tempo_time as f32;
         self.on_sub_step(output, sub);
     }
-    pub fn on_clock<E: api::Externals>(&mut self, output: &mut Output<E>)
+    pub(super) fn on_clock<E: api::Externals>(&mut self, output: &mut Output<E>)
     {
         // always counting
         let acc = self.playing_time;
@@ -121,11 +121,12 @@ impl Sequencer
     }
     
     #[inline]
-    pub fn is_playing(&self) -> bool
+    #[must_use]
+    pub(super) fn is_playing(&self) -> bool
     {
         return self.playing | self.on_stop;
     }
-    pub fn play(&mut self)
+    pub(super) fn play(&mut self)
     {
         self.playing = true;
         self.playing_time = 0;
@@ -137,16 +138,16 @@ impl Sequencer
             s.play(&self.bank);
         }
     }
-    pub fn stop(&mut self)
+    pub(super) fn stop(&mut self)
     {
         self.on_stop = true;
     }
-    pub fn r#continue(&mut self)
+    pub(super) fn r#continue(&mut self)
     {
         self.on_stop = true;
     }
     
-    pub fn play_stop_seq(&mut self, index: usize) -> bool
+    pub(super) fn play_stop_seq(&mut self, index: usize) -> bool
     {
         let seq = self.sequences[index].as_mut();
         seq.set_one_shot(false);
@@ -164,7 +165,7 @@ impl Sequencer
         }
         return true;
     }
-    pub fn one_shot_seq(&mut self, index: usize)
+    pub(super) fn one_shot_seq(&mut self, index: usize)
     {
         let seq = self.sequences[index].as_mut();
         seq.set_one_shot(true);
@@ -176,14 +177,28 @@ impl Sequencer
             seq.play(&self.bank);
         }
     }
-    pub fn reset_seq(&mut self, index: usize)
+    pub(super) fn reset_seq(&mut self, index: usize)
     {
         let seq = self.sequences[index].as_mut();
         seq.reset_skip();
         seq.reset(&self.bank);
     }
-    pub fn get_channel(&self, index: usize) -> Channel
+    #[must_use]
+    pub(super) fn get_channel(&self, index: usize) -> Channel
     {
         return self.sequences[index].channel;
+    }
+    #[must_use]
+    pub(super) fn get_sequence<'a>(&'a self, channel: Channel) -> Option<&'a Sequence>
+    {
+        for s in &self.sequences
+        {
+            if s.channel == channel
+            {
+                return Some(s);
+            }
+        }
+        
+        return None;
     }
 }
