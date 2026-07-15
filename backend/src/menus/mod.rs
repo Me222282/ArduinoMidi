@@ -94,8 +94,12 @@ pub trait Menu
 {
     type State;
     
+    #[inline]
+    #[must_use]
     fn auto_close() -> bool { return true; }
-    fn menu_feedback() -> bool { return true; }
+    #[inline]
+    #[must_use]
+    fn menu_feedback(&self) -> bool { return true; }
     
     fn on_note(&mut self, config: &mut Configuration, channel: Channel, note: Note) -> (MenuState<Self::State>, Option<MenuFeedback>);
     fn on_number_input(&mut self, _config: &mut Configuration, _value: Option<usize>, _channel: Channel, _key: u8) { }

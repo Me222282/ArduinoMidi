@@ -186,12 +186,8 @@ impl<T: Menu> MenuWrapper<T>
         self.state = state;
         return (false, fb);
     }
-}
-
-impl<T: Menu> MenuWrapTrait for MenuWrapper<T>
-    where T::State: Copy + PartialEq
-{
-    fn on_note<N: NvsInterface>(&mut self, config: &mut Configuration, nvs: &mut N, time: u32, channel: Channel, note: Note) -> (bool, Option<MenuFeedback>)
+    
+    fn on_note_impl<N: NvsInterface>(&mut self, config: &mut Configuration, nvs: &mut N, time: u32, channel: Channel, note: Note) -> (bool, Option<MenuFeedback>)
     {
         return match self.state
         {
@@ -325,6 +321,21 @@ impl<T: Menu> MenuWrapTrait for MenuWrapper<T>
             MenuState::Exit => (true, None)
         }
     }
+}
+
+impl<T: Menu> MenuWrapTrait for MenuWrapper<T>
+    where T::State: Copy + PartialEq
+{
+    #[inline]
+    fn on_note<N: NvsInterface>(&mut self, config: &mut Configuration, nvs: &mut N, time: u32, channel: Channel, note: Note) -> (bool, Option<MenuFeedback>)
+    {
+        let result = self.on_note_impl(config, nvs, time, channel, note);
+        if !self.menu.menu_feedback()
+        {
+            return (result.0, None);
+        }
+        return result;
+    }
     
     // #[inline]
     // fn on_loop(&mut self, panel: &mut Panel)
@@ -350,6 +361,10 @@ impl<T: Menu> MenuWrapTrait for MenuWrapper<T>
         }
         
         self.state = MenuState::Listening;
+        if !self.menu.menu_feedback()
+        {
+            return (false, None);
+        }
         return (false, Some(MenuFeedback::note_fail(Channel::All)));
     }
     

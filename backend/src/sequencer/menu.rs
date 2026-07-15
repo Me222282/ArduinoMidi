@@ -14,11 +14,22 @@ const SET_BAR_SIZE: u8 = Note::B2;
 const SET_SEQ_TIME: u8 = Note::C3;
 const TAP_TEMPO: u8 = Note::Db3;
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum SeqMenuState
+{
+    
+}
+
 impl Menu for SequencerMenu
 {
-    type State = ();
+    type State = SeqMenuState;
     
-    fn on_note(&mut self, _config: &mut Configuration, channel: Channel, note: Note) -> (MenuState, Option<MenuFeedback>)
+    #[inline]
+    fn auto_close() -> bool { return false; }
+    #[inline]
+    fn menu_feedback(&self) -> bool { return self.sequencer.is_playing() }
+    
+    fn on_note(&mut self, _config: &mut Configuration, channel: Channel, note: Note) -> (MenuState<SeqMenuState>, Option<MenuFeedback>)
     {
         let mut state = MenuState::Listening;
         let fb = match note.key
