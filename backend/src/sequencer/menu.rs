@@ -213,6 +213,18 @@ impl Menu for SequencerMenu
             {
                 self.sequencer.on_clock(output);
             },
+            api::MidiCode::Start =>
+            {
+                self.sequencer.play();
+            },
+            api::MidiCode::Continue =>
+            {
+                self.sequencer.r#continue();
+            },
+            api::MidiCode::Stop =>
+            {
+                self.sequencer.stop();
+            },
             _ => {}
         }
     }
