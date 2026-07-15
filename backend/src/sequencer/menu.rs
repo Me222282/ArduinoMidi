@@ -16,6 +16,8 @@ const TAP_TEMPO: u8 = Note::Db3;
 
 impl Menu for SequencerMenu
 {
+    type State = ();
+    
     fn on_note(&mut self, _config: &mut Configuration, channel: Channel, note: Note) -> (MenuState, Option<MenuFeedback>)
     {
         let mut state = MenuState::Listening;

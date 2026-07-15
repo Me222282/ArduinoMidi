@@ -72,6 +72,13 @@ impl TrackData
         // all values can safely be zeros
         return unsafe { Box::new_zeroed().assume_init() };
     }
+    pub fn initialise(&mut self)
+    {
+        self.size = 0;
+        self.clock_div = 0;
+        self.use_mod = false;
+        self.half_time = false;
+    }
     
     /// bool determines whether note is the last one
     #[must_use]

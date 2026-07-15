@@ -44,6 +44,8 @@ fn sin(t: f32) -> f32
 
 impl Menu for VibratoMenu
 {
+    type State = ();
+    
     fn on_note(&mut self, config: &mut Configuration, channel: Channel, note: Note) -> (MenuState, Option<MenuFeedback>)
     {
         let mut state = MenuState::Listening;

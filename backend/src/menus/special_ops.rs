@@ -14,6 +14,8 @@ const FILTER_SELECT_KEY: u8 = Note::Eb4;
 
 impl Menu for SpecialOpsMenu
 {
+    type State = ();
+    
     fn on_note(&mut self, config: &mut Configuration, channel: Channel, note: Note) -> (MenuState, Option<MenuFeedback>)
     {
         // TODO: factory reset key

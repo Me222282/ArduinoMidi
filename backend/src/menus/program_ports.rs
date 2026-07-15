@@ -20,6 +20,8 @@ const CC5_KEY: u8 = Note::G5;
 
 impl Menu for ProgramPortsMenu
 {
+    type State = ();
+    
     fn on_note(&mut self, config: &mut Configuration, channel: Channel, note: Note) -> (MenuState, Option<MenuFeedback>)
     {
         let mut state = MenuState::Listening;

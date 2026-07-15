@@ -47,7 +47,7 @@ macro_rules! value_or_last
 pub(crate) use value_or_last;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum MenuState
+pub enum MenuState<T = ()>
 {
     Listening,
     Number{
@@ -65,12 +65,13 @@ pub enum MenuState
         key: u8,
         channel: Channel
     },
+    Custom(T),
     Exit
 }
-impl MenuState
+impl<T> MenuState<T>
 {
     #[must_use]
-    pub fn number<R: RangeBounds<usize>>(digits: u8, range: R, key: u8, channel: Channel) -> MenuState
+    pub fn number<R: RangeBounds<usize>>(digits: u8, range: R, key: u8, channel: Channel) -> Self
     {
         let min = match range.start_bound()
         {
@@ -91,12 +92,16 @@ impl MenuState
 pub trait Menu
     where Self: Sized
 {
-    fn auto_close() -> bool { return true; }
+    type State;
     
-    fn on_note(&mut self, config: &mut Configuration, channel: Channel, note: Note) -> (MenuState, Option<MenuFeedback>);
+    fn auto_close() -> bool { return true; }
+    fn menu_feedback() -> bool { return true; }
+    
+    fn on_note(&mut self, config: &mut Configuration, channel: Channel, note: Note) -> (MenuState<Self::State>, Option<MenuFeedback>);
     fn on_number_input(&mut self, _config: &mut Configuration, _value: Option<usize>, _channel: Channel, _key: u8) { }
     fn on_tap_time(&mut self, _config: &mut Configuration, _value: u32, _channel: Channel, _key: u8) { }
     fn on_key_select(&mut self, _config: &mut Configuration, _value: NoteKey, _channel: Channel, _key: u8) { }
+    fn on_custom_state(&mut self, _state: Self::State, _channel: Channel, _note: Note) -> (MenuState<Self::State>, Option<MenuFeedback>) { (MenuState::Listening, None) }
     
     fn off_note(&self, _channel: Channel, _note: Note) { }
     fn on_message(&self, _message: MidiCode) { }

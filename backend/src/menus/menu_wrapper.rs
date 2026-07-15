@@ -122,8 +122,9 @@ fn get_value(digits: &[u8; 5], start: u8) -> usize
 }
 
 pub(in crate::menus) struct MenuWrapper<T: Menu>
+    where T::State: Copy + PartialEq
 {
-    state: MenuState,
+    state: MenuState<T::State>,
     digits: [u8; MAX_DIGITS],
     d_count: u8,
     tap_duration: u32,
@@ -133,6 +134,7 @@ pub(in crate::menus) struct MenuWrapper<T: Menu>
     pub menu: T
 }
 impl<T: Menu> MenuWrapper<T>
+    where T::State: Copy + PartialEq
 {
     #[must_use]
     pub fn new(menu: T) -> Self
@@ -154,7 +156,7 @@ impl<T: Menu> MenuWrapper<T>
         return self.menu;
     }
     
-    fn set_state(&mut self, mut fb: Option<MenuFeedback>, state: MenuState) -> (bool, Option<MenuFeedback>)
+    fn set_state(&mut self, mut fb: Option<MenuFeedback>, state: MenuState<T::State>) -> (bool, Option<MenuFeedback>)
     {
         if state == MenuState::Exit
         {
@@ -187,6 +189,7 @@ impl<T: Menu> MenuWrapper<T>
 }
 
 impl<T: Menu> MenuWrapTrait for MenuWrapper<T>
+    where T::State: Copy + PartialEq
 {
     fn on_note<N: NvsInterface>(&mut self, config: &mut Configuration, nvs: &mut N, time: u32, channel: Channel, note: Note) -> (bool, Option<MenuFeedback>)
     {
@@ -217,6 +220,11 @@ impl<T: Menu> MenuWrapTrait for MenuWrapper<T>
                         self.set_state(ns.1, ns.0)
                     }
                 }
+            },
+            MenuState::Custom(s) =>
+            {
+                let ns = self.menu.on_custom_state(s, channel, note);
+                self.set_state(ns.1, ns.0)
             },
             MenuState::Number { digits, min, max, key, channel: cf } =>
             {
