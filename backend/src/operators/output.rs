@@ -1,6 +1,6 @@
 use api::{CCType, Channel, Gate, Note, SA, Switch};
 
-use crate::{MenuFeedback, NoteCollection, NoteConfig, NoteOutput, OutputConfig, Panel, RETRIG_TIME, SlotSelect, VibratoOp, get_only_note, process_note};
+use crate::{ChannelOutput, MenuFeedback, NoteCollection, NoteConfig, NoteOutput, OutputConfig, Panel, RETRIG_TIME, SlotSelect, VibratoOp, get_only_note, process_note};
 
 pub struct Output<E: api::Externals>
 {
@@ -51,6 +51,13 @@ impl<E: api::Externals> Output<E>
     pub(crate) fn get_only_note(&self) -> Option<Note>
     {
         return get_only_note(&self.note_manager);
+    }
+    
+    #[inline]
+    #[must_use]
+    pub(crate) fn get_channel_index_only<'a>(&'a mut self, index: usize) -> ChannelOutput<'a, E>
+    {
+        return ChannelOutput::new(self, Channel::from_u8(index as u8));
     }
     
     #[must_use]

@@ -230,7 +230,7 @@ impl Arpeggiator
             if arp.current_time >= config.time
             {
                 arp.current_time -= config.time;
-                arp.trigger_next(config, ChannelOutput::new(output, Channel::from_u8(i as u8)));
+                arp.trigger_next(config, output.get_channel_index_only(i));
                 continue;
             }
             // turn off at half time
@@ -252,7 +252,7 @@ impl Arpeggiator
             for (i, (arp, config)) in self.insts.iter_mut().zip(&self.config.arpeggios).enumerate()
             {
                 if arp.current.is_none() { continue; }
-                arp.trigger_next(config, ChannelOutput::new(output, Channel::from_u8(i as u8)));
+                arp.trigger_next(config, output.get_channel_index_only(i));
             }
             return;
         }

@@ -3,10 +3,11 @@ use api::{Cubic, CubicInput, Externals, Note};
 
 use crate::{ChannelOutput, sequencer::{NOTE_HOLD, NOTE_OFF, TrackBank, TrackRef}};
 
+/// Do not stack alloc
 pub(super) struct Sequence
 {
     /// interpret u8 as +1 (so cannot represent zero)
-    tracks: Box<[(TrackRef, u8); 256]>,
+    tracks: [(TrackRef, u8); 256],
     /// size == 0 => no sequence
     size: u16,
     cubic: Cubic,
@@ -37,6 +38,14 @@ pub(super) struct Sequence
 
 impl Sequence
 {
+    #[inline]
+    #[must_use]
+    pub fn empty() -> Box<Self>
+    {
+        // all values can safely be zeros (hopefully)
+        return unsafe { Box::new_zeroed().assume_init() };
+    }
+    
     pub fn play(&mut self, one_shot: bool, bank: &TrackBank)
     {
         if self.playing || self.size == 0 { return; }

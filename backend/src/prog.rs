@@ -29,6 +29,33 @@ impl<E: api::Externals, N: NvsInterface> Program<E, N>
         
         match message
         {
+            // NoteONs with velocity 0 are NoteOFFs
+            MidiCode::NoteON(channel, note @ Note { key: _, velocity: 0 }) |
+            MidiCode::NoteOFF(channel, note) =>
+            {
+                if self.menu.is_some()
+                {
+                    let mut config = Configuration {
+                        // other: &mut self.other_config,
+                        note: &mut self.output.note_config,
+                        // sequen: &mut self.sequen_config,
+                        output: &mut self.output.config,
+                        panel: &mut self.output.panel.config,
+                        vibrato: &mut self.output.vibrato.config,
+                        arpeggio: &mut self.arpeggio.config
+                    };
+                    self.menu.off_note(&mut config, channel, note);
+                    // sequencer
+                    if let Some(s) = self.menu.is_sequencer()
+                    {
+                        s.sequencer.off_note(&mut self.output, channel, note);
+                    }
+                }
+                else
+                {
+                    self.arpeggio.off_note(&mut self.output, channel, note);
+                }
+            },
             MidiCode::NoteON(channel, note) =>
             {
                 if self.menu.is_some()
@@ -49,7 +76,7 @@ impl<E: api::Externals, N: NvsInterface> Program<E, N>
                     // sequencer
                     else if let Some(s) = self.menu.is_sequencer()
                     {
-                        s.sequencer.on_note(&mut self.output);
+                        s.sequencer.on_note(&mut self.output, channel, note);
                     }
                     // special ops menu - factory reset
                     else if self.menu.is_special_ops()
@@ -74,26 +101,6 @@ impl<E: api::Externals, N: NvsInterface> Program<E, N>
                 else
                 {
                     self.arpeggio.on_note(&mut self.output, channel, note);
-                }
-            },
-            MidiCode::NoteOFF(channel, note) =>
-            {
-                if self.menu.is_some()
-                {
-                    let mut config = Configuration {
-                        // other: &mut self.other_config,
-                        note: &mut self.output.note_config,
-                        // sequen: &mut self.sequen_config,
-                        output: &mut self.output.config,
-                        panel: &mut self.output.panel.config,
-                        vibrato: &mut self.output.vibrato.config,
-                        arpeggio: &mut self.arpeggio.config
-                    };
-                    self.menu.off_note(&mut config, channel, note);
-                }
-                else
-                {
-                    self.arpeggio.off_note(&mut self.output, channel, note);
                 }
             },
             MidiCode::ControlChange(channel, cctype, value) => self.output.on_cc(channel, cctype, value),

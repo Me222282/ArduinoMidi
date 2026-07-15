@@ -2,7 +2,7 @@ use api::{Channel, Note};
 
 use crate::{Configuration, Menu, MenuFeedback, MenuState, menu_toggle, sequencer::Sequencer, value_or_last};
 
-#[derive(Debug, Default)]
+// #[derive(Debug, Default)]
 pub struct SequencerMenu
 {
     pub sequencer: Sequencer,
@@ -17,7 +17,7 @@ const TAP_TEMPO: u8 = Note::Db3;
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum SeqMenuState
 {
-    
+    PlayMode
 }
 
 impl Menu for SequencerMenu
@@ -38,13 +38,36 @@ impl Menu for SequencerMenu
             SET_BAR_SIZE => {state = MenuState::number(3, 1..=127, note.key, Channel::All); None},
             SET_SEQ_TIME => {state = MenuState::number(3, 10.., note.key, Channel::All); None},
             TAP_TEMPO => {state = MenuState::TapTime { key: note.key, channel: Channel::All }; None},
+            Note::D3 => {
+                self.sequencer.play_mode = true;
+                state = MenuState::Custom(SeqMenuState::PlayMode);
+                None
+            },
             Note::Eb3 => menu_toggle!(self.sequencer.config.clocked_sequencer),
-            // Note::C4 => menu_toggle_channel!(menu, channel, config.vibrato.vibratos[channel as usize].enabled),
             Note::Bb3 => return (MenuState::Exit, None),
+            Note::C4 =>
+            {
+                self.sequencer.play();
+                None
+            },
+            Note::D4 =>
+            {
+                self.sequencer.r#continue();
+                None
+            },
+            Note::E4 =>
+            {
+                self.sequencer.stop();
+                None
+            },
             _ => None
         };
         
         return (state, fb);
+    }
+    fn on_custom_state(&mut self, state: SeqMenuState, channel: Channel, note: Note) -> (MenuState<SeqMenuState>, Option<MenuFeedback>)
+    {
+        return (MenuState::Custom(state), None);
     }
     
     fn on_number_input(&mut self, _config: &mut Configuration, value: Option<usize>, _channel: Channel, key: u8)
