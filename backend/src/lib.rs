@@ -34,6 +34,7 @@ extern crate alloc;
 // choose which ports do what - can use gates but no velocity
 // use note and option outputs - with velocity
 // add trigger source for drums
+// drums enabled per output channel - can choose input channel
 
 // ==========PIPELINE==========
 // Channel Filter

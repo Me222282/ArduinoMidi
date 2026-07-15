@@ -14,7 +14,8 @@ pub struct Sequencer
     on_stop: bool,
     on_continue: bool,
     
-    pub(super) sequences: [Box<Sequence>; 16],
+    seq_play: [bool; 5],
+    pub(super) sequences: [Box<Sequence>; 5],
     pub(super) bank: TrackBank
 }
 
@@ -32,10 +33,10 @@ impl Sequencer
             self.on_stop = false;
             self.playing = false;
             
-            // continue sequencers
-            for (i, s) in self.sequences.iter_mut().enumerate()
+            // stop sequencers
+            for s in &mut self.sequences
             {
-                s.stop(output.get_channel_index_only(i));
+                s.stop(output.get_channel_only(s.channel));
             }
         }
         if self.on_continue
@@ -44,16 +45,23 @@ impl Sequencer
             self.playing = true;
             
             // continue sequencers
-            for (i, s) in self.sequences.iter_mut().enumerate()
+            for (s, enabled) in self.sequences.iter_mut().zip(self.seq_play)
             {
-                s.r#continue(output.get_channel_index_only(i), &self.bank);
+                if !enabled { continue; }
+                s.r#continue(output.get_channel_only(s.channel), &self.bank);
+            }
+        }
+        
+        // stop disabled sequences
+        for (s, enabled) in self.sequences.iter_mut().zip(self.seq_play)
+        {
+            if !enabled
+            {
+                s.stop(output.get_channel_only(s.channel));
             }
         }
         
         if !self.playing || self.config.clocked_sequencer { return; }
-        
-        
-        
     }
     pub fn on_clock<E: api::Externals>(&mut self, output: &mut Output<E>)
     {
@@ -72,9 +80,10 @@ impl Sequencer
         self.playing = true;
         
         // start sequencers
-        for s in &mut self.sequences
+        for (s, enabled) in self.sequences.iter_mut().zip(self.seq_play)
         {
-            s.play(false, &self.bank);
+            if !enabled { continue; }
+            s.play(&self.bank);
         }
     }
     pub fn stop(&mut self)
@@ -84,5 +93,46 @@ impl Sequencer
     pub fn r#continue(&mut self)
     {
         self.on_stop = true;
+    }
+    
+    pub fn play_stop_seq(&mut self, index: usize) -> bool
+    {
+        let seq = self.sequences[index].as_mut();
+        seq.set_one_shot(false);
+        
+        if self.seq_play[index]
+        {
+            self.seq_play[index] = false;
+            return false;
+        }
+        // self.seq_play[index] is false
+        self.seq_play[index] = true;
+        if self.playing
+        {
+            seq.play(&self.bank);
+        }
+        return true;
+    }
+    pub fn one_shot_seq(&mut self, index: usize)
+    {
+        let seq = self.sequences[index].as_mut();
+        seq.set_one_shot(true);
+        
+        self.seq_play[index] = true;
+        if self.playing
+        {
+            // will be ignored if already playing
+            seq.play(&self.bank);
+        }
+    }
+    pub fn reset_seq(&mut self, index: usize)
+    {
+        let seq = self.sequences[index].as_mut();
+        seq.reset_skip();
+        seq.reset(&self.bank);
+    }
+    pub fn get_channel(&self, index: usize) -> Channel
+    {
+        return self.sequences[index].channel;
     }
 }

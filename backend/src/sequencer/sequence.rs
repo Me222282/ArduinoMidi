@@ -33,38 +33,65 @@ pub(super) struct Sequence
     
     skip: u8,
     one_shot: bool,
-    end_soon: bool
+    end_soon: bool,
+    pub(super) channel: api::Channel
 }
 
 impl Sequence
 {
     #[inline]
     #[must_use]
-    pub fn empty() -> Box<Self>
+    pub fn empty(channel: api::Channel) -> Box<Self>
     {
         // all values can safely be zeros (hopefully)
-        return unsafe { Box::new_zeroed().assume_init() };
+        let mut seq: Box<Self> = unsafe { Box::new_zeroed().assume_init() };
+        seq.channel = channel;
+        return seq;
     }
     
-    pub fn play(&mut self, one_shot: bool, bank: &TrackBank)
+    /// Causes the next `on_time_step` to play the first note
+    pub fn reset(&mut self, bank: &TrackBank)
     {
-        if self.playing || self.size == 0 { return; }
+        if self.size == 0 { return; }
         
         self.end_soon = false;
         self.track_index = 0;
         self.current_count = 0;
-        self.track_step = 0;
-        self.time_steps = 0;
-        self.last_note = NOTE_OFF;
+        // so that skip is kept into account
+        self.next_step = self.inc_track(bank);
+        self.reset_time();
         
-        // setup first notes
-        let current = &self.tracks[0];
-        let track = current.0.get_ref(bank);
-        self.half_time = track.half_time;
-        self.current_clock_div = track.get_clock_div();
-        self.use_mod = track.use_mod;
+        // self.track_step = 0;
+        // // self.time_steps = 0;
         
-        self.next_step = track.get_step(0).unwrap_or((NOTE_OFF, 0));
+        // // setup first notes
+        // let current = &self.tracks[0];
+        // let track = current.0.get_ref(bank);
+        // self.half_time = track.half_time;
+        // self.current_clock_div = track.get_clock_div();
+        // self.time_steps = (self.current_clock_div as u16) << 1;
+        // self.use_mod = track.use_mod;
+        
+        // self.next_step = track.get_step(0).unwrap_or((NOTE_OFF, 0));
+    }
+    #[inline]
+    fn reset_time(&mut self)
+    {
+        self.time_steps = (self.current_clock_div as u16) << 1;
+    }
+    
+    #[inline]
+    pub fn playing(&self) -> bool
+    {
+        return self.playing;
+    }
+    
+    pub fn play(&mut self, bank: &TrackBank)
+    {
+        if self.playing || self.size == 0 { return; }
+        
+        self.reset(bank);
+        
         let mut cm = 0;
         if self.use_mod
         {
@@ -74,9 +101,9 @@ impl Sequence
             self.cubic = Cubic::generate(cm, cm, self.next_step.1, self.get_next_mod(bank));
         }
         
+        self.last_note = NOTE_OFF;
         self.current_step = (NOTE_OFF, cm);
         
-        self.one_shot = one_shot;
         self.playing = true;
         self.paused = false;
     }
@@ -86,7 +113,7 @@ impl Sequence
         
         if !self.paused
         {
-            self.play(self.one_shot, bank);
+            self.play(bank);
             return;
         }
         
@@ -100,21 +127,28 @@ impl Sequence
     }
     pub fn stop<E: Externals>(&mut self, mut output: ChannelOutput<E>)
     {
-        self.playing = false;
-        self.paused = true;
         if self.playing && self.last_note != NOTE_OFF
         {
             output.remove_note(self.last_note);
         }
+        self.playing = false;
+        self.paused = true;
     }
     
+    #[inline]
     pub fn inc_skip(&mut self)
     {
         self.skip += 1;
     }
-    pub fn set_one_shot(&mut self)
+    #[inline]
+    pub fn reset_skip(&mut self)
     {
-        self.one_shot = true;
+        self.skip = 0;
+    }
+    #[inline]
+    pub fn set_one_shot(&mut self, value: bool)
+    {
+        self.one_shot = value;
     }
     
     #[must_use]
@@ -191,7 +225,7 @@ impl Sequence
         
         // reset counter - encodes the clock div for this step
         // allows clock_div to change
-        self.time_steps = (self.current_clock_div as u16) << 1;
+        self.reset_time();
         self.track_step += 1;
         
         let old = self.last_note;
@@ -212,7 +246,11 @@ impl Sequence
             // get next trackstep - already have current
             let next = track.get_step(self.track_step);
             
-            self.next_step = next.unwrap_or_else(|| self.inc_track(bank));
+            self.next_step = next.unwrap_or_else(||
+            {
+                self.current_count += 1;
+                self.inc_track(bank)
+            });
             if self.use_mod
             {
                 self.cubic = Cubic::generate(last_mod, cs.1, self.next_step.1, self.get_next_mod(bank));
@@ -241,13 +279,14 @@ impl Sequence
         output.set_modulation((m as u16).clamp(0, 0x3FFF));
     }
     
+    /// Increament current_count beforehand
     fn inc_track(&mut self, bank: &TrackBank) -> (Note, u16)
     {
         let mut ti = self.track_index;
         let mut current = &self.tracks[ti as usize];
         
         self.track_step = 0;
-        let mut cc = self.current_count + 1 + self.skip as u16;
+        let mut cc = self.current_count + self.skip as u16;
         self.skip = 0;
         
         // iterate through track indicies until we reach the correct TrackRef

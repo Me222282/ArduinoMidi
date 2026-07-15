@@ -59,6 +59,12 @@ impl<E: api::Externals> Output<E>
     {
         return ChannelOutput::new(self, Channel::from_u8(index as u8));
     }
+    #[inline]
+    #[must_use]
+    pub(crate) fn get_channel_only<'a>(&'a mut self, channel: Channel) -> ChannelOutput<'a, E>
+    {
+        return ChannelOutput::new(self, channel);
+    }
     
     #[must_use]
     fn get_note_collection(note_manager: &mut SA<NoteCollection, 5>, channel: Channel) -> Option<&mut NoteCollection>
