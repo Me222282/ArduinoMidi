@@ -37,62 +37,62 @@ pub(super) struct Sequence
 
 impl Sequence
 {
-    pub fn play<E: Externals>(&mut self, mut output: ChannelOutput<E>, one_shot: bool, bank: &TrackBank)
+    pub fn play(&mut self, one_shot: bool, bank: &TrackBank)
     {
         if self.playing || self.size == 0 { return; }
-        if !self.paused
+        
+        self.end_soon = false;
+        self.track_index = 0;
+        self.current_count = 0;
+        self.track_step = 0;
+        self.time_steps = 0;
+        self.last_note = NOTE_OFF;
+        
+        // setup first notes
+        let current = &self.tracks[0];
+        let track = current.0.get_ref(bank);
+        self.half_time = track.half_time;
+        self.current_clock_div = track.get_clock_div();
+        self.use_mod = track.use_mod;
+        
+        self.next_step = track.get_step(0).unwrap_or((NOTE_OFF, 0));
+        let mut cm = 0;
+        if self.use_mod
         {
-            self.end_soon = false;
-            self.track_index = 0;
-            self.current_count = 0;
-            self.track_step = 0;
-            self.time_steps = 0;
-            self.last_note = NOTE_OFF;
-            
-            // setup first notes
-            let current = &self.tracks[0];
-            let track = current.0.get_ref(bank);
-            self.half_time = track.half_time;
-            self.current_clock_div = track.get_clock_div();
-            self.use_mod = track.use_mod;
-            
-            self.next_step = track.get_step(0).unwrap_or((NOTE_OFF, 0));
-            let mut cm = 0;
-            if self.use_mod
-            {
-                cm = self.get_last_mod(bank);
-                // when does this way, mod will smoothly interpolate across to the next outputed value
-                // so will be different if we skip a section
-                self.cubic = Cubic::generate(cm, cm, self.next_step.1, self.get_next_mod(bank));
-            }
-            
-            self.current_step = (NOTE_OFF, cm);
+            cm = self.get_last_mod(bank);
+            // when does this way, mod will smoothly interpolate across to the next outputed value
+            // so will be different if we skip a section
+            self.cubic = Cubic::generate(cm, cm, self.next_step.1, self.get_next_mod(bank));
         }
-        else
-        {
-            // continue last note
-            if self.playing && self.time_steps > 1
-            {
-                output.push_note(self.last_note);
-            }
-        }
+        
+        self.current_step = (NOTE_OFF, cm);
+        
         self.one_shot = one_shot;
         self.playing = true;
         self.paused = false;
     }
-    pub fn pause<E: Externals>(&mut self, mut output: ChannelOutput<E>)
+    pub fn r#continue<E: Externals>(&mut self, mut output: ChannelOutput<E>, bank: &TrackBank)
     {
-        self.playing = false;
-        self.paused = true;
-        if self.playing && self.last_note != NOTE_OFF
+        if self.playing || self.size == 0 { return; }
+        
+        if !self.paused
         {
-            output.remove_note(self.last_note);
+            self.play(self.one_shot, bank);
+            return;
         }
+        
+        // continue last note
+        if self.playing && self.time_steps > 1
+        {
+            output.push_note(self.last_note);
+        }
+        self.playing = true;
+        self.paused = false;
     }
     pub fn stop<E: Externals>(&mut self, mut output: ChannelOutput<E>)
     {
         self.playing = false;
-        self.paused = false;
+        self.paused = true;
         if self.playing && self.last_note != NOTE_OFF
         {
             output.remove_note(self.last_note);
