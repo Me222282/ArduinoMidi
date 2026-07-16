@@ -65,6 +65,11 @@ pub enum MenuState<T = ()>
         key: u8,
         channel: Channel
     },
+    SlotSelect{
+        slots: u8,
+        key: u8,
+        channel: Channel
+    },
     Custom(T),
     Exit
 }
@@ -112,6 +117,7 @@ pub trait Menu
     fn on_number_input(&mut self, _config: &mut Configuration, _value: Option<usize>, _channel: Channel, _key: u8) { }
     fn on_tap_time(&mut self, _config: &mut Configuration, _value: u32, _channel: Channel, _key: u8) { }
     fn on_key_select(&mut self, _config: &mut Configuration, _value: NoteKey, _channel: Channel, _key: u8) { }
+    fn on_slot_select(&mut self, _config: &mut Configuration, _value: u8, _channel: Channel, _key: u8) { }
     fn on_custom_state(&mut self, _state: Self::State, _channel: Channel, _note: Note) -> (MenuState<Self::State>, Option<MenuFeedback>) { (MenuState::Listening, None) }
     
     fn off_note(&self, _channel: Channel, _note: Note) { }

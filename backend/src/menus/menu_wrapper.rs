@@ -131,6 +131,7 @@ pub(in crate::menus) struct MenuWrapper<T: Menu>
     first_tap_time: u32,
     tap_count: usize,
     key_select: NoteKey,
+    slot_select: u8,
     pub menu: T
 }
 impl<T: Menu> MenuWrapper<T>
@@ -147,6 +148,7 @@ impl<T: Menu> MenuWrapper<T>
             first_tap_time: 0,
             tap_count: 0,
             key_select: NoteKey::C,
+            slot_select: 0,
             menu
         };
     }
@@ -171,16 +173,17 @@ impl<T: Menu> MenuWrapper<T>
                 self.tap_duration = 0;
                 fb = Some(MenuFeedback::note_select(channel));
             },
-            MenuState::Number { digits: _, min: _min, max: _max, key: _key, channel } =>
+            MenuState::Number { digits: _, min: _, max: _, key: _, channel } =>
             {
                 self.d_count = 0;
                 self.digits = [0; MAX_DIGITS];
                 fb = Some(MenuFeedback::note_select(channel));
             },
+            MenuState::SlotSelect { slots: _, key: _, channel } |
             MenuState::KeySelect { key: _, channel } =>
             {
                 fb = Some(MenuFeedback::note_select(channel));
-            }
+            },
             _ => {}
         }
         self.state = state;
@@ -313,6 +316,32 @@ impl<T: Menu> MenuWrapper<T>
                     // won't fail due to check that key is in range
                     self.key_select = unsafe { NoteKey::from_key(note.key) };
                     return (false, Some(MenuFeedback::number(note.key, cf)));
+                }
+                
+                // error
+                (false, Some(MenuFeedback::note_fail(cf)))
+            },
+            MenuState::SlotSelect { slots, key, channel: cf } =>
+            {
+                if cf != Channel::All && cf != channel
+                {
+                    return (false, Some(MenuFeedback::note_fail(cf)));
+                }
+                
+                // exit key select
+                if note.key == key
+                {
+                    self.menu.on_slot_select(config, self.slot_select, channel, key);
+                    self.set_state(None, self.menu.return_state());
+                    return (false, Some(MenuFeedback::note_select(cf)));
+                }
+                
+                let value = note.key - Note::A0;
+                if value < slots
+                {
+                    // won't fail due to check that key is in range
+                    self.slot_select = value;
+                    return (false, Some(MenuFeedback::slot(note.key, cf)));
                 }
                 
                 // error

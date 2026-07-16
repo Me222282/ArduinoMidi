@@ -17,6 +17,12 @@ const SET_BAR_SIZE: u8 = Note::B2;
 const SET_SEQ_TIME: u8 = Note::C3;
 const TAP_TEMPO: u8 = Note::Db3;
 
+const SET_SEQ1_CHANNEL: u8 = Note::C7;
+const SET_SEQ2_CHANNEL: u8 = Note::D7;
+const SET_SEQ3_CHANNEL: u8 = Note::E7;
+const SET_SEQ4_CHANNEL: u8 = Note::F7;
+const SET_SEQ5_CHANNEL: u8 = Note::G7;
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum SeqMenuState
 {
@@ -190,6 +196,11 @@ impl Menu for SequencerMenu
         {
             Note::Eb3 => menu_toggle!(self.sequencer.config.clocked_sequencer),
             Note::Bb3 => return (MenuState::Exit, None),
+            SET_SEQ1_CHANNEL => {state = MenuState::SlotSelect { slots: 16, key: note.key, channel: Channel::All }; None},
+            SET_SEQ2_CHANNEL => {state = MenuState::SlotSelect { slots: 16, key: note.key, channel: Channel::All }; None},
+            SET_SEQ3_CHANNEL => {state = MenuState::SlotSelect { slots: 16, key: note.key, channel: Channel::All }; None},
+            SET_SEQ4_CHANNEL => {state = MenuState::SlotSelect { slots: 16, key: note.key, channel: Channel::All }; None},
+            SET_SEQ5_CHANNEL => {state = MenuState::SlotSelect { slots: 16, key: note.key, channel: Channel::All }; None},
             // do the rest of the menu functions
             _ =>
             {
@@ -249,12 +260,23 @@ impl Menu for SequencerMenu
             _ => {}
         }
     }
-    
     fn on_tap_time(&mut self, _config: &mut Configuration, value: u32, _channel: Channel, key: u8)
     {
         match key
         {
             TAP_TEMPO => self.sequencer.set_time(value),
+            _ => {}
+        }
+    }
+    fn on_slot_select(&mut self, _config: &mut Configuration, value: u8, _channel: Channel, key: u8)
+    {
+        match key
+        {
+            SET_SEQ1_CHANNEL => self.sequencer.config.sequence_channels[0] = Channel::from_u8(value),
+            SET_SEQ2_CHANNEL => self.sequencer.config.sequence_channels[1] = Channel::from_u8(value),
+            SET_SEQ3_CHANNEL => self.sequencer.config.sequence_channels[2] = Channel::from_u8(value),
+            SET_SEQ4_CHANNEL => self.sequencer.config.sequence_channels[3] = Channel::from_u8(value),
+            SET_SEQ5_CHANNEL => self.sequencer.config.sequence_channels[4] = Channel::from_u8(value),
             _ => {}
         }
     }

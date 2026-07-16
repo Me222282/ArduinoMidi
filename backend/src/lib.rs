@@ -226,7 +226,6 @@ pub(crate) struct NoteConfig
     sort_notes: bool,
 }
 
-#[derive(Debug, Default)]
 pub(crate) struct SequencerConfig
 {
     bar_size: u8,
@@ -234,6 +233,7 @@ pub(crate) struct SequencerConfig
     /// Half the full time - for half time stuff
     sequencer_tempo_time: u32,
     clocked_sequencer: bool,
+    sequence_channels: [Channel; 5]
 }
 
 pub(crate) struct PanelConfig

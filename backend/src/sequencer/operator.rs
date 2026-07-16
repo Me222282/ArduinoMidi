@@ -25,6 +25,7 @@ impl Sequencer
 {
     pub(super) fn set_time(&mut self, value: u32)
     {
+        // half so that half time notes are triggered
         self.config.sequencer_tempo_time = value >> 1;
     }
     
@@ -75,9 +76,9 @@ impl Sequencer
             self.playing = false;
             
             // stop sequencers
-            for s in &mut self.sequences
+            for (s, channel) in self.sequences.iter_mut().zip(self.config.sequence_channels)
             {
-                s.stop(output.get_channel_only(s.channel));
+                s.stop(output.get_channel_only(channel));
             }
         }
         if self.on_continue
@@ -86,37 +87,37 @@ impl Sequencer
             self.playing = true;
             
             // continue sequencers
-            for (s, enabled) in self.sequences.iter_mut().zip(self.seq_play)
+            for ((s, channel), enabled) in self.sequences.iter_mut().zip(self.config.sequence_channels).zip(self.seq_play)
             {
                 if !enabled { continue; }
-                s.r#continue(output.get_channel_only(s.channel), &self.bank);
+                s.r#continue(output.get_channel_only(channel), &self.bank);
             }
         }
         
         // stop disabled sequences
-        for (s, enabled) in self.sequences.iter_mut().zip(self.seq_play)
+        for ((s, channel), enabled) in self.sequences.iter_mut().zip(self.config.sequence_channels).zip(self.seq_play)
         {
             if !enabled
             {
-                s.stop(output.get_channel_only(s.channel));
+                s.stop(output.get_channel_only(channel));
             }
         }
     }
     fn on_time_step<E: api::Externals>(&mut self, output: &mut Output<E>)
     {
-        for (s, enabled) in self.sequences.iter_mut().zip(self.seq_play)
+        for ((s, channel), enabled) in self.sequences.iter_mut().zip(self.config.sequence_channels).zip(self.seq_play)
         {
             if !enabled { continue; }
-            s.on_time_step(output.get_channel_only(s.channel), &self.bank);
+            s.on_time_step(output.get_channel_only(channel), &self.bank);
         }
     }
     /// `sub` is 0.0 - 1.0 between every `on_time_step`
     fn on_sub_step<E: api::Externals>(&mut self, output: &mut Output<E>, sub: f32)
     {
-        for (s, enabled) in self.sequences.iter_mut().zip(self.seq_play)
+        for ((s, channel), enabled) in self.sequences.iter_mut().zip(self.config.sequence_channels).zip(self.seq_play)
         {
             if !enabled { continue; }
-            s.on_sub_step(output.get_channel_only(s.channel), sub);
+            s.on_sub_step(output.get_channel_only(channel), sub);
         }
     }
     
@@ -186,14 +187,14 @@ impl Sequencer
     #[must_use]
     pub(super) fn get_channel(&self, index: usize) -> Channel
     {
-        return self.sequences[index].channel;
+        return self.config.sequence_channels[index];
     }
     #[must_use]
     pub(super) fn get_sequence<'a>(&'a self, channel: Channel) -> Option<&'a Sequence>
     {
-        for s in &self.sequences
+        for (s, c) in self.sequences.iter().zip(self.config.sequence_channels)
         {
-            if s.channel == channel
+            if c == channel
             {
                 return Some(s);
             }

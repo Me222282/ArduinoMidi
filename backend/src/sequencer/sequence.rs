@@ -33,20 +33,17 @@ pub(super) struct Sequence
     
     skip: u8,
     one_shot: bool,
-    end_soon: bool,
-    pub(super) channel: api::Channel
+    end_soon: bool
 }
 
 impl Sequence
 {
     #[inline]
     #[must_use]
-    pub fn empty(channel: api::Channel) -> Box<Self>
+    pub fn empty() -> Box<Self>
     {
         // all values can safely be zeros (hopefully)
-        let mut seq: Box<Self> = unsafe { Box::new_zeroed().assume_init() };
-        seq.channel = channel;
-        return seq;
+        return unsafe { Box::new_zeroed().assume_init() };
     }
     
     /// Causes the next `on_time_step` to play the first note
