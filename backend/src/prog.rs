@@ -79,7 +79,7 @@ impl<E: api::Externals, N: NvsInterface> Program<E, N>
                         else if self.menu.is_special_ops()
                         {
                             // repeated key in time
-                            if note.key == Note::B3 &&
+                            if note.key == crate::FACTORY_RESET_KEY &&
                                 (self.factory_reset_count == 0 || time - self.factory_reset_time <= crate::FACTORY_RESET_TIME)
                             {
                                 self.factory_reset_time = time;

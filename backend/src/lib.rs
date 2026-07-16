@@ -53,8 +53,9 @@ extern crate alloc;
 
 pub const RETRIG_TIME: u32 = 4;
 pub const FACTORY_RESET_TIME: u32 = 750;
+pub const FACTORY_RESET_KEY: u8 = api::Note::B2;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub(crate) enum TriggerSource
 {
     Arpeggio(Channel),
@@ -62,6 +63,7 @@ pub(crate) enum TriggerSource
     Sequence(Channel),
     Track(Channel),
     SequencerBeat,
+    #[default]
     MidiClock
 }
 impl TriggerSource

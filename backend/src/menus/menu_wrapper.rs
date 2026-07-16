@@ -131,7 +131,6 @@ pub(in crate::menus) struct MenuWrapper<T: Menu>
     first_tap_time: u32,
     tap_count: usize,
     key_select: NoteKey,
-    slot_select: u8,
     pub menu: T
 }
 impl<T: Menu> MenuWrapper<T>
@@ -148,7 +147,6 @@ impl<T: Menu> MenuWrapper<T>
             first_tap_time: 0,
             tap_count: 0,
             key_select: NoteKey::C,
-            slot_select: 0,
             menu
         };
     }
@@ -328,19 +326,12 @@ impl<T: Menu> MenuWrapper<T>
                     return (false, Some(MenuFeedback::note_fail(cf)));
                 }
                 
-                // exit key select
-                if note.key == key
-                {
-                    self.menu.on_slot_select(config, self.slot_select, channel, key);
-                    self.set_state(None, self.menu.return_state());
-                    return (false, Some(MenuFeedback::note_select(cf)));
-                }
-                
                 let value = note.key - Note::A0;
                 if value < slots
                 {
                     // won't fail due to check that key is in range
-                    self.slot_select = value;
+                    self.menu.on_slot_select(config, value, channel, key);
+                    self.set_state(None, self.menu.return_state());
                     return (false, Some(MenuFeedback::slot(note.key, cf)));
                 }
                 
